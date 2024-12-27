@@ -156,4 +156,16 @@ public class ChatServiceUnitTest {
                 () -> assertEquals(expected.getMessages().getFirst().getContent(), message.getContent())
         );
     }
+
+    @Test
+    public void testThatDeleteMessageWorksWell() {
+        String chatId = "123534123541234512345120";
+        String msgId = "678951245614342341234123";
+        Query query = new Query(Criteria.where("_id").is(new ObjectId(chatId)).and("messages.id").is(new ObjectId(msgId)));
+        Update update = new Update().pull("messages", new Query(Criteria.where("id").is(new ObjectId(msgId))));
+        // when
+        chatService.deleteSpecificMessage(chatId, msgId);
+        // then
+        verify(mongoTemplate, times(1)).updateFirst(query, update, ChatEntity.class);
+    }
 }

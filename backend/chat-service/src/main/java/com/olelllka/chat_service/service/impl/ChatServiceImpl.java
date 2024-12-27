@@ -64,4 +64,11 @@ public class ChatServiceImpl implements ChatService {
         ChatEntity chatWithUpdatedMessage = repository.findChatByMessageId(msg_id).orElseThrow(() -> new NotFoundException("Message with such id was not found."));
         return chatWithUpdatedMessage.getMessages().getFirst();
     }
+
+    @Override
+    public void deleteSpecificMessage(String chatId, String msgId) {
+        Query query = new Query(Criteria.where("_id").is(new ObjectId(chatId)).and("messages.id").is(new ObjectId(msgId)));
+        Update update = new Update().pull("messages", new Query(Criteria.where("id").is(new ObjectId(msgId))));
+        mongoTemplate.updateFirst(query, update, ChatEntity.class);
+    }
 }

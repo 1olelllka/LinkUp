@@ -126,4 +126,18 @@ public class ChatControllerIntegrationTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content").value("UPDATED"));
     }
 
+    @Test
+    public void testThatDeleteSpecificMessageReturnsHttp204NoContentAndDeletesMsg() throws Exception {
+        ChatEntity chat = service.createNewChat("12345", "13456");
+        MessageEntity message = TestDataUtil.createMessageEntity();
+        message.setIdIfNotPresent();
+        chat.setMessages(List.of(message));
+        ChatEntity finalChat = repository.save(chat);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/chats/" + finalChat.getId() + "/messages/" + message.getId()))
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
+        mockMvc.perform(MockMvcRequestBuilders.get("/chats/" + finalChat.getId() + "/messages"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.totalElements").value(0));
+    }
+
 }

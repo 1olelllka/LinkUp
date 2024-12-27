@@ -71,6 +71,13 @@ public class ChatController {
         return new ResponseEntity<>(messageMapper.toDto(updated), HttpStatus.OK);
     }
 
+    @DeleteMapping("/{chat_id}/messages/{msg_id}")
+    public ResponseEntity deleteSpecificMessage(@PathVariable String chat_id,
+                                                @PathVariable String msg_id) {
+        chatService.deleteSpecificMessage(chat_id, msg_id);
+        return new ResponseEntity(HttpStatus.NO_CONTENT);
+    }
+
     private ListOfChatsDto mapToListOfChats(ChatEntity chat) {
         return ListOfChatsDto.builder()
                 .id(chat.getId())

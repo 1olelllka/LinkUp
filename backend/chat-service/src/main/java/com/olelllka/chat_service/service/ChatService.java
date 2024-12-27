@@ -16,4 +16,6 @@ public interface ChatService {
     Page<MessageEntity> getMessagesForChat(String chatId, Pageable pageable);
 
     MessageEntity updateMessage(String msgId, String msg_id, MessageDto updatedMsg);
+
+    void deleteSpecificMessage(String chatId, String msgId);
 }
