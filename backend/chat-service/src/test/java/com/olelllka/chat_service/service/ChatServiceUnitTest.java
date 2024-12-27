@@ -128,7 +128,7 @@ public class ChatServiceUnitTest {
         when(mongoTemplate.updateFirst(query, update, ChatEntity.class)).thenReturn(updateResult);
         // then
         assertThrows(NotFoundException.class, () -> chatService.updateMessage(chat_id, msg_id, dto));
-        verify(mongoTemplate, never()).findOne(any(Query.class), eq(ChatEntity.class));
+        verify(chatRepository, never()).findChatByMessageId(msg_id);
     }
 
     @Test
@@ -148,7 +148,7 @@ public class ChatServiceUnitTest {
         ChatEntity expected = TestDataUtil.createChatEntity(List.of(updatedMessage));
         // when
         when(mongoTemplate.updateFirst(query, update, ChatEntity.class)).thenReturn(updateResult);
-        when(mongoTemplate.findOne(findQuery, ChatEntity.class)).thenReturn(expected);
+        when(chatRepository.findChatByMessageId(msg_id)).thenReturn(Optional.of(expected));
         MessageEntity message = chatService.updateMessage(chat_id, msg_id, dto);
         // then
         assertAll(

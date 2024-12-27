@@ -2,6 +2,7 @@ package com.olelllka.chat_service.controller;
 
 import com.olelllka.chat_service.TestDataUtil;
 import com.olelllka.chat_service.TestcontainersConfiguration;
+import com.olelllka.chat_service.domain.dto.CreateChatDto;
 import com.olelllka.chat_service.domain.dto.MessageDto;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
@@ -65,11 +66,25 @@ public class ChatControllerIntegrationTest {
     }
 
     @Test
-    public void testThatCreateChatWorks() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.post("/chats?userId1=1234&userId2=5678"))
+    public void testThatCreateChatReturnsHttp400BadRequestIfValidationFails() throws Exception {
+        CreateChatDto createChatDto = CreateChatDto.builder().user1Id("").user2Id("").build();
+        String json = objectMapper.writeValueAsString(createChatDto);
+        mockMvc.perform(MockMvcRequestBuilders.post("/chats")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
+    public void testThatCreateChatReturnsHttp201Created() throws Exception {
+        CreateChatDto createChatDto = CreateChatDto.builder().user1Id("1235").user2Id("8765").build();
+        String json = objectMapper.writeValueAsString(createChatDto);
+        mockMvc.perform(MockMvcRequestBuilders.post("/chats")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
                 .andExpect(MockMvcResultMatchers.status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.participants[0]").value("1234"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.participants[1]").value("5678"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.participants[0]").value("1235"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.participants[1]").value("8765"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.messages").isArray());
     }
 

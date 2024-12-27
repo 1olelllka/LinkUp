@@ -1,6 +1,7 @@
 package com.olelllka.chat_service.rest.controller;
 
 import com.olelllka.chat_service.domain.dto.ChatDto;
+import com.olelllka.chat_service.domain.dto.CreateChatDto;
 import com.olelllka.chat_service.domain.dto.ListOfChatsDto;
 import com.olelllka.chat_service.domain.dto.MessageDto;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
@@ -39,9 +40,13 @@ public class ChatController {
     }
 
     @PostMapping("")
-    public ResponseEntity<ChatDto> createNewChat(@RequestParam String userId1,
-                                                 @RequestParam String userId2) {
-        ChatEntity entity = chatService.createNewChat(userId1, userId2);
+    public ResponseEntity<ChatDto> createNewChat(@Valid @RequestBody CreateChatDto createChatDto,
+                                                 BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            String msg = bindingResult.getAllErrors().stream().map(err -> err.getDefaultMessage()).collect(Collectors.joining(" "));
+            throw new ValidationException(msg);
+        }
+        ChatEntity entity = chatService.createNewChat(createChatDto.getUser1Id(), createChatDto.getUser2Id());
         return new ResponseEntity<>(chatMapper.toDto(entity), HttpStatus.CREATED);
     }
 
