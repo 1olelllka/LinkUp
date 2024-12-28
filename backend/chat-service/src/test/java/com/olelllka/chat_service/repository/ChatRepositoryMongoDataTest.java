@@ -3,7 +3,6 @@ package com.olelllka.chat_service.repository;
 import com.olelllka.chat_service.TestDataUtil;
 import com.olelllka.chat_service.TestcontainersConfiguration;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
-import com.olelllka.chat_service.domain.entity.MessageEntity;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
@@ -37,7 +36,7 @@ public class ChatRepositoryMongoDataTest {
     @Test
     public void testThatRepositoryFindsTheRightChatById() {
         // given
-        ChatEntity chat = TestDataUtil.createChatEntity(List.of());
+        ChatEntity chat = TestDataUtil.createChatEntity();
         repository.save(chat);
         Pageable pageable = PageRequest.of(0, 1);
         Page<ChatEntity> expected = new PageImpl<>(List.of(chat));
@@ -53,7 +52,7 @@ public class ChatRepositoryMongoDataTest {
     @Test
     public void testThatRepositoryFindsNothing() {
         // given
-        ChatEntity chat = TestDataUtil.createChatEntity(List.of());
+        ChatEntity chat = TestDataUtil.createChatEntity();
         repository.save(chat);
         Pageable pageable = PageRequest.of(0, 1);
         // when
@@ -66,34 +65,26 @@ public class ChatRepositoryMongoDataTest {
     }
 
     @Test
-    public void testThatRepositoryFindsTheSpecificChatWithOnlyOneMessage() {
+    public void testThatRepositoryFindsTheRightChatByTwoUsers() {
         // given
-        MessageEntity msg1 = TestDataUtil.createMessageEntity();
-        msg1.setIdIfNotPresent();
-        MessageEntity msg2 = TestDataUtil.createMessageEntity();
-        msg2.setIdIfNotPresent();
-        ChatEntity chat = TestDataUtil.createChatEntity(List.of(msg1, msg2));
-        repository.save(chat);
+        ChatEntity chat = TestDataUtil.createChatEntity();
+        ChatEntity expected = repository.save(chat);
         // when
-        Optional<ChatEntity> result = repository.findChatByMessageId(msg2.getId());
+        Optional<ChatEntity> result = repository.findChatByTwoMembers(chat.getParticipants()[0], chat.getParticipants()[1]);
         // then
         assertAll(
-                () -> assertFalse(result.isEmpty()),
-                () -> assertEquals(result.get().getMessages().getFirst().getId(), msg2.getId())
+                () -> assertTrue(result.isPresent()),
+                () -> assertEquals(result.get().getId(), expected.getId())
         );
     }
 
     @Test
-    public void testThatRepositoryCannotFindSpecificChatWithMsgId() {
+    public void testThatRepositoryDoesNotFindAnyChatByTwoUsers() {
         // given
-        MessageEntity msg1 = TestDataUtil.createMessageEntity();
-        msg1.setIdIfNotPresent();
-        MessageEntity msg2 = TestDataUtil.createMessageEntity();
-        msg2.setIdIfNotPresent();
-        ChatEntity chat = TestDataUtil.createChatEntity(List.of(msg1));
-        repository.save(chat);
+        ChatEntity chat = TestDataUtil.createChatEntity();
+        ChatEntity expected = repository.save(chat);
         // when
-        Optional<ChatEntity> result = repository.findChatByMessageId(msg2.getId());
+        Optional<ChatEntity> result = repository.findChatByTwoMembers("12345", "76543");
         // then
         assertAll(
                 () -> assertTrue(result.isEmpty())

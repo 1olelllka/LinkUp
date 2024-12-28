@@ -20,8 +20,8 @@ public class MessageMapperUnitTest {
     @Test
     public void testThatEntityMapsToDto() {
         // given
-        MessageEntity given = TestDataUtil.createMessageEntity();
-        MessageDto expected = TestDataUtil.createMessageDto();
+        MessageEntity given = TestDataUtil.createMessageEntity("12345");
+        MessageDto expected = TestDataUtil.createMessageDto("12345");
         // when
         MessageDto result = mapper.toDto(given);
         // then
@@ -36,8 +36,8 @@ public class MessageMapperUnitTest {
     @Test
     public void testThatDtoMapsToEntity() {
         // given
-        MessageDto given = TestDataUtil.createMessageDto();
-        MessageEntity expected = TestDataUtil.createMessageEntity();
+        MessageDto given = TestDataUtil.createMessageDto("12345");
+        MessageEntity expected = TestDataUtil.createMessageEntity("12345");
         // when
         MessageEntity result = mapper.toEntity(given);
         // then

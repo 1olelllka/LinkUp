@@ -1,15 +1,14 @@
 package com.olelllka.chat_service.service;
 
 import com.olelllka.chat_service.domain.dto.MessageDto;
-import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-public interface ChatService {
-    Page<ChatEntity> getChatsForUser(String userId, Pageable pageable);
+public interface MessageService {
+    Page<MessageEntity> getMessagesForChat(String chatId, Pageable pageable);
 
-    ChatEntity createNewChat(String userId1, String userId2);
+    MessageEntity updateMessage(String msgId, MessageDto updatedMsg);
 
-    void deleteChat(String chatId);
+    void deleteSpecificMessage(String msgId);
 }

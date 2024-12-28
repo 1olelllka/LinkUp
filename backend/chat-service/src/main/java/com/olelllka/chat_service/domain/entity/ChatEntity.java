@@ -14,5 +14,4 @@ public class ChatEntity {
     @Id
     private String id;
     private String[] participants;
-    private List<MessageEntity> messages;
 }

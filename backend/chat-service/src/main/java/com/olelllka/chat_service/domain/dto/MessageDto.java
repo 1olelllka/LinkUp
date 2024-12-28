@@ -1,7 +1,6 @@
 package com.olelllka.chat_service.domain.dto;
 
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Pattern;
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,6 +10,7 @@ import java.util.Date;
 @Data
 public class MessageDto {
     private String id;
+    private String chatId;
     private String to;
     private String from;
     @NotEmpty(message = "Message must not be empty.")

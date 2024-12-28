@@ -10,35 +10,35 @@ import java.util.List;
 
 public class TestDataUtil {
 
-    public static MessageEntity createMessageEntity() {
+    public static MessageEntity createMessageEntity(String chatId) {
         return MessageEntity.builder()
                 .to("User A")
                 .from("User B")
                 .content("Hello World")
+                .chatId(chatId)
                 .build();
     }
 
-    public static MessageDto createMessageDto() {
+    public static MessageDto createMessageDto(String chatId) {
         return MessageDto.builder()
                 .to("User A")
                 .from("User B")
                 .content("Hello World")
+                .chatId(chatId)
                 .build();
     }
 
-    public static ChatEntity createChatEntity(List<MessageEntity> messages) {
+    public static ChatEntity createChatEntity() {
         String[] participants = {"1234", "5678"};
         return ChatEntity.builder()
                 .participants(participants)
-                .messages(messages)
                 .build();
     }
 
-    public static ChatDto createChatDto(List<MessageDto> messages) {
+    public static ChatDto createChatDto() {
         String[] participants = {"1234", "5678"};
         return ChatDto.builder()
                 .participants(participants)
-                .messages(messages)
                 .build();
     }
 

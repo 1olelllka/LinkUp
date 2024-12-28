@@ -10,6 +10,7 @@ import com.olelllka.chat_service.mapper.impl.ChatMapperImpl;
 import com.olelllka.chat_service.mapper.impl.MessageMapperImpl;
 import com.olelllka.chat_service.rest.exception.ValidationException;
 import com.olelllka.chat_service.service.ChatService;
+import com.olelllka.chat_service.service.MessageService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -27,6 +28,8 @@ public class ChatController {
 
     @Autowired
     private ChatService chatService;
+    @Autowired
+    private MessageService messageService;
     @Autowired
     private ChatMapperImpl chatMapper;
     @Autowired
@@ -58,28 +61,26 @@ public class ChatController {
 
     @GetMapping("/{chat_id}/messages")
     public ResponseEntity<Page<MessageDto>> getAllMessagesForChat(@PathVariable String chat_id, Pageable pageable) {
-        Page<MessageEntity> messages = chatService.getMessagesForChat(chat_id, pageable);
+        Page<MessageEntity> messages = messageService.getMessagesForChat(chat_id, pageable);
         Page<MessageDto> result = messages.map(messageMapper::toDto);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    @PatchMapping("/{chat_id}/messages/{msg_id}")
-    public ResponseEntity<MessageDto> updateSpecificMessage(@PathVariable String chat_id,
-                                                            @PathVariable String msg_id,
+    @PatchMapping("/messages/{msg_id}")
+    public ResponseEntity<MessageDto> updateSpecificMessage(@PathVariable String msg_id,
                                                             @Valid @RequestBody MessageDto updatedMsg,
                                                             BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             String msg = bindingResult.getAllErrors().stream().map(err -> err.getDefaultMessage()).collect(Collectors.joining(" "));
             throw new ValidationException(msg);
         }
-        MessageEntity updated = chatService.updateMessage(chat_id, msg_id, updatedMsg);
+        MessageEntity updated = messageService.updateMessage(msg_id, updatedMsg);
         return new ResponseEntity<>(messageMapper.toDto(updated), HttpStatus.OK);
     }
 
-    @DeleteMapping("/{chat_id}/messages/{msg_id}")
-    public ResponseEntity deleteSpecificMessage(@PathVariable String chat_id,
-                                                @PathVariable String msg_id) {
-        chatService.deleteSpecificMessage(chat_id, msg_id);
+    @DeleteMapping("/messages/{msg_id}")
+    public ResponseEntity deleteSpecificMessage(@PathVariable String msg_id) {
+        messageService.deleteSpecificMessage(msg_id);
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 

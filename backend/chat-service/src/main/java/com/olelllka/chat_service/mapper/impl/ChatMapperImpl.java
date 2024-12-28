@@ -16,7 +16,6 @@ public class ChatMapperImpl implements Mapper<ChatEntity, ChatDto> {
     public ChatEntity toEntity(ChatDto dto) {
         return ChatEntity.builder()
                 .participants(dto.getParticipants())
-                .messages(dto.getMessages().stream().map(msg -> messageMapper.toEntity(msg)).toList())
                 .build();
     }
 
@@ -24,7 +23,6 @@ public class ChatMapperImpl implements Mapper<ChatEntity, ChatDto> {
     public ChatDto toDto(ChatEntity entity) {
         return ChatDto.builder()
                 .participants(entity.getParticipants())
-                .messages(entity.getMessages().stream().map(msg -> messageMapper.toDto(msg)).toList())
                 .build();
     }
 }

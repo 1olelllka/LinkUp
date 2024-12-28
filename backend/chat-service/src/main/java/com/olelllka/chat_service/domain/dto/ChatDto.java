@@ -10,5 +10,4 @@ import java.util.List;
 public class ChatDto {
     private String id;
     private String[] participants;
-    private List<MessageDto> messages;
 }
