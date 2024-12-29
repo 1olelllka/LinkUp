@@ -5,7 +5,6 @@ import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
 import com.olelllka.chat_service.repository.ChatRepository;
 import com.olelllka.chat_service.repository.MessageRepository;
-import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
@@ -18,7 +17,6 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-@Log
 public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     private ObjectMapper objectMapper;

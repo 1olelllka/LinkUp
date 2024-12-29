@@ -17,7 +17,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
     private ChatRepository chatRepository;
 
     @Override
-    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) { // url will be: ws://localhost:8080/chat?userId={id}
         registry.addHandler(new ChatWebSocketHandler(chatRepository, messageRepository), "/chat")
                 .setAllowedOrigins("*");
     }

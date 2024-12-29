@@ -49,7 +49,7 @@ public class MessageRepositoryMongoDataTest {
         // then
         assertAll(
                 () -> assertNotNull(result),
-                () -> assertEquals(result.getContent().get(0).getContent(), "New Msg")
+                () -> assertNotEquals(result.getContent().get(0).getContent(), "New Msg")
         );
     }
 

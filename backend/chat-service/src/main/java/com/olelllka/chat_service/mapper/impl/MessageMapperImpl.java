@@ -13,6 +13,7 @@ public class MessageMapperImpl implements Mapper<MessageEntity, MessageDto> {
                 .to(dto.getTo())
                 .from(dto.getFrom())
                 .content(dto.getContent())
+                .chatId(dto.getChatId())
                 .createdAt(dto.getCreatedAt())
                 .build();
     }
@@ -20,8 +21,10 @@ public class MessageMapperImpl implements Mapper<MessageEntity, MessageDto> {
     @Override
     public MessageDto toDto(MessageEntity entity) {
         return MessageDto.builder()
+                .id(entity.getId())
                 .to(entity.getTo())
                 .from(entity.getFrom())
+                .chatId(entity.getChatId())
                 .content(entity.getContent())
                 .createdAt(entity.getCreatedAt())
                 .build();

@@ -10,6 +10,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MessageRepository extends MongoRepository<MessageEntity, String> {
 
-    @Query(value = "{ 'chatId' : ?0 }", sort = "{ 'createdAt': -1 }")
+    @Query(value = "{ 'chatId' : ?0 }", sort = "{ 'createdAt': 1 }")
     Page<MessageEntity> findByChatId(String chatId, Pageable pageable);
 }

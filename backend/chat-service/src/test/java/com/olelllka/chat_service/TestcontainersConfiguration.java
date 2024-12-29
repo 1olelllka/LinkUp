@@ -16,10 +16,10 @@ public class TestcontainersConfiguration {
 		return new MongoDBContainer(DockerImageName.parse("mongo:8.0"));
 	}
 
-	@Bean
-	@ServiceConnection(name = "redis")
-	GenericContainer<?> redisContainer() {
-		return new GenericContainer<>(DockerImageName.parse("redis:latest")).withExposedPorts(6379);
-	}
+//	@Bean
+//	@ServiceConnection(name = "redis")
+//	GenericContainer<?> redisContainer() {
+//		return new GenericContainer<>(DockerImageName.parse("redis:latest")).withExposedPorts(6379);
+//	}
 
 }
