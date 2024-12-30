@@ -11,7 +11,7 @@ import org.testcontainers.utility.DockerImageName;
 
 // Commented something for now, later I'll integrate it
 @TestConfiguration(proxyBeanMethods = false)
-class TestcontainersConfiguration {
+public class TestcontainersConfiguration {
 
 //	@Bean
 //	@ServiceConnection

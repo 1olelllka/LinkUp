@@ -1,25 +1,28 @@
 package com.olelllka.profile_service.domain.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.olelllka.profile_service.domain.entity.Gender;
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
-public class CreateProfileDto {
+public class PatchProfileDto {
     @Pattern(regexp = "^.{8,}$", message = "Username must be from 8 characters")
     private String username;
-    @NotBlank(message = "Password must not be blank.") // for now
-    private String password;
     @NotEmpty(message = "Name must be not empty.")
     private String name;
     @Email(message = "Invalid Email.")
     @NotEmpty(message = "Email must not be empty.")
     private String email;
+    private String aboutMe;
+    private String photo;
     @NotNull(message = "Gender must not be empty.")
     private Gender gender;
     @Past(message = "Date of birth must be in the past.")
