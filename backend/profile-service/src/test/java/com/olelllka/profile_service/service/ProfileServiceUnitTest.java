@@ -6,6 +6,7 @@ import com.olelllka.profile_service.domain.entity.Gender;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
 import com.olelllka.profile_service.repository.ProfileRepository;
 import com.olelllka.profile_service.rest.exception.NotFoundException;
+import com.olelllka.profile_service.rest.exception.ValidationException;
 import com.olelllka.profile_service.service.impl.ProfileServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,7 +50,7 @@ public class ProfileServiceUnitTest {
         // given
         UUID id = UUID.randomUUID();
         // when
-        when(repository.findById(id)).thenReturn(Optional.empty());
+        when(repository.findByIdWithRelationships(id)).thenReturn(Optional.empty());
         // then
         assertThrows(NotFoundException.class, () -> service.getProfileById(id));
     }
@@ -60,7 +61,7 @@ public class ProfileServiceUnitTest {
         UUID id = UUID.randomUUID();
         ProfileEntity profile = TestDataUtil.createNewProfileEntity();
         // when
-        when(repository.findById(id)).thenReturn(Optional.of(profile));
+        when(repository.findByIdWithRelationships(id)).thenReturn(Optional.of(profile));
         ProfileEntity result = service.getProfileById(id);
         // then
         assertAll(
@@ -75,7 +76,7 @@ public class ProfileServiceUnitTest {
         UUID id = UUID.randomUUID();
         PatchProfileDto patchProfileDto = TestDataUtil.createPatchProfileDto();
         // when
-        when(repository.findById(id)).thenReturn(Optional.empty());
+        when(repository.existsById(id)).thenReturn(false);
         // then
         assertThrows(NotFoundException.class, () -> service.updateProfile(id, patchProfileDto));
         verify(repository, never()).save(any(ProfileEntity.class));
@@ -103,8 +104,15 @@ public class ProfileServiceUnitTest {
         expected.setPhoto("UPDATED PHOTO");
         expected.setAboutMe("UPDATED");
         // when
-        when(repository.findById(id)).thenReturn(Optional.of(entity));
-        when(repository.save(expected)).thenReturn(expected);
+        when(repository.existsById(id)).thenReturn(true);
+        when(repository.updateProfile(id,
+                expected.getUsername(),
+                expected.getName(),
+                expected.getEmail(),
+                expected.getGender().toString(),
+                expected.getPhoto(),
+                expected.getAboutMe(),
+                expected.getDateOfBirth())).thenReturn(expected);
         ProfileEntity result = service.updateProfile(id, patchProfileDto);
         // then
         assertAll(
@@ -117,6 +125,14 @@ public class ProfileServiceUnitTest {
                 () -> assertEquals(result.getPhoto(), patchProfileDto.getPhoto()),
                 () -> assertEquals(result.getPhoto(), patchProfileDto.getPhoto())
                 );
+        verify(repository, times(1)).updateProfile(id,
+                expected.getUsername(),
+                expected.getName(),
+                expected.getEmail(),
+                expected.getGender().toString(),
+                expected.getPhoto(),
+                expected.getAboutMe(),
+                expected.getDateOfBirth());
     }
 
     @Test
@@ -127,6 +143,52 @@ public class ProfileServiceUnitTest {
         service.deleteById(uid);
         // then
         verify(repository, times(1)).deleteById(uid);
+    }
+
+    @Test
+    public void testThatFollowNewProfileThrowsExceptions() {
+        UUID id = UUID.randomUUID();
+        assertThrows(ValidationException.class, () -> service.followNewProfile(id, id));
+        UUID id2 = UUID.randomUUID();
+        assertThrows(NotFoundException.class, () -> service.followNewProfile(id, id2));
+        when(repository.existsById(id)).thenReturn(true);
+        when(repository.existsById(id2)).thenReturn(true);
+        when(repository.isFollowing(id, id2)).thenReturn(true);
+        assertThrows(ValidationException.class, () -> service.followNewProfile(id, id2));
+    }
+
+    @Test
+    public void testThatFollowNewProfileWorks() {
+        UUID id1 = UUID.randomUUID();
+        UUID id2 = UUID.randomUUID();
+        when(repository.existsById(id1)).thenReturn(true);
+        when(repository.existsById(id2)).thenReturn(true);
+        when(repository.isFollowing(id1, id2)).thenReturn(false);
+        service.followNewProfile(id1, id2);
+        verify(repository, times(1)).follow(id1, id2);
+    }
+
+    @Test
+    public void testThatUnfollowProfileThrowsException() {
+        UUID id = UUID.randomUUID();
+        assertThrows(ValidationException.class, () -> service.unfollowProfile(id, id));
+        UUID id2 = UUID.randomUUID();
+        assertThrows(NotFoundException.class, () -> service.unfollowProfile(id, id2));
+        when(repository.existsById(id)).thenReturn(true);
+        when(repository.existsById(id2)).thenReturn(true);
+        when(repository.isFollowing(id, id2)).thenReturn(false);
+        assertThrows(ValidationException.class, () -> service.unfollowProfile(id, id2));
+    }
+
+    @Test
+    public void testThatUnfollowProfileWorks() {
+        UUID id1 = UUID.randomUUID();
+        UUID id2 = UUID.randomUUID();
+        when(repository.existsById(id1)).thenReturn(true);
+        when(repository.existsById(id2)).thenReturn(true);
+        when(repository.isFollowing(id1, id2)).thenReturn(true);
+        service.unfollowProfile(id1, id2);
+        verify(repository, times(1)).unfollow(id1, id2);
     }
 
 }

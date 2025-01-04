@@ -1,10 +1,14 @@
 package com.olelllka.profile_service.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.neo4j.core.schema.*;
 
@@ -31,21 +35,10 @@ public class ProfileEntity {
     private Gender gender;
 
     @Relationship(type = "FOLLOWS", direction = Relationship.Direction.OUTGOING)
-    private Set<ProfileEntity> following = new HashSet<>();
-    @Relationship(type = "FOLLOWS", direction = Relationship.Direction.INCOMING)
-    private Set<ProfileEntity> followers = new HashSet<>();
-
+    private Set<ProfileEntity> following;
+    @Relationship(type = "FOLLOWED_BY", direction = Relationship.Direction.INCOMING)
+    private Set<ProfileEntity> followers;
     private LocalDate dateOfBirth;
     @CreatedDate
     private LocalDate createdAt;
-
-    public void follow(ProfileEntity profile) {
-        this.following.add(profile);
-        profile.getFollowers().add(this);
-    }
-
-    public void unfollow(ProfileEntity profile) {
-        this.following.remove(profile);
-        profile.getFollowers().remove(profile);
-    }
 }

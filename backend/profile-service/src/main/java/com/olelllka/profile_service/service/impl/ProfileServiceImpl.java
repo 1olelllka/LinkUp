@@ -4,12 +4,12 @@ import com.olelllka.profile_service.domain.dto.PatchProfileDto;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
 import com.olelllka.profile_service.repository.ProfileRepository;
 import com.olelllka.profile_service.rest.exception.NotFoundException;
+import com.olelllka.profile_service.rest.exception.ValidationException;
 import com.olelllka.profile_service.service.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -26,25 +26,56 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public ProfileEntity getProfileById(UUID profileId) {
-        return repository.findById(profileId).orElseThrow(() -> new NotFoundException("Profile with such id was not found."));
+        return repository.findByIdWithRelationships(profileId).orElseThrow(() -> new NotFoundException("Profile with such id was not found."));
     }
 
     @Override
     public ProfileEntity updateProfile(UUID profileId, PatchProfileDto dto) {
-        return repository.findById(profileId).map(profile -> {
-            Optional.ofNullable(dto.getUsername()).ifPresent(profile::setUsername);
-            Optional.ofNullable(dto.getName()).ifPresent(profile::setName);
-            Optional.ofNullable(dto.getEmail()).ifPresent(profile::setEmail);
-            Optional.ofNullable(dto.getGender()).ifPresent(profile::setGender);
-            Optional.ofNullable(dto.getPhoto()).ifPresent(profile::setPhoto);
-            Optional.ofNullable(dto.getAboutMe()).ifPresent(profile::setAboutMe);
-            Optional.ofNullable(dto.getDateOfBirth()).ifPresent(profile::setDateOfBirth);
-            return repository.save(profile);
-        }).orElseThrow(() -> new NotFoundException("Profile with such id was not found."));
+        if (!repository.existsById(profileId)) {
+            throw new NotFoundException("Profile with such id does not exist");
+        }
+        return repository.updateProfile(profileId,
+                dto.getUsername(),
+                dto.getName(),
+                dto.getEmail(),
+                dto.getGender().toString(),
+                dto.getPhoto(),
+                dto.getAboutMe(),
+                dto.getDateOfBirth());
     }
 
     @Override
     public void deleteById(UUID profileId) {
         repository.deleteById(profileId);
+    }
+
+    @Override
+    public void followNewProfile(UUID profileId, UUID follow) {
+        if (profileId.equals(follow)) {
+            throw new ValidationException("Follower id and Followee id must not be the same");
+        }
+        if (!repository.existsById(profileId) || !repository.existsById(follow)) {
+            throw new NotFoundException("Profile/s with such id/s is/are not found.");
+        }
+        if (!repository.isFollowing(profileId, follow)) {
+            repository.follow(profileId, follow);
+        } else {
+            throw new ValidationException("You've already followed this profile.");
+        }
+    }
+
+    @Override
+    public void unfollowProfile(UUID profileId, UUID followId) {
+        if (profileId.equals(followId)) {
+            throw new ValidationException("Follower id and Followee id must not be the same.");
+        }
+        if (!repository.existsById(profileId) || !repository.existsById(followId)) {
+            throw new NotFoundException("Profile/s with such id/s is/are not found.");
+        }
+        if (repository.isFollowing(profileId, followId)) {
+            repository.unfollow(profileId, followId);
+        } else {
+            throw new ValidationException("You are not following this profile.");
+        }
     }
 }

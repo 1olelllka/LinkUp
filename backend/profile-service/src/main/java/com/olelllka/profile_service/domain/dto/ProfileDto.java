@@ -1,15 +1,13 @@
 package com.olelllka.profile_service.domain.dto;
 
 import com.olelllka.profile_service.domain.entity.Gender;
-import com.olelllka.profile_service.domain.entity.ProfileEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 
 @Builder
@@ -25,8 +23,8 @@ public class ProfileDto {
     private String aboutMe;
     private String photo;
     private Gender gender;
-    private Set<ProfileEntity> following = new HashSet<>();
-    private Set<ProfileEntity> followers = new HashSet<>();
+    private List<UUID> following;
+    private List<UUID> followers;
     private LocalDate dateOfBirth;
     private LocalDate createdAt;
 }

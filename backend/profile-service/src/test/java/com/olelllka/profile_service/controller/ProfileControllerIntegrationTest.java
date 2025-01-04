@@ -127,4 +127,60 @@ public class ProfileControllerIntegrationTest {
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
     }
 
+    @Test
+    public void testThatFollowProfileReturnsHttp400BadRequestIfTheSameIds() throws Exception {
+        UUID id = UUID.randomUUID();
+        mockMvc.perform(MockMvcRequestBuilders.post("/profiles/" + id + "/follow?user=" + id))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
+    public void testThatFollowProfileReturnsHttp400BadRequestIfAlreadyFollowed() throws Exception {
+        ProfileEntity profile1 = TestDataUtil.createNewProfileEntity();
+        profileService.createProfile(profile1);
+        ProfileEntity profile2 = TestDataUtil.createNewProfileEntity();
+        profileService.createProfile(profile2);
+        profileService.followNewProfile(profile1.getId(), profile2.getId());
+        mockMvc.perform(MockMvcRequestBuilders.post("/profiles/" + profile1.getId() + "/follow?user=" + profile2.getId()))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
+    public void testThatFollowProfileReturnsHttp200OkIfSuccessful() throws Exception {
+        ProfileEntity profile1 = TestDataUtil.createNewProfileEntity();
+        profileService.createProfile(profile1);
+        ProfileEntity profile2 = TestDataUtil.createNewProfileEntity();
+        profileService.createProfile(profile2);
+        mockMvc.perform(MockMvcRequestBuilders.post("/profiles/" + profile1.getId() + "/follow?user=" + profile2.getId()))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    public void testThatUnfollowProfileReturnsHttp400BadRequestIfTheSameIds() throws Exception {
+        UUID id = UUID.randomUUID();
+        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/" + id + "/unfollow?user=" + id))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
+    public void testThatUnfollowProfileReturnsHttp400BadRequestIfAlreadyFollowed() throws Exception {
+        ProfileEntity profile1 = TestDataUtil.createNewProfileEntity();
+        profileService.createProfile(profile1);
+        ProfileEntity profile2 = TestDataUtil.createNewProfileEntity();
+        profileService.createProfile(profile2);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/" + profile1.getId() + "/unfollow?user=" + profile2.getId()))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
+    public void testThatUnfollowProfileReturnsHttp200OktIfSuccessful() throws Exception {
+        ProfileEntity profile1 = TestDataUtil.createNewProfileEntity();
+        profileService.createProfile(profile1);
+        ProfileEntity profile2 = TestDataUtil.createNewProfileEntity();
+        profileService.createProfile(profile2);
+        profileService.followNewProfile(profile1.getId(), profile2.getId());
+        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/" + profile1.getId() + "/unfollow?user=" + profile2.getId()))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
 }

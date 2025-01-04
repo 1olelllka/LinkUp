@@ -3,12 +3,12 @@ package com.olelllka.profile_service.rest.controller;
 import com.olelllka.profile_service.domain.dto.CreateProfileDto;
 import com.olelllka.profile_service.domain.dto.PatchProfileDto;
 import com.olelllka.profile_service.domain.dto.ProfileDto;
+import com.olelllka.profile_service.domain.dto.SuccessErrorMessage;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
 import com.olelllka.profile_service.mapper.impl.ProfileMapper;
 import com.olelllka.profile_service.rest.exception.ValidationException;
 import com.olelllka.profile_service.service.ProfileService;
 import jakarta.validation.Valid;
-import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -60,6 +60,20 @@ public class ProfileController {
     public ResponseEntity deleteProfileById(@PathVariable UUID profile_id) {
         profileService.deleteById(profile_id);
         return new ResponseEntity(HttpStatus.NO_CONTENT);
+    }
+
+    @PostMapping("/{profile_id}/follow")
+    public ResponseEntity<SuccessErrorMessage> followTheUser(@PathVariable UUID profile_id,
+                                                             @RequestParam(name = "user") UUID follow_id) {
+        profileService.followNewProfile(profile_id, follow_id);
+        return new ResponseEntity<>(SuccessErrorMessage.builder().message("User " + profile_id + " successfully followed user " + follow_id).build(), HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{profile_id}/unfollow")
+    public ResponseEntity<SuccessErrorMessage> unfollowTheUser(@PathVariable UUID profile_id,
+                                                               @RequestParam(name = "user") UUID follow_id) {
+        profileService.unfollowProfile(profile_id, follow_id);
+        return new ResponseEntity<>(SuccessErrorMessage.builder().message("User " + profile_id + " successfully unfollowed user " + follow_id).build(), HttpStatus.OK);
     }
 
     private ProfileEntity mapCreateToEntity(CreateProfileDto dto) {

@@ -1,7 +1,6 @@
 package com.olelllka.profile_service.service;
 
 import com.olelllka.profile_service.domain.dto.PatchProfileDto;
-import com.olelllka.profile_service.domain.dto.ProfileDto;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
 
 import java.util.UUID;
@@ -14,4 +13,8 @@ public interface ProfileService {
     ProfileEntity updateProfile(UUID profileId, PatchProfileDto dto);
 
     void deleteById(UUID profileId);
+
+    void followNewProfile(UUID profileId, UUID profileId1);
+
+    void unfollowProfile(UUID profileId, UUID followId);
 }

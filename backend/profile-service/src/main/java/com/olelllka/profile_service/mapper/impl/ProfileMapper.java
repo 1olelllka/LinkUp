@@ -5,6 +5,8 @@ import com.olelllka.profile_service.domain.entity.ProfileEntity;
 import com.olelllka.profile_service.mapper.Mapper;
 import org.springframework.stereotype.Component;
 
+import java.util.stream.Collectors;
+
 @Component
 public class ProfileMapper implements Mapper<ProfileEntity, ProfileDto> {
     @Override
@@ -21,8 +23,6 @@ public class ProfileMapper implements Mapper<ProfileEntity, ProfileDto> {
                 .gender(profileDto.getGender())
                 .dateOfBirth(profileDto.getDateOfBirth())
                 .createdAt(profileDto.getCreatedAt())
-                .followers(profileDto.getFollowers())
-                .following(profileDto.getFollowing())
                 .build();
     }
 
@@ -40,8 +40,8 @@ public class ProfileMapper implements Mapper<ProfileEntity, ProfileDto> {
                 .gender(profileEntity.getGender())
                 .dateOfBirth(profileEntity.getDateOfBirth())
                 .createdAt(profileEntity.getCreatedAt())
-                .followers(profileEntity.getFollowers())
-                .following(profileEntity.getFollowing())
+                .followers(profileEntity.getFollowers() != null ? profileEntity.getFollowers().stream().map(profile -> profile.getId()).collect(Collectors.toList()) : null)
+                .following(profileEntity.getFollowing() != null ? profileEntity.getFollowing().stream().map(profile -> profile.getId()).collect(Collectors.toList()) : null)
                 .build();
     }
 }
