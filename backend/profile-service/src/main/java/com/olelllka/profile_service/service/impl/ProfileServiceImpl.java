@@ -7,6 +7,8 @@ import com.olelllka.profile_service.rest.exception.NotFoundException;
 import com.olelllka.profile_service.rest.exception.ValidationException;
 import com.olelllka.profile_service.service.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -77,5 +79,15 @@ public class ProfileServiceImpl implements ProfileService {
         } else {
             throw new ValidationException("You are not following this profile.");
         }
+    }
+
+    @Override
+    public Page<ProfileEntity> getFollowersById(UUID profileId, Pageable pageable) {
+        return repository.findAllFollowersByProfileId(profileId, pageable);
+    }
+
+    @Override
+    public Page<ProfileEntity> getFolloweesById(UUID profileId, Pageable pageable) {
+        return repository.findAllFolloweeByProfileId(profileId, pageable);
     }
 }

@@ -13,8 +13,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -191,4 +196,35 @@ public class ProfileServiceUnitTest {
         verify(repository, times(1)).unfollow(id1, id2);
     }
 
+    @Test
+    public void testThatGetFollowersByIdReturnsPageOfResults() {
+        // given
+        Pageable pageable = PageRequest.of(0, 1);
+        Page<ProfileEntity> profiles = new PageImpl<>(List.of());
+        UUID id = UUID.randomUUID();
+        // when
+        when(repository.findAllFollowersByProfileId(id, pageable)).thenReturn(profiles);
+        Page<ProfileEntity> result = service.getFollowersById(id, pageable);
+        // then
+        assertAll(
+                () -> assertNotNull(result),
+                () -> assertEquals(result.getTotalElements(), 0)
+        );
+    }
+
+    @Test
+    public void testThatGetFolloweesByIdReturnsPageOfResults() {
+        // given
+        Pageable pageable = PageRequest.of(0, 1);
+        Page<ProfileEntity> profiles = new PageImpl<>(List.of());
+        UUID id = UUID.randomUUID();
+        // when
+        when(repository.findAllFolloweeByProfileId(id, pageable)).thenReturn(profiles);
+        Page<ProfileEntity> result = service.getFolloweesById(id, pageable);
+        // then
+        assertAll(
+                () -> assertNotNull(result),
+                () -> assertEquals(result.getTotalElements(), 0)
+        );
+    }
 }

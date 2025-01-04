@@ -1,15 +1,14 @@
 package com.olelllka.profile_service.rest.controller;
 
-import com.olelllka.profile_service.domain.dto.CreateProfileDto;
-import com.olelllka.profile_service.domain.dto.PatchProfileDto;
-import com.olelllka.profile_service.domain.dto.ProfileDto;
-import com.olelllka.profile_service.domain.dto.SuccessErrorMessage;
+import com.olelllka.profile_service.domain.dto.*;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
 import com.olelllka.profile_service.mapper.impl.ProfileMapper;
 import com.olelllka.profile_service.rest.exception.ValidationException;
 import com.olelllka.profile_service.service.ProfileService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -74,6 +73,31 @@ public class ProfileController {
                                                                @RequestParam(name = "user") UUID follow_id) {
         profileService.unfollowProfile(profile_id, follow_id);
         return new ResponseEntity<>(SuccessErrorMessage.builder().message("User " + profile_id + " successfully unfollowed user " + follow_id).build(), HttpStatus.OK);
+    }
+
+    @GetMapping("/{profile_id}/followers")
+    public ResponseEntity<Page<ListOfProfilesDto>> getAllFollowersForProfile(@PathVariable UUID profile_id,
+                                                                             Pageable pageable) {
+        Page<ProfileEntity> profiles = profileService.getFollowersById(profile_id, pageable);
+        Page<ListOfProfilesDto> result = profiles.map(this::mapEntityToListDto);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @GetMapping("/{profile_id}/followees")
+    public ResponseEntity<Page<ListOfProfilesDto>> getAllFolloweesForProfile(@PathVariable UUID profile_id,
+                                                                             Pageable pageable) {
+        Page<ProfileEntity> profiles = profileService.getFolloweesById(profile_id, pageable);
+        Page<ListOfProfilesDto> result = profiles.map(this::mapEntityToListDto);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    private ListOfProfilesDto mapEntityToListDto(ProfileEntity entity) {
+        return ListOfProfilesDto.builder()
+                .id(entity.getId())
+                .username(entity.getUsername())
+                .name(entity.getName())
+                .photo(entity.getPhoto())
+                .build();
     }
 
     private ProfileEntity mapCreateToEntity(CreateProfileDto dto) {

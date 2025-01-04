@@ -183,4 +183,30 @@ public class ProfileControllerIntegrationTest {
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
+    @Test
+    public void testThatGetFollowersByIdReturnsHttp200Ok() throws Exception {
+        ProfileEntity profile1 = TestDataUtil.createNewProfileEntity();
+        profile1.setUsername("TEST");
+        profileService.createProfile(profile1);
+        ProfileEntity profile2 = TestDataUtil.createNewProfileEntity();
+        profileService.createProfile(profile2);
+        profileService.followNewProfile(profile1.getId(), profile2.getId());
+        mockMvc.perform(MockMvcRequestBuilders.get("/profiles/" + profile2.getId() + "/followers"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].username").value("TEST"));
+    }
+
+    @Test
+    public void testThatGetFolloweesByIdReturnsHttp200Ok() throws Exception {
+        ProfileEntity profile1 = TestDataUtil.createNewProfileEntity();
+        profileService.createProfile(profile1);
+        ProfileEntity profile2 = TestDataUtil.createNewProfileEntity();
+        profile2.setUsername("TEST");
+        profileService.createProfile(profile2);
+        profileService.followNewProfile(profile1.getId(), profile2.getId());
+        mockMvc.perform(MockMvcRequestBuilders.get("/profiles/" + profile1.getId() + "/followees"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].username").value("TEST"));
+    }
+
 }
