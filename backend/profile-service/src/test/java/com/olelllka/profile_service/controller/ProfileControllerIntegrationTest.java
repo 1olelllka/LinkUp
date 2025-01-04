@@ -121,4 +121,10 @@ public class ProfileControllerIntegrationTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value("UPDATED NAME"));
     }
 
+    @Test
+    public void testThatDeleteProfileByIdReturnsHttp204NoContent() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/" + UUID.randomUUID()))
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
+    }
+
 }

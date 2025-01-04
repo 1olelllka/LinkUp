@@ -42,4 +42,9 @@ public class ProfileServiceImpl implements ProfileService {
             return repository.save(profile);
         }).orElseThrow(() -> new NotFoundException("Profile with such id was not found."));
     }
+
+    @Override
+    public void deleteById(UUID profileId) {
+        repository.deleteById(profileId);
+    }
 }

@@ -119,4 +119,14 @@ public class ProfileServiceUnitTest {
                 );
     }
 
+    @Test
+    public void testThatServicePerformsDeleteCorrectly() {
+        // given
+        UUID uid = UUID.randomUUID();
+        // when
+        service.deleteById(uid);
+        // then
+        verify(repository, times(1)).deleteById(uid);
+    }
+
 }

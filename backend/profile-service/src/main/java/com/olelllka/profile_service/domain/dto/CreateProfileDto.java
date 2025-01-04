@@ -1,6 +1,5 @@
 package com.olelllka.profile_service.domain.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.olelllka.profile_service.domain.entity.Gender;
 import jakarta.validation.constraints.*;
 import lombok.Builder;

@@ -56,6 +56,12 @@ public class ProfileController {
         return new ResponseEntity<>(profileMapper.toDto(updatedProfile), HttpStatus.OK);
     }
 
+    @DeleteMapping("/{profile_id}")
+    public ResponseEntity deleteProfileById(@PathVariable UUID profile_id) {
+        profileService.deleteById(profile_id);
+        return new ResponseEntity(HttpStatus.NO_CONTENT);
+    }
+
     private ProfileEntity mapCreateToEntity(CreateProfileDto dto) {
         return ProfileEntity.builder()
                 .username(dto.getUsername())

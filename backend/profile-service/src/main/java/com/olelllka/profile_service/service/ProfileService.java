@@ -12,4 +12,6 @@ public interface ProfileService {
     ProfileEntity getProfileById(UUID profileId);
 
     ProfileEntity updateProfile(UUID profileId, PatchProfileDto dto);
+
+    void deleteById(UUID profileId);
 }
