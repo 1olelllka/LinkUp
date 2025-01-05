@@ -8,13 +8,14 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface ChatRepository extends MongoRepository<ChatEntity, String> {
 
     @Query("{ 'participants': ?0 }")
-    Page<ChatEntity> findChatsByUserId(String userId, Pageable pageable);
+    Page<ChatEntity> findChatsByUserId(UUID userId, Pageable pageable);
 
     @Query("{ 'participants' : { $size: 2, $all: [?0, ?1] } }")
-    Optional<ChatEntity> findChatByTwoMembers(String userId1, String userId2);
+    Optional<ChatEntity> findChatByTwoMembers(UUID userId1, UUID userId2);
 }

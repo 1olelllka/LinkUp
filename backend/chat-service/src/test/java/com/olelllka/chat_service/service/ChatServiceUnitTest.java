@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -34,7 +35,7 @@ public class ChatServiceUnitTest {
         // given
         Page<ChatEntity> expected = new PageImpl<>(List.of(TestDataUtil.createChatEntity()));
         Pageable pageable = PageRequest.of(0, 1);
-        String userId = "1234";
+        UUID userId = UUID.randomUUID();
         // when
         when(chatRepository.findChatsByUserId(userId, pageable)).thenReturn(expected);
         Page<ChatEntity> result = chatService.getChatsForUser(userId, pageable);
@@ -50,9 +51,11 @@ public class ChatServiceUnitTest {
     @Test
     public void testThatCreateNewChatWorks() {
         // given
-        String userId1 = "1234";
-        String userId2 = "5678";
+        UUID userId1 = UUID.randomUUID();
+        UUID userId2 = UUID.randomUUID();
         ChatEntity expected = TestDataUtil.createChatEntity();
+        UUID[] ids = {userId1, userId2};
+        expected.setParticipants(ids);
         // when
         when(chatRepository.save(expected)).thenReturn(expected);
         ChatEntity result = chatService.createNewChat(userId1, userId2);

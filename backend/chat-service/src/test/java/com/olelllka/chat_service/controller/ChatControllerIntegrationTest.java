@@ -1,20 +1,19 @@
 package com.olelllka.chat_service.controller;
 
 import com.olelllka.chat_service.TestDataUtil;
-import com.olelllka.chat_service.TestcontainersConfiguration;
 import com.olelllka.chat_service.domain.dto.CreateChatDto;
 import com.olelllka.chat_service.domain.dto.MessageDto;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
 import com.olelllka.chat_service.repository.MessageRepository;
 import com.olelllka.chat_service.service.ChatService;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -24,12 +23,13 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.UUID;
+
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
 public class ChatControllerIntegrationTest {
 
     @ServiceConnection
@@ -37,6 +37,12 @@ public class ChatControllerIntegrationTest {
 
     static {
         mongo.start();
+    }
+
+    @AfterAll
+    static void tearDown() {
+        mongo.stop();
+        mongo.close();
     }
 
     private ChatService chatService;
@@ -56,15 +62,15 @@ public class ChatControllerIntegrationTest {
 
     @Test
     public void testThatGetChatsByUserReturnsPageOfResults() throws Exception {
-        chatService.createNewChat("1234", "5678");
-        mockMvc.perform(MockMvcRequestBuilders.get("/chats/users/1234"))
+        ChatEntity saved = chatService.createNewChat(UUID.randomUUID(), UUID.randomUUID());
+        mockMvc.perform(MockMvcRequestBuilders.get("/chats/users/" + saved.getParticipants()[0]))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content[0]").exists());
     }
 
     @Test
     public void testThatCreateChatReturnsHttp400BadRequestIfValidationFails() throws Exception {
-        CreateChatDto createChatDto = CreateChatDto.builder().user1Id("").user2Id("").build();
+        CreateChatDto createChatDto = CreateChatDto.builder().user1Id(null).user2Id(null).build();
         String json = objectMapper.writeValueAsString(createChatDto);
         mockMvc.perform(MockMvcRequestBuilders.post("/chats")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -74,14 +80,14 @@ public class ChatControllerIntegrationTest {
 
     @Test
     public void testThatCreateChatReturnsHttp201Created() throws Exception {
-        CreateChatDto createChatDto = CreateChatDto.builder().user1Id("1235").user2Id("8765").build();
+        CreateChatDto createChatDto = CreateChatDto.builder().user1Id(UUID.randomUUID()).user2Id(UUID.randomUUID()).build();
         String json = objectMapper.writeValueAsString(createChatDto);
         mockMvc.perform(MockMvcRequestBuilders.post("/chats")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.participants[0]").value("1235"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.participants[1]").value("8765"));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.participants[0]").value(createChatDto.getUser1Id().toString()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.participants[1]").value(createChatDto.getUser2Id().toString()));
     }
 
     @Test
@@ -92,7 +98,7 @@ public class ChatControllerIntegrationTest {
 
     @Test
     public void testThatGetMessagesByChatIdReturnsPageOfMessages() throws Exception {
-        ChatEntity chat = chatService.createNewChat("12345", "67890");
+        ChatEntity chat = chatService.createNewChat(UUID.randomUUID(), UUID.randomUUID());
         mockMvc.perform(MockMvcRequestBuilders.get("/chats/" + chat.getId() + "/messages"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.totalElements").value(0));

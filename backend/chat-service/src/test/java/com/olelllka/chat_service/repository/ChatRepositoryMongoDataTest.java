@@ -1,13 +1,13 @@
 package com.olelllka.chat_service.repository;
 
 import com.olelllka.chat_service.TestDataUtil;
-import com.olelllka.chat_service.TestcontainersConfiguration;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
+import org.junit.After;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -16,11 +16,11 @@ import org.testcontainers.containers.MongoDBContainer;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataMongoTest
-@Import(TestcontainersConfiguration.class)
 public class ChatRepositoryMongoDataTest {
 
     @ServiceConnection
@@ -33,15 +33,21 @@ public class ChatRepositoryMongoDataTest {
         mongo.start();
     }
 
+    @AfterAll
+    static void tearDown() {
+        mongo.stop();
+        mongo.close();
+    }
+
     @Test
     public void testThatRepositoryFindsTheRightChatById() {
         // given
         ChatEntity chat = TestDataUtil.createChatEntity();
-        repository.save(chat);
+        ChatEntity saved = repository.save(chat);
         Pageable pageable = PageRequest.of(0, 1);
         Page<ChatEntity> expected = new PageImpl<>(List.of(chat));
         // when
-        Page<ChatEntity> result = repository.findChatsByUserId("1234", pageable);
+        Page<ChatEntity> result = repository.findChatsByUserId(saved.getParticipants()[0], pageable);
         // then
         assertAll(
                 () -> assertNotNull(result),
@@ -56,7 +62,7 @@ public class ChatRepositoryMongoDataTest {
         repository.save(chat);
         Pageable pageable = PageRequest.of(0, 1);
         // when
-        Page<ChatEntity> result = repository.findChatsByUserId("1235", pageable);
+        Page<ChatEntity> result = repository.findChatsByUserId(UUID.randomUUID(), pageable);
         // then
         assertAll(
                 () -> assertNotNull(result),
@@ -82,9 +88,9 @@ public class ChatRepositoryMongoDataTest {
     public void testThatRepositoryDoesNotFindAnyChatByTwoUsers() {
         // given
         ChatEntity chat = TestDataUtil.createChatEntity();
-        ChatEntity expected = repository.save(chat);
+        repository.save(chat);
         // when
-        Optional<ChatEntity> result = repository.findChatByTwoMembers("12345", "76543");
+        Optional<ChatEntity> result = repository.findChatByTwoMembers(UUID.randomUUID(), UUID.randomUUID());
         // then
         assertAll(
                 () -> assertTrue(result.isEmpty())

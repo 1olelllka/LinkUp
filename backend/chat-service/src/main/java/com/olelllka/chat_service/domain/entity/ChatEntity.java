@@ -6,6 +6,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
+import java.util.UUID;
 
 @Document(collection = "Chat")
 @Builder
@@ -13,5 +14,5 @@ import java.util.List;
 public class ChatEntity {
     @Id
     private String id;
-    private String[] participants;
+    private UUID[] participants;
 }

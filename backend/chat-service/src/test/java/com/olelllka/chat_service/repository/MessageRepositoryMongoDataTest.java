@@ -3,6 +3,7 @@ package com.olelllka.chat_service.repository;
 import com.olelllka.chat_service.TestDataUtil;
 import com.olelllka.chat_service.TestcontainersConfiguration;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
@@ -20,7 +21,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataMongoTest
-@Import(TestcontainersConfiguration.class)
 public class MessageRepositoryMongoDataTest {
 
     @ServiceConnection
@@ -28,6 +28,12 @@ public class MessageRepositoryMongoDataTest {
 
     static {
         mongo.start();
+    }
+
+    @AfterAll
+    static void tearDown() {
+        mongo.stop();
+        mongo.close();
     }
 
     @Autowired

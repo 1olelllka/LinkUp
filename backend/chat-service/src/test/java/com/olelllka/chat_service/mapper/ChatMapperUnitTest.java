@@ -22,6 +22,7 @@ public class ChatMapperUnitTest {
         // given
         ChatEntity given = TestDataUtil.createChatEntity();
         ChatDto expected = TestDataUtil.createChatDto();
+        expected.setParticipants(given.getParticipants());
         // when
         ChatDto result = chatMapper.toDto(given);
         // then
@@ -37,6 +38,7 @@ public class ChatMapperUnitTest {
         // given
         ChatEntity expected = TestDataUtil.createChatEntity();
         ChatDto given = TestDataUtil.createChatDto();
+        expected.setParticipants(given.getParticipants());
         // when
         ChatEntity result = chatMapper.toEntity(given);
         // then

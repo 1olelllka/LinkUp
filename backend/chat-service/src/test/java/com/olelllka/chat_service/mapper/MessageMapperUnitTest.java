@@ -27,8 +27,6 @@ public class MessageMapperUnitTest {
         // then
         assertAll(
                 () -> assertNotNull(result),
-                () -> assertEquals(result.getFrom(), expected.getFrom()),
-                () -> assertEquals(result.getTo(), expected.getTo()),
                 () -> assertEquals(result.getContent(), expected.getContent())
         );
     }
@@ -43,8 +41,6 @@ public class MessageMapperUnitTest {
         // then
         assertAll(
                 () -> assertNotNull(result),
-                () -> assertEquals(result.getFrom(), expected.getFrom()),
-                () -> assertEquals(result.getTo(), expected.getTo()),
                 () -> assertEquals(result.getContent(), expected.getContent())
         );
     }

@@ -65,8 +65,10 @@ public class MessageServiceUnitTest {
         String id = "12345678";
         MessageEntity expected = TestDataUtil.createMessageEntity("12345");
         expected.setContent("UPDATED");
+        expected.setTo(dto.getTo());
+        expected.setFrom(dto.getFrom());
         // when
-        when(messageRepository.findById(id)).thenReturn(Optional.of(TestDataUtil.createMessageEntity("12345")));
+        when(messageRepository.findById(id)).thenReturn(Optional.of(expected));
         when(messageRepository.save(expected)).thenReturn(expected);
         MessageEntity result = messageService.updateMessage(id, dto);
         // then

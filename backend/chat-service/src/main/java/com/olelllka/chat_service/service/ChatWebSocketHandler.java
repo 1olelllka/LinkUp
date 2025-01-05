@@ -14,6 +14,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.util.Date;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -43,15 +44,15 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String payload = message.getPayload();
         MessageEntity msg = objectMapper.readValue(payload, MessageEntity.class);
-        String senderId = session.getUri().getQuery().split("=")[1];
-        String targetUserId = msg.getTo();
+        UUID senderId = UUID.fromString(session.getUri().getQuery().split("=")[1]);
+        UUID targetUserId = msg.getTo();
         String chatMessage = msg.getContent();
 
         WebSocketSession targetSession = sessions.get(targetUserId);
-        Optional<ChatEntity> chat = chatRepository.findChatByTwoMembers(session.getUri().getQuery().split("=")[1], targetUserId);
+        Optional<ChatEntity> chat = chatRepository.findChatByTwoMembers(UUID.fromString(session.getUri().getQuery().split("=")[1]), targetUserId);
         String chatId;
         if (chat.isEmpty()) {
-            String users[] = {senderId, targetUserId};
+            UUID users[] = {senderId, targetUserId};
             ChatEntity newChat = chatRepository.save(ChatEntity.builder().participants(users).build());
             chatId = newChat.getId();
         } else {

@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -36,7 +37,7 @@ public class ChatController {
     private MessageMapperImpl messageMapper;
 
     @GetMapping("/users/{user_id}")
-    public ResponseEntity<Page<ListOfChatsDto>> getAllChatsForUser(Pageable pageable, @PathVariable String user_id) {
+    public ResponseEntity<Page<ListOfChatsDto>> getAllChatsForUser(Pageable pageable, @PathVariable UUID user_id) {
         Page<ChatEntity> entities = chatService.getChatsForUser(user_id, pageable);
         Page<ListOfChatsDto> result = entities.map(this::mapToListOfChats);
         return new ResponseEntity<>(result, HttpStatus.OK);
