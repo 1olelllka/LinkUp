@@ -32,7 +32,7 @@ class TestCommentAPI(TestCase):
     def test_create_comments_for_specific_post_returns_Http201(self):
         response = self.client.post(f"/posts/{self.post.pk}/comments", {"text":"text", "user_id":12})
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.json()['user_id'], 12)
+        self.assertEqual(response.json()['user_id'], '12')
         self.assertEqual(response.json()['text'], 'text')
     
     def test_create_reply_for_specific_comment_returns_Http400(self):
