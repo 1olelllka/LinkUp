@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.UUID;
 
 @Builder
 @NoArgsConstructor
@@ -14,7 +15,7 @@ import java.util.Date;
 public class StoryDto {
     private String id;
     private String image;
-    private String userId;
+    private UUID userId;
     private Integer likes;
     private Boolean available;
     private Date createdAt;

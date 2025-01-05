@@ -5,11 +5,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.UUID;
 
 @Document(collection = "Story")
 @Builder
@@ -21,7 +20,7 @@ public class StoryEntity {
     @Id
     private String id;
     private String image;
-    private String userId;
+    private UUID userId;
     @Builder.Default
     private Integer likes = 0;
     private Boolean available;

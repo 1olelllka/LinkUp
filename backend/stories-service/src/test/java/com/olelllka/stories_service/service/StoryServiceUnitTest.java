@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -32,7 +33,7 @@ public class StoryServiceUnitTest {
     @Test
     public void testThatGetStoriesForUserReturnsPageOfResults() {
         // given
-        String id = "1234";
+        UUID id = UUID.randomUUID();
         Pageable pageable = PageRequest.of(0, 1);
         StoryEntity entity = TestDataUtil.createStoryEntity();
         Page<StoryEntity> expected = new PageImpl<>(List.of(entity));
@@ -76,7 +77,7 @@ public class StoryServiceUnitTest {
     @Test
     public void testThatCreateStoryWorksWell() {
         // given
-        String userId = "1234";
+        UUID userId = UUID.randomUUID();
         StoryEntity expected = TestDataUtil.createStoryEntity();
         expected.setAvailable(true);
         expected.setUserId(userId);

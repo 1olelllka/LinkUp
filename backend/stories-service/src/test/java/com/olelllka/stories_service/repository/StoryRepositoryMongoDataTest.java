@@ -1,13 +1,12 @@
 package com.olelllka.stories_service.repository;
 
 import com.olelllka.stories_service.TestDataUtil;
-import com.olelllka.stories_service.TestcontainersConfiguration;
 import com.olelllka.stories_service.domain.entity.StoryEntity;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.*;
 import org.testcontainers.containers.MongoDBContainer;
 
@@ -15,11 +14,11 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataMongoTest
-@Import(TestcontainersConfiguration.class)
 public class StoryRepositoryMongoDataTest {
 
     @ServiceConnection
@@ -29,18 +28,25 @@ public class StoryRepositoryMongoDataTest {
         mongoDBContainer.start();
     }
 
+    @AfterAll
+    static void tearDown() {
+        mongoDBContainer.stop();
+        mongoDBContainer.close();
+    }
+
     @Autowired
     private StoryRepository repository;
 
     @Test
     public void testThatMongoReturnsPageOfStoriesForSpecificUser() {
         StoryEntity story = TestDataUtil.createStoryEntity();
-        story.setUserId("1234");
+        UUID id = UUID.randomUUID();
+        story.setUserId(id);
         StoryEntity saved = repository.save(story);
         Pageable pageable = PageRequest.of(0, 1);
         Page<StoryEntity> expected = new PageImpl<>(List.of(saved));
 
-        Page<StoryEntity> result = repository.findStoryByUserId("1234", pageable);
+        Page<StoryEntity> result = repository.findStoryByUserId(id, pageable);
 
         assertAll(
                 () -> assertNotNull(result),
@@ -51,9 +57,9 @@ public class StoryRepositoryMongoDataTest {
     @Test
     public void testThatMongoReturnsNothingForUserThatDoesNotHaveStory() {
         StoryEntity story = TestDataUtil.createStoryEntity();
-        story.setUserId("1234");
+        story.setUserId(UUID.randomUUID());
         Pageable pageable = PageRequest.of(0, 1);
-        Page<StoryEntity> result = repository.findStoryByUserId("12345", pageable);
+        Page<StoryEntity> result = repository.findStoryByUserId(UUID.randomUUID(), pageable);
 
         assertAll(
                 () -> assertNotNull(result),

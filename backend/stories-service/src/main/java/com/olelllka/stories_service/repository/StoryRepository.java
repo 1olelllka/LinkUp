@@ -9,12 +9,13 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 public interface StoryRepository extends MongoRepository<StoryEntity, String> {
 
     @Query("{ 'userId': ?0 }")
-    Page<StoryEntity> findStoryByUserId(String id, Pageable pageable);
+    Page<StoryEntity> findStoryByUserId(UUID id, Pageable pageable);
 
     List<StoryEntity> findByAvailableTrueAndCreatedAtBefore(Date expiryDate);
 }

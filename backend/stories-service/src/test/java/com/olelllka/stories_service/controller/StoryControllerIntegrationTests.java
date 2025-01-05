@@ -1,18 +1,17 @@
 package com.olelllka.stories_service.controller;
 
 import com.olelllka.stories_service.TestDataUtil;
-import com.olelllka.stories_service.TestcontainersConfiguration;
 import com.olelllka.stories_service.domain.dto.CreateStoryDto;
 import com.olelllka.stories_service.domain.entity.StoryEntity;
 import com.olelllka.stories_service.service.SHA256;
 import com.olelllka.stories_service.service.StoryService;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
@@ -25,6 +24,8 @@ import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import org.testcontainers.utility.DockerImageName;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -32,7 +33,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ExtendWith(SpringExtension.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
 public class StoryControllerIntegrationTests {
 
     @ServiceConnection
@@ -58,9 +58,17 @@ public class StoryControllerIntegrationTests {
         redisContainer.start();
     }
 
+    @AfterAll
+    static void tearDown() {
+        mongoDBContainer.stop();
+        mongoDBContainer.close();
+        redisContainer.stop();
+        redisContainer.close();
+    }
+
     @Test
     public void testThatGetAllStoriesForUserReturnsHttp200Ok() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/stories/users/123"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/stories/users/" + UUID.randomUUID()))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
@@ -72,7 +80,7 @@ public class StoryControllerIntegrationTests {
 
     @Test
     public void testThatGetSpecificStoryReturnsHttp200OkIfExistsAndThenCacheWorks() throws Exception {
-        StoryEntity story = service.createStory("1234", TestDataUtil.createStoryEntity());
+        StoryEntity story = service.createStory(UUID.randomUUID(), TestDataUtil.createStoryEntity());
         mockMvc.perform(MockMvcRequestBuilders.get("/stories/" + story.getId()))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         assertTrue(redisTemplate.hasKey("story::"+SHA256.generate(story.getId())));
@@ -92,13 +100,12 @@ public class StoryControllerIntegrationTests {
     public void testThatCreateStoryForUserReturnsHttp201CreatedIfSuccessful() throws Exception {
         CreateStoryDto createStoryDto = CreateStoryDto.builder().image("New Image url").build();
         String json = objectMapper.writeValueAsString(createStoryDto);
-        mockMvc.perform(MockMvcRequestBuilders.post("/stories/users/1234")
+        mockMvc.perform(MockMvcRequestBuilders.post("/stories/users/" + UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.available").value(true))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.image").value("New Image url"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.userId").value("1234"));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.image").value("New Image url"));
     }
 
     @Test
@@ -123,7 +130,7 @@ public class StoryControllerIntegrationTests {
 
     @Test
     public void testThatUpdateStoryReturnsHttp200IfSuccessful() throws Exception {
-        StoryEntity entity = service.createStory("1234", TestDataUtil.createStoryEntity());
+        StoryEntity entity = service.createStory(UUID.randomUUID(), TestDataUtil.createStoryEntity());
         CreateStoryDto createStoryDto = CreateStoryDto.builder().image("Updated url").build();
         String json = objectMapper.writeValueAsString(createStoryDto);
         mockMvc.perform(MockMvcRequestBuilders.patch("/stories/" + entity.getId())

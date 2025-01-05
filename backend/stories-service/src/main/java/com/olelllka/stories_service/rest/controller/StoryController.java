@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -27,7 +28,7 @@ public class StoryController {
     private StoryMapper<StoryEntity, StoryDto> mapper;
 
     @GetMapping("/users/{user_id}")
-    public ResponseEntity<Page<StoryDto>> getAllStoriesForUser(@PathVariable String user_id,
+    public ResponseEntity<Page<StoryDto>> getAllStoriesForUser(@PathVariable UUID user_id,
                                                                Pageable pageable) {
         Page<StoryEntity> entities = service.getStoriesForUser(user_id, pageable);
         Page<StoryDto> result = entities.map(mapper::toDto);
@@ -35,7 +36,7 @@ public class StoryController {
     }
 
     @PostMapping("/users/{user_id}")
-    public ResponseEntity<StoryDto> createNewStoryForUser(@PathVariable String user_id,
+    public ResponseEntity<StoryDto> createNewStoryForUser(@PathVariable UUID user_id,
                                                           @RequestBody @Valid  CreateStoryDto dto,
                                                           BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {

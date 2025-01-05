@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Log
@@ -24,7 +25,7 @@ public class StoryServiceImpl implements StoryService {
     private StoryRepository repository;
 
     @Override
-    public Page<StoryEntity> getStoriesForUser(String id, Pageable pageable) {
+    public Page<StoryEntity> getStoriesForUser(UUID id, Pageable pageable) {
         return repository.findStoryByUserId(id, pageable);
     }
 
@@ -36,7 +37,7 @@ public class StoryServiceImpl implements StoryService {
     }
 
     @Override
-    public StoryEntity createStory(String userId, StoryEntity entity) {
+    public StoryEntity createStory(UUID userId, StoryEntity entity) {
         entity.setAvailable(true);
         entity.setUserId(userId);
         return repository.save(entity);
