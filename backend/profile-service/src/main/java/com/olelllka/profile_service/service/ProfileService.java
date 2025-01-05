@@ -23,4 +23,6 @@ public interface ProfileService {
     Page<ProfileEntity> getFollowersById(UUID profileId, Pageable pageable);
 
     Page<ProfileEntity> getFolloweesById(UUID profileId, Pageable pageable);
+
+    Page<ProfileEntity> searchForProfile(String search, Pageable pageable);
 }

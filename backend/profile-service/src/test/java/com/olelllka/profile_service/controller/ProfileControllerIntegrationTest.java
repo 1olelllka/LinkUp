@@ -8,6 +8,7 @@ import com.olelllka.profile_service.domain.dto.CreateProfileDto;
 import com.olelllka.profile_service.domain.dto.PatchProfileDto;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
 import com.olelllka.profile_service.service.ProfileService;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,6 @@ import java.util.UUID;
 @ExtendWith(SpringExtension.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
 public class ProfileControllerIntegrationTest {
 
     @ServiceConnection
@@ -37,6 +37,12 @@ public class ProfileControllerIntegrationTest {
 
     static {
         neo4j.start();
+    }
+
+    @AfterAll
+    static void tearDown() {
+        neo4j.stop();
+        neo4j.close();
     }
 
     private MockMvc mockMvc;

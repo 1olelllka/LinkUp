@@ -4,19 +4,16 @@ import com.olelllka.profile_service.TestDataUtil;
 import com.olelllka.profile_service.domain.dto.ProfileDto;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
 import com.olelllka.profile_service.mapper.impl.ProfileMapper;
-import lombok.extern.java.Log;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
-@Log
 public class ProfileMapperUnitTest {
 
     @InjectMocks
@@ -42,13 +39,12 @@ public class ProfileMapperUnitTest {
         ProfileEntity entity = TestDataUtil.createNewProfileEntity();
         ProfileEntity follow = TestDataUtil.createNewProfileEntity();
         follow.setId(UUID.randomUUID());
-        entity.setFollowing(Set.of(follow));
         // when
         ProfileDto result = mapper.toDto(entity);
         // then
         assertAll(
                 () -> assertNotNull(result),
-                () -> assertEquals(result.getFollowing().getFirst(), follow.getId())
+                () -> assertEquals(result.getName(), follow.getName())
         );
     }
 

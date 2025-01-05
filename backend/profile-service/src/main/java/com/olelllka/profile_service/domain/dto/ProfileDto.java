@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
 @Builder
@@ -23,8 +22,6 @@ public class ProfileDto {
     private String aboutMe;
     private String photo;
     private Gender gender;
-    private List<UUID> following;
-    private List<UUID> followers;
     private LocalDate dateOfBirth;
     private LocalDate createdAt;
 }

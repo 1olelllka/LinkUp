@@ -90,4 +90,14 @@ public class ProfileServiceImpl implements ProfileService {
     public Page<ProfileEntity> getFolloweesById(UUID profileId, Pageable pageable) {
         return repository.findAllFolloweeByProfileId(profileId, pageable);
     }
+
+    @Override
+    public Page<ProfileEntity> searchForProfile(String search, Pageable pageable) {
+        // I'll create two options: elasticsearch search and neo4j search.
+        // Elasticsearch's will be main and neo4j's in case of failure of elasticsearch
+        // TODO: Create elasticsearch implementation
+
+        // neo4j implementation (it'll be far less performant than elasticsearch)
+        return repository.findProfileByParam(search, pageable);
+    }
 }

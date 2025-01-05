@@ -1,13 +1,13 @@
 package com.olelllka.profile_service.repository;
 
 import com.olelllka.profile_service.TestDataUtil;
-import com.olelllka.profile_service.TestcontainersConfiguration;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.neo4j.DataNeo4jTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -20,7 +20,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataNeo4jTest
-@Import(TestcontainersConfiguration.class)
 public class ProfileRepositoryTest {
 
     @ServiceConnection
@@ -33,6 +32,16 @@ public class ProfileRepositoryTest {
         neo4j.start();
     }
 
+    @AfterEach
+    void tearDown() {
+        repository.deleteAll();
+    }
+
+    @AfterAll
+    static void stopContainer() {
+       neo4j.stop();
+       neo4j.close();
+    }
 
     @Test
     public void testThatCustomUpdateProfileWorks() {
@@ -88,7 +97,7 @@ public class ProfileRepositoryTest {
 
         assertAll(
                 () -> assertNotNull(result),
-                () -> assertEquals(result.getTotalElements(), result.getTotalElements()),
+                () -> assertEquals(result.getTotalElements(), expected.getTotalElements()),
                 () -> assertEquals(result.getContent().getFirst().getId(), profile2.getId())
         );
     }
@@ -107,6 +116,23 @@ public class ProfileRepositoryTest {
                 () -> assertNotNull(result),
                 () -> assertEquals(result.getTotalElements(), expected.getTotalElements()),
                 () -> assertEquals(result.getContent().getFirst().getId(), profile1.getId())
+        );
+    }
+
+    @Test
+    public void testThatFindProfilesByParamWorks() {
+        ProfileEntity profile1 = repository.save(TestDataUtil.createNewProfileEntity());
+        ProfileEntity profile2 = repository.save(TestDataUtil.createNewProfileEntity());
+        profile2.setUsername("u2");
+        repository.save(profile1);
+        repository.save(profile2);
+        Pageable pageable = PageRequest.of(0, 2);
+
+        Page<ProfileEntity> result = repository.findProfileByParam("u", pageable);
+
+        assertAll(
+                () -> assertNotNull(result),
+                () -> assertEquals(result.getTotalElements(), 2)
         );
     }
 }

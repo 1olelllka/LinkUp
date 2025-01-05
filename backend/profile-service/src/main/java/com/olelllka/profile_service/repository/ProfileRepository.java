@@ -45,9 +45,8 @@ public interface ProfileRepository extends Neo4jRepository<ProfileEntity, UUID> 
     MATCH (p:Profile {id: $profileId})
     OPTIONAL MATCH (p)-[:FOLLOWS*..1]->(following:Profile)
     OPTIONAL MATCH (p)<-[:FOLLOWS*..1]-(followers:Profile)
-    RETURN p, collect(following) as following, collect(followers) as followers 
+    RETURN p, collect(following) as following, collect(followers) as followers
     """)
-    // this query does not work as intended(followee and follower fields are empty...)
     Optional<ProfileEntity> findByIdWithRelationships(UUID profileId);
 
     @Query("""
@@ -94,4 +93,16 @@ public interface ProfileRepository extends Neo4jRepository<ProfileEntity, UUID> 
     """)
     Page<ProfileEntity> findAllFolloweeByProfileId(UUID profileId, Pageable pageable);
 
+    @Query(value = """
+            MATCH (p:Profile)
+            WHERE p.username CONTAINS $search OR p.name CONTAINS $search
+            RETURN p
+            SKIP $skip
+            LIMIT $limit
+            """, countQuery = """
+            MATCH (p:Profile)
+            WHERE p.username CONTAINS $search OR p.name CONTAINS $search
+            RETURN count(p)
+            """)
+    Page<ProfileEntity> findProfileByParam(String search, Pageable pageable);
 }

@@ -26,6 +26,14 @@ public class ProfileController {
     @Autowired
     private ProfileService profileService;
 
+    @GetMapping("")
+    public ResponseEntity<Page<ListOfProfilesDto>> searchForProfiles(@RequestParam(name = "search") String search,
+                                                                     Pageable pageable) {
+        Page<ProfileEntity> profiles = profileService.searchForProfile(search, pageable);
+        Page<ListOfProfilesDto> result = profiles.map(this::mapEntityToListDto);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
     @PostMapping("")
     public ResponseEntity<ProfileDto> createNewProfile(@Valid @RequestBody CreateProfileDto dto,
                                                        BindingResult bindingResult) {

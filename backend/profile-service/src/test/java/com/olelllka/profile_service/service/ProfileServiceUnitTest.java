@@ -227,4 +227,20 @@ public class ProfileServiceUnitTest {
                 () -> assertEquals(result.getTotalElements(), 0)
         );
     }
+
+    @Test
+    public void testThatSearchUserByNeo4jWorks() {
+        // given
+        Pageable pageable = PageRequest.of(0, 1);
+        Page<ProfileEntity> profiles = new PageImpl<>(List.of());
+        String query = "search";
+        // when
+        when(repository.findProfileByParam(query, pageable)).thenReturn(profiles);
+        Page<ProfileEntity> result = service.searchForProfile(query, pageable);
+        // then
+        assertAll(
+                () -> assertNotNull(result),
+                () -> assertEquals(result.getTotalElements(), profiles.getTotalElements())
+        );
+    }
 }
