@@ -13,23 +13,23 @@ import org.testcontainers.utility.DockerImageName;
 @TestConfiguration(proxyBeanMethods = false)
 public class TestcontainersConfiguration {
 
-//	@Bean
-//	@ServiceConnection
-//	ElasticsearchContainer elasticsearchContainer() {
-//		return new ElasticsearchContainer(DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:7.17.10"));
-//	}
+	@Bean
+	@ServiceConnection
+	ElasticsearchContainer elasticsearchContainer() {
+		return new ElasticsearchContainer(DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:7.17.23"));
+	}
 
 	@Bean
 	@ServiceConnection
 	Neo4jContainer<?> neo4jContainer() {
 		return new Neo4jContainer<>(DockerImageName.parse("neo4j:latest"));
 	}
-//	@Bean
-//	@ServiceConnection
-//	RabbitMQContainer rabbitContainer() {
-//		return new RabbitMQContainer(DockerImageName.parse("rabbitmq:latest"));
-//	}
-//
+	@Bean
+	@ServiceConnection
+	RabbitMQContainer rabbitContainer() {
+		return new RabbitMQContainer(DockerImageName.parse("rabbitmq:3.13-management"));
+	}
+
 //	@Bean
 //	@ServiceConnection(name = "redis")
 //	GenericContainer<?> redisContainer() {

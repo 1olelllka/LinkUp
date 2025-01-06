@@ -1,0 +1,31 @@
+# Global Docker Compose File
+
+services:
+  elasticsearch:
+    container_name: linkup_elasticsearch
+    image: elasticsearch:7.17.23
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - ELASTIC_PASSWORD=secret
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - http.cors.enabled=true
+      - ESJAVAOPTS=-Xmx3g
+      - http.cors.allow-origin=http://localhost:8080
+      - http.cors.allow-headers=X-Requested-With,Content-Type,Content-Length,Authorization
+    volumes:
+      - "elasticsearch_data:/usr/share/elasticsearch/data"
+  rabbitmq:
+    container_name: linkup_rabbimtq
+    image: rabbitmq:3.13-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_PASS=secret
+      - RABBITMQ_DEFAULT_USER=myuser
+
+volumes:
+  elasticsearch_data:

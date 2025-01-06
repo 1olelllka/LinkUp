@@ -1,6 +1,5 @@
 package com.olelllka.chat_service.domain.dto;
 
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;

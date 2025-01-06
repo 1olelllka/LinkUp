@@ -1,7 +1,9 @@
 package com.olelllka.profile_service.service;
 
 import com.olelllka.profile_service.TestDataUtil;
+import com.olelllka.profile_service.domain.dto.CreateProfileDto;
 import com.olelllka.profile_service.domain.dto.PatchProfileDto;
+import com.olelllka.profile_service.domain.dto.ProfileDocumentDto;
 import com.olelllka.profile_service.domain.entity.Gender;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
 import com.olelllka.profile_service.repository.ProfileRepository;
@@ -31,6 +33,8 @@ public class ProfileServiceUnitTest {
 
     @Mock
     private ProfileRepository repository;
+    @Mock
+    private MessagePublisher messagePublisher;
     @InjectMocks
     private ProfileServiceImpl service;
 
@@ -48,7 +52,13 @@ public class ProfileServiceUnitTest {
                 () -> assertNotNull(result),
                 () -> assertEquals(result.getCreatedAt(), LocalDate.now())
         );
-    }
+        ProfileDocumentDto documentDto = ProfileDocumentDto.builder()
+                .id(result.getId())
+                .username(result.getUsername())
+                .name(result.getName())
+                .email(result.getEmail())
+                .build();
+        verify(messagePublisher, times(1)).createUpdateProfile(documentDto);    }
 
     @Test
     public void testThatGetProfileByIdThrowsException() {
@@ -128,8 +138,7 @@ public class ProfileServiceUnitTest {
                 () -> assertEquals(result.getAboutMe(), patchProfileDto.getAboutMe()),
                 () -> assertEquals(result.getGender(), patchProfileDto.getGender()),
                 () -> assertEquals(result.getPhoto(), patchProfileDto.getPhoto()),
-                () -> assertEquals(result.getPhoto(), patchProfileDto.getPhoto())
-                );
+                () -> assertEquals(result.getPhoto(), patchProfileDto.getPhoto()));
         verify(repository, times(1)).updateProfile(id,
                 expected.getUsername(),
                 expected.getName(),
@@ -138,6 +147,13 @@ public class ProfileServiceUnitTest {
                 expected.getPhoto(),
                 expected.getAboutMe(),
                 expected.getDateOfBirth());
+        ProfileDocumentDto documentDto = ProfileDocumentDto.builder()
+                .id(result.getId())
+                .username(result.getUsername())
+                .name(result.getName())
+                .email(result.getEmail())
+                .build();
+        verify(messagePublisher, times(1)).createUpdateProfile(documentDto);
     }
 
     @Test
@@ -148,6 +164,7 @@ public class ProfileServiceUnitTest {
         service.deleteById(uid);
         // then
         verify(repository, times(1)).deleteById(uid);
+        verify(messagePublisher, times(1)).deleteProfile(uid);
     }
 
     @Test
