@@ -20,5 +20,6 @@ public class ProfileDocument {
     private UUID id;
     private String username;
     private String name;
+    private String photo;
     private String email;
 }

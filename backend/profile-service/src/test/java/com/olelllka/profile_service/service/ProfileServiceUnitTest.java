@@ -1,11 +1,12 @@
 package com.olelllka.profile_service.service;
 
 import com.olelllka.profile_service.TestDataUtil;
-import com.olelllka.profile_service.domain.dto.CreateProfileDto;
 import com.olelllka.profile_service.domain.dto.PatchProfileDto;
 import com.olelllka.profile_service.domain.dto.ProfileDocumentDto;
 import com.olelllka.profile_service.domain.entity.Gender;
+import com.olelllka.profile_service.domain.entity.ProfileDocument;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
+import com.olelllka.profile_service.repository.ProfileDocumentRepository;
 import com.olelllka.profile_service.repository.ProfileRepository;
 import com.olelllka.profile_service.rest.exception.NotFoundException;
 import com.olelllka.profile_service.rest.exception.ValidationException;
@@ -15,6 +16,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.actuate.elasticsearch.ElasticsearchRestClientHealthIndicator;
+import org.springframework.boot.actuate.health.Health;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +36,10 @@ public class ProfileServiceUnitTest {
 
     @Mock
     private ProfileRepository repository;
+    @Mock
+    private ProfileDocumentRepository elasticRepository;
+    @Mock
+    private ElasticsearchRestClientHealthIndicator elasticHealth;
     @Mock
     private MessagePublisher messagePublisher;
     @InjectMocks
@@ -252,6 +259,7 @@ public class ProfileServiceUnitTest {
         Page<ProfileEntity> profiles = new PageImpl<>(List.of());
         String query = "search";
         // when
+        when(elasticHealth.getHealth(false)).thenReturn(Health.down().build());
         when(repository.findProfileByParam(query, pageable)).thenReturn(profiles);
         Page<ProfileEntity> result = service.searchForProfile(query, pageable);
         // then
@@ -259,5 +267,25 @@ public class ProfileServiceUnitTest {
                 () -> assertNotNull(result),
                 () -> assertEquals(result.getTotalElements(), profiles.getTotalElements())
         );
+        verify(elasticRepository, never()).findByParams(query, pageable);
+    }
+
+    @Test
+    public void testThatSearchUserByElasticsearchWorks() {
+        // given
+        Pageable pageable = PageRequest.of(0, 1);
+        Page<ProfileEntity> profiles = new PageImpl<>(List.of());
+        Page<ProfileDocument> elasticProfiles = new PageImpl<>(List.of());
+        String query = "search";
+        // when
+        when(elasticHealth.getHealth(false)).thenReturn(Health.up().build());
+        when(elasticRepository.findByParams(query, pageable)).thenReturn(elasticProfiles);
+        Page<ProfileEntity> result = service.searchForProfile(query, pageable);
+        // then
+        assertAll(
+                () -> assertNotNull(result),
+                () -> assertEquals(result.getTotalElements(), profiles.getTotalElements())
+        );
+        verify(repository, never()).findProfileByParam(query, pageable);
     }
 }

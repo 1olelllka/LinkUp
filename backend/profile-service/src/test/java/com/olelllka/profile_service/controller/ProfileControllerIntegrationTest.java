@@ -266,4 +266,27 @@ public class ProfileControllerIntegrationTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].username").value("TEST"));
     }
 
+    @Test
+    public void testThatSearchProfilesByElasticSearchReturnsHttp200Ok() throws Exception {
+        registry.stop();
+        ProfileEntity profile = TestDataUtil.createNewProfileEntity();
+        registry.getListenerContainer("cu-profile").start();
+        profileService.createProfile(profile);
+        mockMvc.perform(MockMvcRequestBuilders.get("/profiles?search=F"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].username").value(profile.getUsername()));
+    }
+
+    @Test
+    public void testThatSearchProfilesByNeo4jReturnsHttp200OkIfElasticsearchIsDown() throws Exception {
+        registry.stop();
+        ProfileEntity profile = TestDataUtil.createNewProfileEntity();
+        registry.getListenerContainer("cu-profile").start();
+        profileService.createProfile(profile);
+        elasticsearchContainer.stop();
+        mockMvc.perform(MockMvcRequestBuilders.get("/profiles?search=username"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].username").value(profile.getUsername()));
+    }
+
 }

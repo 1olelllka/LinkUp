@@ -23,6 +23,7 @@ public class MessageListener {
                 .name(dto.getName())
                 .email(dto.getEmail())
                 .username(dto.getUsername())
+                .photo(dto.getPhoto())
                 .build();
         documentRepository.save(document);
     }

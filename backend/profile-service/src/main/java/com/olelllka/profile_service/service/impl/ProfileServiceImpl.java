@@ -2,13 +2,17 @@ package com.olelllka.profile_service.service.impl;
 
 import com.olelllka.profile_service.domain.dto.PatchProfileDto;
 import com.olelllka.profile_service.domain.dto.ProfileDocumentDto;
+import com.olelllka.profile_service.domain.entity.ProfileDocument;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
+import com.olelllka.profile_service.repository.ProfileDocumentRepository;
 import com.olelllka.profile_service.repository.ProfileRepository;
 import com.olelllka.profile_service.rest.exception.NotFoundException;
 import com.olelllka.profile_service.rest.exception.ValidationException;
 import com.olelllka.profile_service.service.MessagePublisher;
 import com.olelllka.profile_service.service.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.elasticsearch.ElasticsearchRestClientHealthIndicator;
+import org.springframework.boot.actuate.health.Status;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,7 +28,13 @@ public class ProfileServiceImpl implements ProfileService {
     private ProfileRepository repository;
 
     @Autowired
+    private ProfileDocumentRepository elasticRepository;
+
+    @Autowired
     private MessagePublisher messagePublisher;
+
+    @Autowired
+    private ElasticsearchRestClientHealthIndicator elasticHealth;
 
     @Override
     @Transactional
@@ -121,9 +131,21 @@ public class ProfileServiceImpl implements ProfileService {
     public Page<ProfileEntity> searchForProfile(String search, Pageable pageable) {
         // I'll create two options: elasticsearch search and neo4j search.
         // Elasticsearch's will be main and neo4j's in case of failure of elasticsearch
-        // TODO: Create elasticsearch implementation
+        if (elasticHealth.getHealth(false).getStatus().equals(Status.UP)) {
+            Page<ProfileDocument> documents = elasticRepository.findByParams(search, pageable);
+            return documents.map(this::documentToEntity);
+        } else {
+            return repository.findProfileByParam(search, pageable);
+        }
+    }
 
-        // neo4j implementation (it'll be far less performant than elasticsearch)
-        return repository.findProfileByParam(search, pageable);
+    private ProfileEntity documentToEntity(ProfileDocument document) {
+        return ProfileEntity.builder()
+                .id(document.getId())
+                .username(document.getUsername())
+                .photo(document.getPhoto())
+                .name(document.getName())
+                .email(document.getEmail())
+                .build();
     }
 }
