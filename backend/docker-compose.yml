@@ -1,5 +1,5 @@
 # Global Docker Compose File
-
+name: LinkUp_Backend
 services:
   elasticsearch:
     container_name: linkup_elasticsearch
@@ -17,6 +17,7 @@ services:
       - http.cors.allow-headers=X-Requested-With,Content-Type,Content-Length,Authorization
     volumes:
       - "elasticsearch_data:/usr/share/elasticsearch/data"
+    mem_limit: 4g
   rabbitmq:
     container_name: linkup_rabbimtq
     image: rabbitmq:3.13-management
