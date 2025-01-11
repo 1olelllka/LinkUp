@@ -4,8 +4,7 @@ import com.olelllka.stories_service.domain.entity.StoryEntity;
 import com.olelllka.stories_service.repository.StoryRepository;
 import com.olelllka.stories_service.rest.exception.NotFoundException;
 import com.olelllka.stories_service.service.StoryService;
-import lombok.extern.java.Log;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -18,11 +17,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@Log
+@RequiredArgsConstructor
 public class StoryServiceImpl implements StoryService {
 
-    @Autowired
-    private StoryRepository repository;
+    private final StoryRepository repository;
 
     @Override
     public Page<StoryEntity> getStoriesForUser(UUID id, Pageable pageable) {
@@ -32,7 +30,6 @@ public class StoryServiceImpl implements StoryService {
     @Override
     @Cacheable(value = "story", keyGenerator = "sha256KeyGenerator")
     public StoryEntity getSpecificStory(String storyId) {
-        log.info("Not a cache");
         return repository.findById(storyId).orElseThrow(() -> new NotFoundException("Story with such id was not found."));
     }
 

@@ -7,6 +7,7 @@ import com.olelllka.stories_service.mapper.StoryMapper;
 import com.olelllka.stories_service.rest.exception.ValidationException;
 import com.olelllka.stories_service.service.StoryService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,12 +21,11 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = "/stories")
+@RequiredArgsConstructor
 public class StoryController {
 
-    @Autowired
-    private StoryService service;
-    @Autowired
-    private StoryMapper<StoryEntity, StoryDto> mapper;
+    private final StoryService service;
+    private final StoryMapper<StoryEntity, StoryDto> mapper;
 
     @GetMapping("/users/{user_id}")
     public ResponseEntity<Page<StoryDto>> getAllStoriesForUser(@PathVariable UUID user_id,

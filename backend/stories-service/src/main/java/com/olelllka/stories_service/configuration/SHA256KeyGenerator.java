@@ -10,7 +10,6 @@ import java.util.Arrays;
 @Component
 public class SHA256KeyGenerator implements KeyGenerator {
 
-
     @Override
     public Object generate(Object target, Method method, Object... params) {
         Object obj = Arrays.stream(params).findFirst().orElse("withoutParams");
