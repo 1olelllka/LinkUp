@@ -12,6 +12,7 @@ import com.olelllka.chat_service.rest.exception.ValidationException;
 import com.olelllka.chat_service.service.ChatService;
 import com.olelllka.chat_service.service.MessageService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,16 +26,13 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = "/chats")
+@RequiredArgsConstructor
 public class ChatController {
 
-    @Autowired
-    private ChatService chatService;
-    @Autowired
-    private MessageService messageService;
-    @Autowired
-    private ChatMapperImpl chatMapper;
-    @Autowired
-    private MessageMapperImpl messageMapper;
+    private final ChatService chatService;
+    private final MessageService messageService;
+    private final ChatMapperImpl chatMapper;
+    private final MessageMapperImpl messageMapper;
 
     @GetMapping("/users/{user_id}")
     public ResponseEntity<Page<ListOfChatsDto>> getAllChatsForUser(Pageable pageable, @PathVariable UUID user_id) {

@@ -1,6 +1,7 @@
 package com.olelllka.chat_service.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.olelllka.chat_service.domain.dto.NotificationDto;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
 import com.olelllka.chat_service.repository.ChatRepository;
@@ -20,17 +21,18 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class ChatWebSocketHandler extends TextWebSocketHandler {
 
-    private ObjectMapper objectMapper;
     private ChatRepository chatRepository;
     private MessageRepository messageRepository;
+    private MessagePublisher messagePublisher;
     private static final ConcurrentHashMap<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
 
     @Autowired
     public ChatWebSocketHandler(ChatRepository chatRepository,
-                                MessageRepository messageRepository) {
-        this.objectMapper = new ObjectMapper();
+                                MessageRepository messageRepository,
+                                MessagePublisher messagePublisher) {
         this.chatRepository = chatRepository;
         this.messageRepository = messageRepository;
+        this.messagePublisher = messagePublisher;
     }
 
     @Override
@@ -42,6 +44,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
         String payload = message.getPayload();
         MessageEntity msg = objectMapper.readValue(payload, MessageEntity.class);
         UUID senderId = UUID.fromString(session.getUri().getQuery().split("=")[1]);
@@ -62,6 +65,14 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             targetSession.sendMessage(new TextMessage(senderId + ": " + chatMessage));
         } else {
             session.sendMessage(new TextMessage("User " + targetUserId + " is not available."));
+            NotificationDto notification = NotificationDto.builder()
+                    .read(false)
+                    .createdAt(new Date())
+                    .userId(targetUserId.toString())
+                    // TODO: When gateway implemented, put name instead of id!!!
+                    .text("User with id: " + senderId + " sent you a message: " + chatMessage)
+                    .build();
+            messagePublisher.createChatNotification(notification);
         }
         // I've implemented sync write into db for simplicity, in future I'll try to do this async to prevent db overhead.
         messageRepository.save(MessageEntity

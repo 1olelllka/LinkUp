@@ -2,6 +2,7 @@ package com.olelllka.chat_service.service;
 
 import com.olelllka.chat_service.TestDataUtil;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
+import com.olelllka.chat_service.domain.entity.MessageEntity;
 import com.olelllka.chat_service.repository.ChatRepository;
 import com.olelllka.chat_service.service.impl.ChatServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -71,9 +75,12 @@ public class ChatServiceUnitTest {
     public void testThatDeleteChatWorks() {
         // given
         String chatId = "1235";
+        Query query = new Query();
+        query.addCriteria(Criteria.where("chatId").is(chatId));
         // when
         chatService.deleteChat(chatId);
         // then
         verify(chatRepository, times(1)).deleteById(chatId);
+        verify(mongoTemplate, times(1)).findAllAndRemove(query, MessageEntity.class, "Message");
     }
 }
