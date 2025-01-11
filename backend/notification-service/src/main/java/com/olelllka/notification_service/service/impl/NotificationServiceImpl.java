@@ -4,7 +4,7 @@ import com.olelllka.notification_service.domain.entity.NotificationEntity;
 import com.olelllka.notification_service.repository.NotificationRepository;
 import com.olelllka.notification_service.rest.exception.NotFoundException;
 import com.olelllka.notification_service.service.NotificationService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -15,12 +15,11 @@ import org.springframework.stereotype.Component;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
-    @Autowired
-    private NotificationRepository repository;
-    @Autowired
-    private MongoTemplate mongoTemplate;
+    private final NotificationRepository repository;
+    private final MongoTemplate mongoTemplate;
 
     @Override
     public Page<NotificationEntity> getNotificationsForUser(UUID userId, Pageable pageable) {

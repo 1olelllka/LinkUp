@@ -3,7 +3,7 @@ package com.olelllka.notification_service.rest.controller;
 import com.olelllka.notification_service.domain.dto.NotificationDto;
 import com.olelllka.notification_service.domain.entity.NotificationEntity;
 import com.olelllka.notification_service.service.NotificationService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -14,10 +14,10 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping(path = "/notifications")
+@RequiredArgsConstructor
 public class NotificationController {
 
-    @Autowired
-    private NotificationService service;
+    private final NotificationService service;
 
     @GetMapping("/users/{user_id}")
     public ResponseEntity<Page<NotificationDto>> getListOfNotificationsForUser(@PathVariable UUID user_id,
@@ -51,7 +51,7 @@ public class NotificationController {
                 .read(entity.getRead())
                 .text(entity.getText())
                 .createdAt(entity.getCreatedAt())
-                .userId(entity.getUserId())
+                .userId(entity.getUserId().toString())
                 .build();
     }
 }

@@ -36,19 +36,17 @@ public class NotificationControllerIntegrationTest {
         mongoDBContainer.start();
     }
 
-    private NotificationService service;
-    private MockMvc mockMvc;
-    private NotificationRepository repository; // temporary
-    private ObjectMapper objectMapper;
+    private final NotificationService service;
+    private final MockMvc mockMvc;
+    private final NotificationRepository repository; // temporary
 
     @Autowired
     public NotificationControllerIntegrationTest(NotificationService service,
-                                                 NotificationRepository repository,
-                                                 MockMvc mockMvc) {
+                                                 MockMvc mockMvc,
+                                                 NotificationRepository repository) {
+        this.repository = repository;
         this.mockMvc = mockMvc;
         this.service = service;
-        this.repository = repository;
-        this.objectMapper = new ObjectMapper();
     }
 
     @Test

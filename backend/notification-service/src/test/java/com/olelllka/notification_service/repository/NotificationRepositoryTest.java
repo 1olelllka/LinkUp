@@ -37,8 +37,12 @@ public class NotificationRepositoryTest {
         mongoDBContainer.close();
     }
 
+    private final NotificationRepository repository;
+
     @Autowired
-    private NotificationRepository repository;
+    public NotificationRepositoryTest(NotificationRepository repository) {
+        this.repository = repository;
+    }
 
     @Test
     public void testThatFindByUserIdWorksAsExpected() {

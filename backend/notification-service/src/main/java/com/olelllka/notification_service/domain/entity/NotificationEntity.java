@@ -4,6 +4,8 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 
 import java.util.Date;
 import java.util.UUID;
@@ -16,6 +18,7 @@ import java.util.UUID;
 public class NotificationEntity {
     @Id
     private String id;
+    @Field(targetType = FieldType.STRING)
     private UUID userId;
     private String text;
     private Boolean read;

@@ -1,12 +1,12 @@
 package com.olelllka.notification_service.domain.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
-import java.util.UUID;
 
 @Builder
 @AllArgsConstructor
@@ -14,8 +14,9 @@ import java.util.UUID;
 @Data
 public class NotificationDto {
     private String id;
-    private UUID userId;
+    private String userId;
     private String text;
     private Boolean read;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
     private Date createdAt;
 }
