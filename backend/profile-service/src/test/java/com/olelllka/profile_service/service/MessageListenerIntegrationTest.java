@@ -34,14 +34,21 @@ public class MessageListenerIntegrationTest {
         elasticsearchContainer.start();
     }
 
+    private final RabbitListenerEndpointRegistry registry;
+    private final RabbitAdmin admin;
+    private final MessagePublisher messagePublisher;
+    private final ProfileDocumentRepository repository;
+
     @Autowired
-    private RabbitListenerEndpointRegistry registry;
-    @Autowired
-    private RabbitAdmin admin;
-    @Autowired
-    private MessagePublisher messagePublisher;
-    @Autowired
-    private ProfileDocumentRepository repository;
+    public MessageListenerIntegrationTest(RabbitListenerEndpointRegistry registry,
+                                          RabbitAdmin admin,
+                                          MessagePublisher messagePublisher,
+                                          ProfileDocumentRepository repository) {
+        this.messagePublisher = messagePublisher;
+        this.admin = admin;
+        this.registry = registry;
+        this.repository = repository;
+    }
 
     @AfterAll
     static void tearDown() {

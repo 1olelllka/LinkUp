@@ -193,6 +193,7 @@ public class ProfileControllerIntegrationTest {
 
     @Test
     public void testThatFollowProfileReturnsHttp400BadRequestIfAlreadyFollowed() throws Exception {
+        rabbitAdmin.purgeQueue(RabbitMQConfig.notification_queue);
         ProfileEntity profile1 = TestDataUtil.createNewProfileEntity();
         profileService.createProfile(profile1);
         ProfileEntity profile2 = TestDataUtil.createNewProfileEntity();
@@ -204,12 +205,15 @@ public class ProfileControllerIntegrationTest {
 
     @Test
     public void testThatFollowProfileReturnsHttp200OkIfSuccessful() throws Exception {
+        registry.stop();
+        rabbitAdmin.purgeQueue(RabbitMQConfig.notification_queue);
         ProfileEntity profile1 = TestDataUtil.createNewProfileEntity();
         profileService.createProfile(profile1);
         ProfileEntity profile2 = TestDataUtil.createNewProfileEntity();
         profileService.createProfile(profile2);
         mockMvc.perform(MockMvcRequestBuilders.post("/profiles/" + profile1.getId() + "/follow?user=" + profile2.getId()))
                 .andExpect(MockMvcResultMatchers.status().isOk());
+        assertEquals(1, rabbitAdmin.getQueueInfo(RabbitMQConfig.notification_queue).getMessageCount());
     }
 
     @Test

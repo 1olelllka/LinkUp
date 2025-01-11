@@ -6,7 +6,7 @@ import com.olelllka.profile_service.mapper.impl.ProfileMapper;
 import com.olelllka.profile_service.rest.exception.ValidationException;
 import com.olelllka.profile_service.service.ProfileService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -19,12 +19,11 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = "/profiles")
+@RequiredArgsConstructor
 public class ProfileController {
 
-    @Autowired
-    private ProfileMapper profileMapper;
-    @Autowired
-    private ProfileService profileService;
+    private final ProfileMapper profileMapper;
+    private final ProfileService profileService;
 
     @GetMapping("")
     public ResponseEntity<Page<ListOfProfilesDto>> searchForProfiles(@RequestParam(name = "search") String search,

@@ -1,5 +1,7 @@
 package com.olelllka.profile_service.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.olelllka.profile_service.domain.dto.NotificationDto;
 import com.olelllka.profile_service.domain.dto.PatchProfileDto;
 import com.olelllka.profile_service.domain.dto.ProfileDocumentDto;
 import com.olelllka.profile_service.domain.entity.ProfileDocument;
@@ -10,7 +12,7 @@ import com.olelllka.profile_service.rest.exception.NotFoundException;
 import com.olelllka.profile_service.rest.exception.ValidationException;
 import com.olelllka.profile_service.service.MessagePublisher;
 import com.olelllka.profile_service.service.ProfileService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.actuate.elasticsearch.ElasticsearchRestClientHealthIndicator;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.data.domain.Page;
@@ -19,22 +21,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class ProfileServiceImpl implements ProfileService {
 
-    @Autowired
-    private ProfileRepository repository;
-
-    @Autowired
-    private ProfileDocumentRepository elasticRepository;
-
-    @Autowired
-    private MessagePublisher messagePublisher;
-
-    @Autowired
-    private ElasticsearchRestClientHealthIndicator elasticHealth;
+    private final ProfileRepository repository;
+    private final ProfileDocumentRepository elasticRepository;
+    private final MessagePublisher messagePublisher;
+    private final ElasticsearchRestClientHealthIndicator elasticHealth;
 
     @Override
     @Transactional
@@ -88,6 +85,7 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
+    @Transactional
     public void followNewProfile(UUID profileId, UUID follow) {
         if (profileId.equals(follow)) {
             throw new ValidationException("Follower id and Followee id must not be the same");
@@ -97,6 +95,18 @@ public class ProfileServiceImpl implements ProfileService {
         }
         if (!repository.isFollowing(profileId, follow)) {
             repository.follow(profileId, follow);
+            ProfileEntity follower = repository.findByIdWithRelationships(profileId).get();
+            NotificationDto notification = NotificationDto.builder()
+                    .read(false)
+                    .userId(follow.toString())
+                    .createdAt(new Date())
+                    .text(follower.getUsername() + " followed your profile.")
+                    .build();
+            try {
+                messagePublisher.createFollowNotification(notification);
+            } catch (JsonProcessingException ex) {
+                throw new RuntimeException(ex);
+            }
         } else {
             throw new ValidationException("You've already followed this profile.");
         }

@@ -1,6 +1,8 @@
 package com.olelllka.profile_service.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.olelllka.profile_service.TestDataUtil;
+import com.olelllka.profile_service.domain.dto.NotificationDto;
 import com.olelllka.profile_service.domain.dto.PatchProfileDto;
 import com.olelllka.profile_service.domain.dto.ProfileDocumentDto;
 import com.olelllka.profile_service.domain.entity.Gender;
@@ -187,14 +189,17 @@ public class ProfileServiceUnitTest {
     }
 
     @Test
-    public void testThatFollowNewProfileWorks() {
+    public void testThatFollowNewProfileWorks() throws JsonProcessingException {
         UUID id1 = UUID.randomUUID();
         UUID id2 = UUID.randomUUID();
+        ProfileEntity entity = TestDataUtil.createNewProfileEntity();
         when(repository.existsById(id1)).thenReturn(true);
         when(repository.existsById(id2)).thenReturn(true);
+        when(repository.findByIdWithRelationships(id1)).thenReturn(Optional.of(entity));
         when(repository.isFollowing(id1, id2)).thenReturn(false);
         service.followNewProfile(id1, id2);
         verify(repository, times(1)).follow(id1, id2);
+        verify(messagePublisher, times(1)).createFollowNotification(any(NotificationDto.class));
     }
 
     @Test
