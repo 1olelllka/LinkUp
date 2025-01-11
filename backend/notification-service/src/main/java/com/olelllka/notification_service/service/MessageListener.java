@@ -16,6 +16,7 @@ import java.util.UUID;
 public class MessageListener {
 
     private final NotificationRepository repository;
+    private final WebSocketHandler webSocketHandler;
     public static final String notification_queue = "notification_queue";
 
     @RabbitListener(id="notification", queues = notification_queue)
@@ -30,6 +31,6 @@ public class MessageListener {
                 .userId(UUID.fromString(dto.getUserId()))
                 .build();
         repository.save(entity);
+        webSocketHandler.sendNotificationToUser(entity.getUserId(), entity.getText());
     }
-
 }

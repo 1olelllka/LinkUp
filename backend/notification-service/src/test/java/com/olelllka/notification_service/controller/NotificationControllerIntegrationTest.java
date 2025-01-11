@@ -1,6 +1,5 @@
 package com.olelllka.notification_service.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.olelllka.notification_service.TestDataUtil;
 import com.olelllka.notification_service.domain.entity.NotificationEntity;
 import com.olelllka.notification_service.repository.NotificationRepository;
@@ -36,17 +35,14 @@ public class NotificationControllerIntegrationTest {
         mongoDBContainer.start();
     }
 
-    private final NotificationService service;
     private final MockMvc mockMvc;
     private final NotificationRepository repository; // temporary
 
     @Autowired
-    public NotificationControllerIntegrationTest(NotificationService service,
-                                                 MockMvc mockMvc,
+    public NotificationControllerIntegrationTest(MockMvc mockMvc,
                                                  NotificationRepository repository) {
         this.repository = repository;
         this.mockMvc = mockMvc;
-        this.service = service;
     }
 
     @Test
