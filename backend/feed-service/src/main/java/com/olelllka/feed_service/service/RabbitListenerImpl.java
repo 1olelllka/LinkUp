@@ -3,6 +3,7 @@ package com.olelllka.feed_service.service;
 import com.olelllka.feed_service.domain.dto.NewPostEvent;
 import com.olelllka.feed_service.domain.dto.ProfileDto;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -20,28 +21,33 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 @RequiredArgsConstructor
+@Log
 public class RabbitListenerImpl {
 
     private final RedisTemplate<String, String> redisTemplate;
     public static final String queue = "feed_updates_queue";
 
+    // comments for now
     @RabbitListener(queues = queue)
     public void handleNewPost(NewPostEvent postEvent) {
-        String postId = postEvent.getPostId();
-        UUID profileId = postEvent.getProfileId();
-
-        int page = 0;
-        int size = 20;
-        Page<ProfileDto> followers;
-        List<CompletableFuture<Void>> futures = new ArrayList<>();
-        do {
-            Pageable pageable = PageRequest.of(page, size);
-            followers = mockFollowers(profileId, pageable);
-            if (followers.hasContent()) {
-                futures.add(processFollowerBatch(postId, followers.getContent()));
-            }
-            page++;
-        } while (!followers.isEmpty());
+//        String postId = postEvent.getPostId();
+//        UUID profileId = postEvent.getProfileId();
+        log.info("Received " + postEvent + " from message queue.");
+//        int page = 0;
+//        int size = 20;
+//        Page<ProfileDto> followers;
+//        List<CompletableFuture<Void>> futures = new ArrayList<>();
+//        do {
+//            Pageable pageable = PageRequest.of(page, size);
+//            followers = mockFollowers(profileId, pageable);
+//            if (followers == null) {
+//                break;
+//            }
+//            if (followers.hasContent()) {
+//                futures.add(processFollowerBatch(postId, followers.getContent()));
+//            }
+//            page++;
+//        } while (followers != null);
     }
 
     @Async
@@ -49,7 +55,7 @@ public class RabbitListenerImpl {
         for (ProfileDto follower : followers) {
             try {
                 redisTemplate.opsForList().leftPush("feed:profile:"+follower.getId(), postId);
-                redisTemplate.expire("feed:user:" + follower, Duration.ofHours(12)); // Set TTL to 0.5 day
+                redisTemplate.expire("feed:profile:" + follower, Duration.ofHours(12)); // Set TTL to 0.5 day
             } catch (Exception e) {
                 throw new RuntimeException(e.getMessage());
             }
@@ -60,5 +66,6 @@ public class RabbitListenerImpl {
     private Page<ProfileDto> mockFollowers(UUID authorId, Pageable pageable) {
         List<ProfileDto> mock = List.of(ProfileDto.builder().id(UUID.randomUUID()).build());
         return new PageImpl<>(mock);
+//        return null;
     }
 }

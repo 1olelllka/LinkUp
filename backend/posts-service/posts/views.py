@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404
 from django.http import Http404
 import redis
 import hashlib
+from .message_publisher import publish_message
 from datetime import datetime, timedelta, timezone
 from django.core.cache import cache
 
@@ -18,8 +19,14 @@ class UserPostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
 
     def create(self, request, user_id):
-        return super().create(request)
-
+        response = super().create(request)
+        if response.status_code == 201:
+            post_id = response.data['id']
+            profile_id = response.data['user_id']
+            message_data = {"postId": f"{post_id}", "profileId": profile_id, "timestamp": datetime.now().isoformat()}
+            publish_message(message=message_data)
+        return response
+    
     def get_queryset(self):
         return self.queryset.filter(user_id=self.kwargs['user_id'])
     

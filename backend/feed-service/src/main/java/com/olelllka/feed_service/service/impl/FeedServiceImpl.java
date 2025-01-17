@@ -10,6 +10,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,9 +24,10 @@ public class FeedServiceImpl implements FeedService {
 
     @Override
     public Page<PostDto> getFeedForProfile(UUID profileId, Pageable pageable) {
-        int start = (pageable.getPageNumber() + 1) * pageable.getPageSize();
+        int start = pageable.getPageNumber() * pageable.getPageSize();
         int end = start + pageable.getPageSize() - 1;
-        List<String> postIds = redisTemplate.opsForList().range("feed:profile:"+profileId.toString(), start, end);
+        log.info(start+ " " + end);
+        List<String> postIds = redisTemplate.opsForList().range("feed:profile:"+profileId, start, end);
         log.info("" + postIds);
         return mockGetPostsByIds(postIds, start, end);
     }
