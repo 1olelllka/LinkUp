@@ -1,39 +1,44 @@
 package com.olelllka.feed_service.service.impl;
 
 import com.olelllka.feed_service.domain.dto.PostDto;
+import com.olelllka.feed_service.feign.PostsInterface;
 import com.olelllka.feed_service.service.FeedService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Log
 public class FeedServiceImpl implements FeedService {
 
     private final RedisTemplate<String, String> redisTemplate;
+    private final PostsInterface postsInterface;
 
     @Override
     public Page<PostDto> getFeedForProfile(UUID profileId, Pageable pageable) {
         int start = pageable.getPageNumber() * pageable.getPageSize();
         int end = start + pageable.getPageSize() - 1;
-        log.info(start+ " " + end);
         List<String> postIds = redisTemplate.opsForList().range("feed:profile:"+profileId, start, end);
-        log.info("" + postIds);
-        return mockGetPostsByIds(postIds, start, end);
+        return mockGetPostsByIds(postIds.stream().map(Integer::parseInt).toList(), start, end);
     }
 
-    // it'll be here until I connect components to eureka, I think it's not that hard to integrate it here.
-    private Page<PostDto> mockGetPostsByIds(List<String> ids, int start, int end) {
-        return new PageImpl<>(List.of());
+    // here can be some latency issues if list of ids is too large, but I'll fix it sometime later
+    private Page<PostDto> mockGetPostsByIds(List<Integer> ids, int start, int end) {
+        List<PostDto> posts = new ArrayList<>();
+        for (Integer id : ids) {
+            ResponseEntity<PostDto> result = postsInterface.getPosts(id);
+            if (result.getStatusCode().is2xxSuccessful()) {
+                posts.add(result.getBody());
+            }
+        }
+        return new PageImpl<>(posts);
     }
 }

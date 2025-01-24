@@ -13,6 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Data
 public class PostDto {
+    private Integer id;
     private UUID user_id;
     private String image;
     private String desc;

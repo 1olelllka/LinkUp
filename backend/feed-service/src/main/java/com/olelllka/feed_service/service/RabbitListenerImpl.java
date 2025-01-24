@@ -2,11 +2,10 @@ package com.olelllka.feed_service.service;
 
 import com.olelllka.feed_service.domain.dto.NewPostEvent;
 import com.olelllka.feed_service.domain.dto.ProfileDto;
+import com.olelllka.feed_service.feign.ProfileInterface;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -21,33 +20,32 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 @RequiredArgsConstructor
-@Log
 public class RabbitListenerImpl {
 
     private final RedisTemplate<String, String> redisTemplate;
+    private final ProfileInterface profileInterface;
     public static final String queue = "feed_updates_queue";
 
     // comments for now
     @RabbitListener(queues = queue)
     public void handleNewPost(NewPostEvent postEvent) {
-//        String postId = postEvent.getPostId();
-//        UUID profileId = postEvent.getProfileId();
-        log.info("Received " + postEvent + " from message queue.");
-//        int page = 0;
-//        int size = 20;
-//        Page<ProfileDto> followers;
-//        List<CompletableFuture<Void>> futures = new ArrayList<>();
-//        do {
-//            Pageable pageable = PageRequest.of(page, size);
-//            followers = mockFollowers(profileId, pageable);
-//            if (followers == null) {
-//                break;
-//            }
-//            if (followers.hasContent()) {
-//                futures.add(processFollowerBatch(postId, followers.getContent()));
-//            }
-//            page++;
-//        } while (followers != null);
+        String postId = postEvent.getPostId();
+        UUID profileId = postEvent.getProfileId();
+        int page = 0;
+        int size = 20;
+        Page<ProfileDto> followers;
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        do {
+            Pageable pageable = PageRequest.of(page, size);
+            followers = getFollowers(profileId, pageable);
+            if (followers.isEmpty()) {
+                break;
+            }
+            if (followers.hasContent()) {
+                futures.add(processFollowerBatch(postId, followers.getContent()));
+            }
+            page++;
+        } while (followers.hasContent());
     }
 
     @Async
@@ -63,9 +61,7 @@ public class RabbitListenerImpl {
         return CompletableFuture.completedFuture(null);
     }
 
-    private Page<ProfileDto> mockFollowers(UUID authorId, Pageable pageable) {
-        List<ProfileDto> mock = List.of(ProfileDto.builder().id(UUID.randomUUID()).build());
-        return new PageImpl<>(mock);
-//        return null;
+    private Page<ProfileDto> getFollowers(UUID authorId, Pageable pageable) {
+        return profileInterface.getAllFollowersForProfile(authorId, pageable).getBody();
     }
 }

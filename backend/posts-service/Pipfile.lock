@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "5231164f92f8d36e0c7e312f714ff61324b205b1722ef41616d6d4916ca4a84c"
+            "sha256": "e86c14bba32cbfe7c3ced7aa5c0340508fcec0c9b8b9e5fce3917fa75c896d63"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -59,6 +59,21 @@
             "index": "pypi",
             "markers": "python_version >= '3.8'",
             "version": "==3.15.2"
+        },
+        "dnspython": {
+            "hashes": [
+                "sha256:b4c34b7d10b51bcc3a5071e7b8dee77939f1e878477eeecc965e9835f63c6c86",
+                "sha256:ce9c432eda0dc91cf618a5cedf1a4e142651196bbcd2c80e89ed5a907e5cfaf1"
+            ],
+            "markers": "python_version >= '3.9'",
+            "version": "==2.7.0"
+        },
+        "ifaddr": {
+            "hashes": [
+                "sha256:085e0305cfe6f16ab12d72e2024030f5d52674afad6911bb1eee207177b8a748",
+                "sha256:cc0cbfcaabf765d44595825fb96a99bb12c79716b73b44330ea38ee2b0c4aed4"
+            ],
+            "version": "==0.2.0"
         },
         "pika": {
             "hashes": [
@@ -221,6 +236,15 @@
             "index": "pypi",
             "markers": "python_version >= '3.8'",
             "version": "==2.9.10"
+        },
+        "py-eureka-client": {
+            "hashes": [
+                "sha256:277e033975d1d9a452949de1de0b81f4faf82a93b484a167e6cc66046eda9126",
+                "sha256:41c376d9d1ba55fb325f14cdcbaa007a2c8af8b06fcf03ad2f30155482ac39fd"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.7'",
+            "version": "==0.11.13"
         },
         "redis": {
             "hashes": [
