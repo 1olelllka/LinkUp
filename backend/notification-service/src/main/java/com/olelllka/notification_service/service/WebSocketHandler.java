@@ -1,5 +1,8 @@
 package com.olelllka.notification_service.service;
 
+import com.olelllka.notification_service.feign.ProfileFeign;
+import com.olelllka.notification_service.rest.exception.NotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
@@ -8,13 +11,19 @@ import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+@RequiredArgsConstructor
 public class WebSocketHandler extends TextWebSocketHandler {
 
     private static final ConcurrentHashMap<UUID, WebSocketSession> sessions = new ConcurrentHashMap<>();
+    private final ProfileFeign profileService;
+
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         UUID userId = getUserIdFromUri(session);
+        if (!profileService.getProfileById(userId).getStatusCode().is2xxSuccessful()) {
+            throw new NotFoundException("User with such id does not exist.");
+        }
         sessions.put(userId, session);
         session.sendMessage(new TextMessage("Connection established! Your userId: " + userId));
     }

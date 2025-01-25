@@ -1,6 +1,7 @@
 package com.olelllka.notification_service.service.impl;
 
 import com.olelllka.notification_service.domain.entity.NotificationEntity;
+import com.olelllka.notification_service.feign.ProfileFeign;
 import com.olelllka.notification_service.repository.NotificationRepository;
 import com.olelllka.notification_service.rest.exception.NotFoundException;
 import com.olelllka.notification_service.service.NotificationService;
@@ -20,9 +21,13 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository repository;
     private final MongoTemplate mongoTemplate;
+    private final ProfileFeign profileService;
 
     @Override
     public Page<NotificationEntity> getNotificationsForUser(UUID userId, Pageable pageable) {
+        if (!profileService.getProfileById(userId).getStatusCode().is2xxSuccessful()) {
+            throw new NotFoundException("User with such id does not exist.");
+        }
         return repository.findByUserId(userId, pageable);
     }
 
@@ -41,6 +46,9 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void deleteNotificationsForSpecificUser(UUID userId) {
+        if (!profileService.getProfileById(userId).getStatusCode().is2xxSuccessful()) {
+            throw new NotFoundException("User with such id does not exist.");
+        }
         Query query = new Query();
         query.addCriteria(Criteria.where("userId").is(userId));
         mongoTemplate.findAllAndRemove(query, NotificationEntity.class);

@@ -2,7 +2,9 @@ package com.olelllka.chat_service.service.impl;
 
 import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
+import com.olelllka.chat_service.feign.ProfileFeign;
 import com.olelllka.chat_service.repository.ChatRepository;
+import com.olelllka.chat_service.rest.exception.NotFoundException;
 import com.olelllka.chat_service.service.ChatService;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
@@ -22,14 +24,22 @@ public class ChatServiceImpl implements ChatService {
 
     private final ChatRepository repository;
     private final MongoTemplate mongoTemplate;
+    private final ProfileFeign profileService;
 
     @Override
     public Page<ChatEntity> getChatsForUser(UUID userId, Pageable pageable) {
+        if (!profileService.getProfileById(userId).getStatusCode().is2xxSuccessful()) {
+            throw new NotFoundException("User with such id does not exist.");
+        }
         return repository.findChatsByUserId(userId, pageable);
     }
 
     @Override
     public ChatEntity createNewChat(@NotEmpty UUID userId1, @NotEmpty UUID userId2) {
+        if (!profileService.getProfileById(userId1).getStatusCode().is2xxSuccessful() ||
+        !profileService.getProfileById(userId2).getStatusCode().is2xxSuccessful()) {
+            throw new NotFoundException("One of the users with such id does not exist.");
+        }
         ChatEntity newChat = ChatEntity.builder()
                 .participants(new UUID[]{userId1, userId2})
                 .build();

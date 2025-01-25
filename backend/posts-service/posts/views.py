@@ -11,6 +11,7 @@ import hashlib
 from .message_publisher import publish_message
 from datetime import datetime, timedelta, timezone
 from django.core.cache import cache
+import requests
 
 redis_instance = redis.StrictRedis(host='localhost', port=6379, db=0)
 
@@ -19,6 +20,9 @@ class UserPostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
 
     def create(self, request, user_id):
+        profile_response = requests.get(f"http://localhost:8001/profiles/{user_id}")
+        if profile_response.status_code != 200:
+            return Response(data={"error": "User with such id does not exist"}, status=404)
         response = super().create(request)
         if response.status_code == 201:
             post_id = response.data['id']
@@ -81,6 +85,12 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def create(self, request, post_id):
         post = get_object_or_404(Post, pk=post_id)
+        if request.data.get('user_id') is not None:
+            profile_response = requests.get(f"http://localhost:8001/profiles/{request.data['user_id']}")
+        else:
+            return Response(data={"error": "Profile id is required"}, status=400)
+        if (profile_response.status_code != 200):
+            return Response(data={"error": "User with such id does not exist"}, status=404)
         data = request.data.copy()
         data['post'] = post.pk
         serializer = self.get_serializer(data=data)

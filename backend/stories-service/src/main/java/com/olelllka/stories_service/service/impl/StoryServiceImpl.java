@@ -1,6 +1,7 @@
 package com.olelllka.stories_service.service.impl;
 
 import com.olelllka.stories_service.domain.entity.StoryEntity;
+import com.olelllka.stories_service.feign.ProfileFeign;
 import com.olelllka.stories_service.repository.StoryRepository;
 import com.olelllka.stories_service.rest.exception.NotFoundException;
 import com.olelllka.stories_service.service.StoryService;
@@ -21,9 +22,13 @@ import java.util.UUID;
 public class StoryServiceImpl implements StoryService {
 
     private final StoryRepository repository;
+    private final ProfileFeign profileService;
 
     @Override
     public Page<StoryEntity> getStoriesForUser(UUID id, Pageable pageable) {
+        if (!profileService.getProfileById(id).getStatusCode().is2xxSuccessful()) {
+            throw new NotFoundException("User with such id does not exist.");
+        }
         return repository.findStoryByUserId(id, pageable);
     }
 
@@ -35,6 +40,9 @@ public class StoryServiceImpl implements StoryService {
 
     @Override
     public StoryEntity createStory(UUID userId, StoryEntity entity) {
+        if (!profileService.getProfileById(userId).getStatusCode().is2xxSuccessful()) {
+            throw new NotFoundException("User with such id does not exist.");
+        }
         entity.setAvailable(true);
         entity.setUserId(userId);
         return repository.save(entity);

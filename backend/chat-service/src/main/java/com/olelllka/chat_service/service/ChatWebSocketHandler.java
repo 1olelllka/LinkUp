@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.olelllka.chat_service.domain.dto.NotificationDto;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
+import com.olelllka.chat_service.feign.ProfileFeign;
 import com.olelllka.chat_service.repository.ChatRepository;
 import com.olelllka.chat_service.repository.MessageRepository;
+import com.olelllka.chat_service.rest.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
@@ -24,20 +26,26 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private ChatRepository chatRepository;
     private MessageRepository messageRepository;
     private MessagePublisher messagePublisher;
+    private ProfileFeign profileService;
     private static final ConcurrentHashMap<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
 
     @Autowired
     public ChatWebSocketHandler(ChatRepository chatRepository,
                                 MessageRepository messageRepository,
+                                ProfileFeign profileService,
                                 MessagePublisher messagePublisher) {
         this.chatRepository = chatRepository;
         this.messageRepository = messageRepository;
         this.messagePublisher = messagePublisher;
+        this.profileService = profileService;
     }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         String userId = session.getUri().getQuery().split("=")[1];
+        if (!profileService.getProfileById(UUID.fromString(userId)).getStatusCode().is2xxSuccessful()){
+            throw new NotFoundException("User with such id does not exist");
+        }
         sessions.put(userId, session);
         session.sendMessage(new TextMessage("Connection established! Your userId: " + userId));
     }
@@ -49,6 +57,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         MessageEntity msg = objectMapper.readValue(payload, MessageEntity.class);
         UUID senderId = UUID.fromString(session.getUri().getQuery().split("=")[1]);
         UUID targetUserId = msg.getTo();
+        if (!profileService.getProfileById(targetUserId).getStatusCode().is2xxSuccessful()){
+            throw new NotFoundException("User with such id does not exist");
+        }
         String chatMessage = msg.getContent();
 
         WebSocketSession targetSession = sessions.get(targetUserId);

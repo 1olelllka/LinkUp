@@ -4,7 +4,7 @@ services:
     container_name: feed_redis
     image: redis:7.2.6
     ports:
-      - "6379:6379"
+      - "6377:6379"
     volumes:
       - "redis_data:/data"
 

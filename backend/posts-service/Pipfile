@@ -12,6 +12,7 @@ django-cors-headers = "*"
 django-redis = "*"
 pika = "*"
 py-eureka-client = "*"
+requests = "*"
 
 [dev-packages]
 
