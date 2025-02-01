@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.UUID;
 
-@FeignClient("PROFILE-SERVICE")
+@FeignClient(value = "PROFILE-SERVICE", url = "http://localhost:8001", dismiss404 = true)
 public interface ProfileInterface {
 
     @GetMapping("/profiles/{profile_id}/followers")

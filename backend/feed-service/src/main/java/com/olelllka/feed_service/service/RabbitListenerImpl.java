@@ -26,7 +26,6 @@ public class RabbitListenerImpl {
     private final ProfileInterface profileInterface;
     public static final String queue = "feed_updates_queue";
 
-    // comments for now
     @RabbitListener(queues = queue)
     public void handleNewPost(NewPostEvent postEvent) {
         String postId = postEvent.getPostId();
