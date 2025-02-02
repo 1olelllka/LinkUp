@@ -17,5 +17,7 @@ public interface StoryRepository extends MongoRepository<StoryEntity, String> {
     @Query("{ 'userId': ?0 }")
     Page<StoryEntity> findStoryByUserId(UUID id, Pageable pageable);
 
+    void deleteByUserId(UUID id);
+
     List<StoryEntity> findByAvailableTrueAndCreatedAtBefore(Date expiryDate);
 }

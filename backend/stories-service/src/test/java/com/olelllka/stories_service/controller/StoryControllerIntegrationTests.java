@@ -1,5 +1,8 @@
 package com.olelllka.stories_service.controller;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.olelllka.stories_service.TestDataUtil;
 import com.olelllka.stories_service.domain.dto.CreateStoryDto;
 import com.olelllka.stories_service.domain.entity.StoryEntity;
@@ -8,6 +11,7 @@ import com.olelllka.stories_service.service.StoryService;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,6 +38,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureMockMvc
 public class StoryControllerIntegrationTests {
+
+    @RegisterExtension
+    static WireMockExtension PROFILE_SERVICE = WireMockExtension.newInstance()
+            .options(WireMockConfiguration.options().port(8001)).build();
 
     @ServiceConnection
     static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:8.0");
@@ -68,8 +76,18 @@ public class StoryControllerIntegrationTests {
 
     @Test
     public void testThatGetAllStoriesForUserReturnsHttp200Ok() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/stories/users/" + UUID.randomUUID()))
+        UUID profileId = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
+        mockMvc.perform(MockMvcRequestBuilders.get("/stories/users/" + profileId))
                 .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    public void testThatGetAllStoriesForUserReturnsHttp404NotFoundIdUserDoesNotExist() throws Exception {
+        UUID profileId = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.notFound()));
+        mockMvc.perform(MockMvcRequestBuilders.get("/stories/users/" + profileId))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test
@@ -80,7 +98,9 @@ public class StoryControllerIntegrationTests {
 
     @Test
     public void testThatGetSpecificStoryReturnsHttp200OkIfExistsAndThenCacheWorks() throws Exception {
-        StoryEntity story = service.createStory(UUID.randomUUID(), TestDataUtil.createStoryEntity());
+        UUID profileId = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
+        StoryEntity story = service.createStory(profileId, TestDataUtil.createStoryEntity());
         mockMvc.perform(MockMvcRequestBuilders.get("/stories/" + story.getId()))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         assertTrue(redisTemplate.hasKey("story::"+SHA256.generate(story.getId())));
@@ -98,14 +118,28 @@ public class StoryControllerIntegrationTests {
 
     @Test
     public void testThatCreateStoryForUserReturnsHttp201CreatedIfSuccessful() throws Exception {
+        UUID profileId = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
         CreateStoryDto createStoryDto = CreateStoryDto.builder().image("New Image url").build();
         String json = objectMapper.writeValueAsString(createStoryDto);
-        mockMvc.perform(MockMvcRequestBuilders.post("/stories/users/" + UUID.randomUUID())
+        mockMvc.perform(MockMvcRequestBuilders.post("/stories/users/" + profileId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.available").value(true))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.image").value("New Image url"));
+    }
+
+    @Test
+    public void testThatCreateStoryForUserReturnsHttp404NotFoundIfUserDoesNotExist() throws Exception {
+        UUID profileId = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.notFound()));
+        CreateStoryDto createStoryDto = CreateStoryDto.builder().image("New Image url").build();
+        String json = objectMapper.writeValueAsString(createStoryDto);
+        mockMvc.perform(MockMvcRequestBuilders.post("/stories/users/" + profileId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test
@@ -130,7 +164,9 @@ public class StoryControllerIntegrationTests {
 
     @Test
     public void testThatUpdateStoryReturnsHttp200IfSuccessful() throws Exception {
-        StoryEntity entity = service.createStory(UUID.randomUUID(), TestDataUtil.createStoryEntity());
+        UUID profileId = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
+        StoryEntity entity = service.createStory(profileId, TestDataUtil.createStoryEntity());
         CreateStoryDto createStoryDto = CreateStoryDto.builder().image("Updated url").build();
         String json = objectMapper.writeValueAsString(createStoryDto);
         mockMvc.perform(MockMvcRequestBuilders.patch("/stories/" + entity.getId())

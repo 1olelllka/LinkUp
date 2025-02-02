@@ -85,4 +85,20 @@ public class StoryRepositoryMongoDataTest {
         assertEquals(stories.size(), 0);
     }
 
+    @Test
+    public void testThatMongoDeletesAllOfTheStoriesByUserId() {
+        UUID profileId = UUID.randomUUID();
+        StoryEntity story1 = TestDataUtil.createStoryEntity();
+        story1.setUserId(profileId);
+        StoryEntity story2 = TestDataUtil.createStoryEntity();
+        story2.setUserId(profileId);
+        repository.saveAll(List.of(story1, story2));
+
+        repository.deleteByUserId(profileId);
+
+        Pageable pageable = PageRequest.of(0, 1);
+        Page<StoryEntity> stories = repository.findStoryByUserId(profileId, pageable);
+        assertEquals(stories.getTotalElements(), 0);
+    }
+
 }

@@ -2,6 +2,7 @@ package com.olelllka.stories_service.service;
 
 import com.olelllka.stories_service.TestDataUtil;
 import com.olelllka.stories_service.domain.entity.StoryEntity;
+import com.olelllka.stories_service.feign.ProfileFeign;
 import com.olelllka.stories_service.repository.StoryRepository;
 import com.olelllka.stories_service.rest.exception.NotFoundException;
 import com.olelllka.stories_service.service.impl.StoryServiceImpl;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +29,8 @@ public class StoryServiceUnitTest {
 
     @Mock
     private StoryRepository repository;
+    @Mock
+    private ProfileFeign profileFeign;
     @InjectMocks
     private StoryServiceImpl service;
 
@@ -39,6 +43,7 @@ public class StoryServiceUnitTest {
         Page<StoryEntity> expected = new PageImpl<>(List.of(entity));
         // when
         when(repository.findStoryByUserId(id, pageable)).thenReturn(expected);
+        when(profileFeign.getProfileById(id)).thenReturn(ResponseEntity.ok().build());
         Page<StoryEntity> result = service.getStoriesForUser(id, pageable);
         // then
         assertAll(
@@ -46,6 +51,17 @@ public class StoryServiceUnitTest {
                 () -> assertEquals(result.getContent().get(0).getImage(), expected.getContent().get(0).getImage())
         );
         verify(repository, times(1)).findStoryByUserId(id, pageable);
+    }
+
+    @Test
+    public void testThatGetStoriesForUserThrowsException() {
+        // given
+        UUID id = UUID.randomUUID();
+        Pageable pageable = PageRequest.of(0, 1);
+        // when
+        when(profileFeign.getProfileById(id)).thenReturn(ResponseEntity.notFound().build());
+        assertThrows(NotFoundException.class, () -> service.getStoriesForUser(id, pageable));
+        verify(repository, never()).findStoryByUserId(id, pageable);
     }
 
     @Test
@@ -84,6 +100,7 @@ public class StoryServiceUnitTest {
         StoryEntity story = TestDataUtil.createStoryEntity();
         // when
         when(repository.save(expected)).thenReturn(story);
+        when(profileFeign.getProfileById(userId)).thenReturn(ResponseEntity.ok().build());
         StoryEntity result = service.createStory(userId, story);
         // then
         assertAll(
@@ -93,6 +110,18 @@ public class StoryServiceUnitTest {
                 () -> assertEquals(result.getUserId(), expected.getUserId())
         );
         verify(repository, times(1)).save(expected);
+    }
+
+    @Test
+    public void testThatCreateStoryThrowsException () {
+        // given
+        UUID userId = UUID.randomUUID();
+        StoryEntity story = TestDataUtil.createStoryEntity();
+        // when
+        when(profileFeign.getProfileById(userId)).thenReturn(ResponseEntity.notFound().build());
+        assertThrows(NotFoundException.class, () -> service.createStory(userId, story));
+        // then
+        verify(repository, never()).save(any(StoryEntity.class));
     }
 
     @Test

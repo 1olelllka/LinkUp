@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
@@ -16,10 +17,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class StoryEntity {
-
     @Id
     private String id;
     private String image;
+    @Indexed
     private UUID userId;
     @Builder.Default
     private Integer likes = 0;
