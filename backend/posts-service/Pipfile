@@ -13,6 +13,7 @@ django-redis = "*"
 pika = "*"
 py-eureka-client = "*"
 requests = "*"
+wiremock = "*"
 
 [dev-packages]
 
