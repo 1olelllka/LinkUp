@@ -1,5 +1,6 @@
 from pika import BlockingConnection, ConnectionParameters, PlainCredentials
 import json;
+from django.conf import settings
 
 def publish_message(message):
     connection = None
