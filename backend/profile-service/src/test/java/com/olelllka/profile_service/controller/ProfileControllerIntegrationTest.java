@@ -180,7 +180,7 @@ public class ProfileControllerIntegrationTest {
         registry.getListenerContainer("d-profile").start();
         mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/" + profile.getId()))
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue).getMessageCount() == 0);
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_elastic).getMessageCount() == 0);
         assertFalse(documentRepository.existsById(profile.getId()));
     }
 

@@ -28,7 +28,7 @@ public class MessageListener {
         documentRepository.save(document);
     }
 
-    @RabbitListener(queues = RabbitMQConfig.delete_queue, id="d-profile")
+    @RabbitListener(queues = RabbitMQConfig.delete_queue_elastic, id="d-profile")
     public void deleteProfileOnElasticSearch(UUID id) {
         documentRepository.deleteById(id);
     }

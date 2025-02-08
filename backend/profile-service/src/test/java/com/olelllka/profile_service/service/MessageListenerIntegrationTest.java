@@ -83,9 +83,10 @@ public class MessageListenerIntegrationTest {
         messagePublisher.createUpdateProfile(dto);
         // when
         messagePublisher.deleteProfile(dto.getId());
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> admin.getQueueInfo(RabbitMQConfig.delete_queue).getMessageCount() == 0);
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> admin.getQueueInfo(RabbitMQConfig.delete_queue_elastic).getMessageCount() == 0);
         // then
         assertFalse(repository.existsById(dto.getId()));
+        assertEquals(admin.getQueueInfo(RabbitMQConfig.delete_queue_post).getMessageCount(), 1);
     }
 
 }

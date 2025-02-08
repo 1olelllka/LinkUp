@@ -24,7 +24,7 @@ public class MessagePublisher {
     }
 
     public void deleteProfile(UUID id) {
-        rabbitTemplate.convertAndSend(RabbitMQConfig.profile_exchange, "delete_profile", id);
+        rabbitTemplate.convertAndSend(RabbitMQConfig.profile_fanout_exchange, "", id);
     }
 
     public void createFollowNotification(NotificationDto notificationDto) throws JsonProcessingException {
