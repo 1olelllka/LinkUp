@@ -3,7 +3,6 @@ package com.olelllka.chat_service.domain.dto;
 import lombok.Builder;
 import lombok.Data;
 
-import java.util.List;
 import java.util.UUID;
 
 @Builder

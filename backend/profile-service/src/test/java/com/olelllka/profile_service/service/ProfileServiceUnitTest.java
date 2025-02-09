@@ -118,7 +118,6 @@ public class ProfileServiceUnitTest {
         patchProfileDto.setGender(Gender.FEMALE);
         patchProfileDto.setAboutMe("UPDATED");
         patchProfileDto.setPhoto("UPDATED PHOTO");
-        ProfileEntity entity = TestDataUtil.createNewProfileEntity();
         ProfileEntity expected = TestDataUtil.createNewProfileEntity();
         expected.setName("UPDATED NAME");
         expected.setUsername("UPDATED USERNAME");

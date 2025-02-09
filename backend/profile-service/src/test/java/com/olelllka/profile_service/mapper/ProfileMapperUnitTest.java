@@ -4,7 +4,6 @@ import com.olelllka.profile_service.TestDataUtil;
 import com.olelllka.profile_service.domain.dto.ProfileDto;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
 import com.olelllka.profile_service.mapper.impl.ProfileMapper;
-import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

@@ -7,7 +7,6 @@ import com.olelllka.profile_service.domain.dto.NotificationDto;
 import com.olelllka.profile_service.domain.dto.ProfileDocumentDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;

@@ -2,7 +2,6 @@ package com.olelllka.chat_service.repository;
 
 import com.olelllka.chat_service.TestDataUtil;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
-import org.junit.After;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

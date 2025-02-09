@@ -56,7 +56,6 @@ public class NotificationServiceUnitTest {
         // given
         UUID id = UUID.randomUUID();
         Pageable pageable = PageRequest.of(0, 1);
-        Page<NotificationEntity> expected = new PageImpl<>(List.of(TestDataUtil.createNotificationEntity()));
         // when
         when(profileFeign.getProfileById(id)).thenReturn(ResponseEntity.notFound().build());
         assertThrows(NotFoundException.class, () -> service.getNotificationsForUser(id, pageable));
