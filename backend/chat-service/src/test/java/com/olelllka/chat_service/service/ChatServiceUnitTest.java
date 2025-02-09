@@ -3,7 +3,9 @@ package com.olelllka.chat_service.service;
 import com.olelllka.chat_service.TestDataUtil;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
+import com.olelllka.chat_service.feign.ProfileFeign;
 import com.olelllka.chat_service.repository.ChatRepository;
+import com.olelllka.chat_service.rest.exception.NotFoundException;
 import com.olelllka.chat_service.service.impl.ChatServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,8 +34,23 @@ public class ChatServiceUnitTest {
     private ChatRepository chatRepository;
     @Mock
     private MongoTemplate mongoTemplate;
+    @Mock
+    private ProfileFeign profileFeign;
     @InjectMocks
     private ChatServiceImpl chatService;
+
+    @Test
+    public void testThatGetChatsByUserIdThrowsException() {
+        // given
+        Pageable pageable = PageRequest.of(0, 1);
+        UUID userId = UUID.randomUUID();
+        // when
+        when(profileFeign.getProfileById(userId)).thenReturn(ResponseEntity.notFound().build());
+        // then
+        assertThrows(NotFoundException.class, () -> chatService.getChatsForUser(userId, pageable));
+
+        verify(chatRepository, never()).findChatsByUserId(userId, pageable);
+    }
 
     @Test
     public void testThatGetChatsByUserIdWorks() {
@@ -41,6 +59,7 @@ public class ChatServiceUnitTest {
         Pageable pageable = PageRequest.of(0, 1);
         UUID userId = UUID.randomUUID();
         // when
+        when(profileFeign.getProfileById(userId)).thenReturn(ResponseEntity.ok().build());
         when(chatRepository.findChatsByUserId(userId, pageable)).thenReturn(expected);
         Page<ChatEntity> result = chatService.getChatsForUser(userId, pageable);
         // then
@@ -61,6 +80,8 @@ public class ChatServiceUnitTest {
         UUID[] ids = {userId1, userId2};
         expected.setParticipants(ids);
         // when
+        when(profileFeign.getProfileById(userId1)).thenReturn(ResponseEntity.ok().build());
+        when(profileFeign.getProfileById(userId2)).thenReturn(ResponseEntity.ok().build());
         when(chatRepository.save(expected)).thenReturn(expected);
         ChatEntity result = chatService.createNewChat(userId1, userId2);
         // then
@@ -69,6 +90,18 @@ public class ChatServiceUnitTest {
                 () -> assertEquals(result.getParticipants()[0], expected.getParticipants()[0]),
                 () -> assertEquals(result.getParticipants()[1], expected.getParticipants()[1])
         );
+    }
+
+    @Test
+    public void testThatCreateNewChatThrowsExceptionIfOneOfTheUsersDoesNotExist() {
+        // given
+        UUID userId1 = UUID.randomUUID();
+        UUID userId2 = UUID.randomUUID();
+        // when
+        when(profileFeign.getProfileById(userId1)).thenReturn(ResponseEntity.notFound().build());
+        // then
+        assertThrows(NotFoundException.class, () -> chatService.createNewChat(userId1, userId2));
+        verify(chatRepository, never()).save(any(ChatEntity.class));
     }
 
     @Test

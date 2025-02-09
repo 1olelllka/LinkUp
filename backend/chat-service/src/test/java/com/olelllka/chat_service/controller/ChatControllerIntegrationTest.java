@@ -1,5 +1,8 @@
 package com.olelllka.chat_service.controller;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.olelllka.chat_service.TestDataUtil;
 import com.olelllka.chat_service.domain.dto.CreateChatDto;
 import com.olelllka.chat_service.domain.dto.MessageDto;
@@ -10,6 +13,7 @@ import com.olelllka.chat_service.service.ChatService;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,6 +35,10 @@ import java.util.UUID;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureMockMvc
 public class ChatControllerIntegrationTest {
+
+    @RegisterExtension
+    static WireMockExtension PROFILE_SERVICE = WireMockExtension.newInstance()
+            .options(WireMockConfiguration.options().port(8001)).build();
 
     @ServiceConnection
     static MongoDBContainer mongo = new MongoDBContainer("mongo:8.0");
@@ -61,11 +69,23 @@ public class ChatControllerIntegrationTest {
     }
 
     @Test
-    public void testThatGetChatsByUserReturnsPageOfResults() throws Exception {
-        ChatEntity saved = chatService.createNewChat(UUID.randomUUID(), UUID.randomUUID());
+    public void testThatGetChatsByUserReturnsHttp200Ok() throws Exception {
+        UUID user1 = UUID.randomUUID();
+        UUID user2 = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok()));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok()));
+        ChatEntity saved = chatService.createNewChat(user1, user2);
         mockMvc.perform(MockMvcRequestBuilders.get("/chats/users/" + saved.getParticipants()[0]))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content[0]").exists());
+    }
+
+    @Test
+    public void testThatGetChatsByUserReturnsHttp404() throws Exception {
+        UUID user1 = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.notFound()));
+        mockMvc.perform(MockMvcRequestBuilders.get("/chats/users/" + user1))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test
@@ -80,7 +100,11 @@ public class ChatControllerIntegrationTest {
 
     @Test
     public void testThatCreateChatReturnsHttp201Created() throws Exception {
-        CreateChatDto createChatDto = CreateChatDto.builder().user1Id(UUID.randomUUID()).user2Id(UUID.randomUUID()).build();
+        UUID user1 = UUID.randomUUID();
+        UUID user2 = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok()));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok()));
+        CreateChatDto createChatDto = CreateChatDto.builder().user1Id(user1).user2Id(user2).build();
         String json = objectMapper.writeValueAsString(createChatDto);
         mockMvc.perform(MockMvcRequestBuilders.post("/chats")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -91,6 +115,20 @@ public class ChatControllerIntegrationTest {
     }
 
     @Test
+    public void testThatCreateChatReturnsHttp404Created() throws Exception {
+        UUID user1 = UUID.randomUUID();
+        UUID user2 = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok()));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.notFound()));
+        CreateChatDto createChatDto = CreateChatDto.builder().user1Id(user1).user2Id(user2).build();
+        String json = objectMapper.writeValueAsString(createChatDto);
+        mockMvc.perform(MockMvcRequestBuilders.post("/chats")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
     public void testThatDeleteChatWorks() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/chats/12345"))
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
@@ -98,7 +136,11 @@ public class ChatControllerIntegrationTest {
 
     @Test
     public void testThatGetMessagesByChatIdReturnsPageOfMessages() throws Exception {
-        ChatEntity chat = chatService.createNewChat(UUID.randomUUID(), UUID.randomUUID());
+        UUID user1 = UUID.randomUUID();
+        UUID user2 = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok()));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok()));
+        ChatEntity chat = chatService.createNewChat(user1, user2);
         mockMvc.perform(MockMvcRequestBuilders.get("/chats/" + chat.getId() + "/messages"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.totalElements").value(0));

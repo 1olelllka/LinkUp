@@ -62,7 +62,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         }
         String chatMessage = msg.getContent();
 
-        WebSocketSession targetSession = sessions.get(targetUserId);
+        WebSocketSession targetSession = sessions.get(targetUserId.toString());
         Optional<ChatEntity> chat = chatRepository.findChatByTwoMembers(UUID.fromString(session.getUri().getQuery().split("=")[1]), targetUserId);
         String chatId;
         if (chat.isEmpty()) {
