@@ -14,6 +14,8 @@ import org.springframework.data.domain.Pageable;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.utility.DockerImageName;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataMongoTest
@@ -55,6 +57,22 @@ public class NotificationRepositoryTest {
                 () -> assertNotNull(result),
                 () -> assertEquals(result.getTotalElements(), 1)
         );
+    }
+
+    @Test
+    public void testThatDeleteByUserIdWorksAsExpected() {
+        UUID userId = UUID.randomUUID();
+        NotificationEntity entity1 = TestDataUtil.createNotificationEntity();
+        entity1.setUserId(userId);
+        repository.save(entity1);
+        NotificationEntity entity2 = TestDataUtil.createNotificationEntity();
+        entity2.setUserId(userId);
+        repository.save(entity2);
+
+        repository.deleteByUserId(userId);
+
+        Page<NotificationEntity> result = repository.findByUserId(userId, PageRequest.of(0, 1));
+        assertEquals(result.getTotalElements(), 0);
     }
 
 }

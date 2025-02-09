@@ -25,28 +25,18 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Queue notificationQueue() {
-        return new Queue(notification_queue, true);
-    }
-
-    @Bean
     public Queue deletePostQueue() {
         return new Queue(delete_queue_post, true);
     }
 
     @Bean
-    public TopicExchange notificationExchange() {
-        return new TopicExchange(notification_exchange);
-    }
-
-    @Bean
-    public Binding notificationBinding(Queue notificationQueue, TopicExchange notificationExchange) {
-        return BindingBuilder.bind(notificationQueue).to(notificationExchange).with("notifications");
-    }
-
-    @Bean
     public Queue deleteQueueElastic() {
         return new Queue(delete_queue_elastic, true);
+    }
+
+    @Bean
+    public Queue notificationQueue() {
+        return new Queue(notification_queue, true);
     }
 
     @Bean
@@ -57,6 +47,11 @@ public class RabbitMQConfig {
     @Bean
     public FanoutExchange fanoutExchange() {
         return new FanoutExchange(profile_fanout_exchange);
+    }
+
+    @Bean
+    public TopicExchange notificationExchange() {
+        return new TopicExchange(notification_exchange);
     }
 
     @Bean
@@ -72,6 +67,11 @@ public class RabbitMQConfig {
     @Bean
     public Binding deleteProfilePostBinding(Queue deletePostQueue, FanoutExchange fanoutExchange) {
         return BindingBuilder.bind(deletePostQueue).to(fanoutExchange);
+    }
+
+    @Bean
+    public Binding notificationBinding(Queue notificationQueue, TopicExchange notificationExchange) {
+        return BindingBuilder.bind(notificationQueue).to(notificationExchange).with("notifications");
     }
 
     @Bean

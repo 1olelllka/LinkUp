@@ -33,7 +33,21 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-gateway-mvc</artifactId>
+			<artifactId>spring-cloud-starter-gateway</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-loadbalancer</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-resolver-dns-native-macos</artifactId>
+			<classifier>osx-aarch_64</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+			<version>4.1.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

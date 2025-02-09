@@ -8,9 +8,6 @@ import com.olelllka.notification_service.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -20,7 +17,6 @@ import java.util.UUID;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository repository;
-    private final MongoTemplate mongoTemplate;
     private final ProfileFeign profileService;
 
     @Override
@@ -49,8 +45,6 @@ public class NotificationServiceImpl implements NotificationService {
         if (!profileService.getProfileById(userId).getStatusCode().is2xxSuccessful()) {
             throw new NotFoundException("User with such id does not exist.");
         }
-        Query query = new Query();
-        query.addCriteria(Criteria.where("userId").is(userId));
-        mongoTemplate.findAllAndRemove(query, NotificationEntity.class);
+        repository.deleteByUserId(userId);
     }
 }

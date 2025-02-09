@@ -11,4 +11,6 @@ import java.util.UUID;
 @Repository
 public interface NotificationRepository extends MongoRepository<NotificationEntity, String> {
     Page<NotificationEntity> findByUserId(UUID userId, Pageable pageable);
+
+    void deleteByUserId(UUID userId);
 }

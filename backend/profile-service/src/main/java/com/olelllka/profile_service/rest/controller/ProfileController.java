@@ -118,16 +118,4 @@ public class ProfileController {
                 .build();
     }
 
-    private ProfileEntity mapPatchToEntity(PatchProfileDto dto) {
-        return ProfileEntity.builder()
-                .username(dto.getUsername())
-                .photo(dto.getPhoto())
-                .aboutMe(dto.getAboutMe())
-                .gender(dto.getGender())
-                .name(dto.getName())
-                .email(dto.getEmail())
-                .dateOfBirth(dto.getDateOfBirth())
-                .build();
-    }
-
 }
