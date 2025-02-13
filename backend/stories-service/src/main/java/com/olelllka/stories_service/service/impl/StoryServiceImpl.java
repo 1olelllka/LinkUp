@@ -5,7 +5,9 @@ import com.olelllka.stories_service.feign.ProfileFeign;
 import com.olelllka.stories_service.repository.StoryRepository;
 import com.olelllka.stories_service.rest.exception.NotFoundException;
 import com.olelllka.stories_service.service.StoryService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -19,12 +21,14 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Log
 public class StoryServiceImpl implements StoryService {
 
     private final StoryRepository repository;
     private final ProfileFeign profileService;
 
     @Override
+    @CircuitBreaker(name = "stories-service", fallbackMethod = "pageFallback")
     public Page<StoryEntity> getStoriesForUser(UUID id, Pageable pageable) {
         if (!profileService.getProfileById(id).getStatusCode().is2xxSuccessful()) {
             throw new NotFoundException("User with such id does not exist.");
@@ -39,6 +43,7 @@ public class StoryServiceImpl implements StoryService {
     }
 
     @Override
+    @CircuitBreaker(name = "stories-service", fallbackMethod = "createFallback")
     public StoryEntity createStory(UUID userId, StoryEntity entity) {
         if (!profileService.getProfileById(userId).getStatusCode().is2xxSuccessful()) {
             throw new NotFoundException("User with such id does not exist.");
@@ -63,5 +68,28 @@ public class StoryServiceImpl implements StoryService {
     @CacheEvict(value = "story", keyGenerator = "sha256KeyGenerator")
     public void deleteSpecificStory(String storyId) {
         repository.deleteById(storyId);
+    }
+
+    private Page<StoryEntity> pageFallback(UUID id, Pageable pageable, Throwable t) {
+        if (t instanceof NotFoundException) {
+            throw new NotFoundException(t.getMessage());
+        }
+        log.warning("Circuit Breaker triggered: " + t.getMessage());
+        return Page.empty();
+    }
+
+    private StoryEntity createFallback(UUID userId, StoryEntity entity, Throwable t) {
+        if (t instanceof NotFoundException) {
+            throw new NotFoundException(t.getMessage());
+        }
+        log.warning("Circuit Breaker triggered: " + t.getMessage());
+        return StoryEntity.builder()
+                .id("circuit-breaker.id")
+                .image("circuit-breaker.url")
+                .likes(0)
+                .available(false)
+                .userId(UUID.randomUUID())
+                .createdAt(new Date())
+                .build();
     }
 }

@@ -1,0 +1,63 @@
+spring:
+  application:
+    name: stories-service
+
+  cloud:
+    compatibility-verifier:
+      enabled: false
+
+  data:
+    mongodb:
+      uri: mongodb://admin:admin@localhost:27017/storiesDB?authSource=admin
+
+  cache:
+    type: redis
+    host: localhost
+    port: 6379
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    password: secret
+    username: myuser
+
+feign:
+  circuitbreaker:
+    enabled: true
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: health
+  health:
+    circuitbreakers:
+      enabled: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      stories-service:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        failureRateThreshold: 40
+        slowCallRateThreshold: 75
+        slowCallDurationThreshold: 2s
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        registerHealthIndicator: true
+        ignoreExceptions:
+          - com.olelllka.stories_service.rest.exception.NotFoundException
+
+server:
+  port: 8002

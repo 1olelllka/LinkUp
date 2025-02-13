@@ -83,6 +83,14 @@ public class StoryControllerIntegrationTests {
     }
 
     @Test
+    public void testThatGetALlStoriesForUserTriggersCircuitBreaker() throws Exception {
+        UUID profileId = UUID.randomUUID();
+        mockMvc.perform(MockMvcRequestBuilders.get("/stories/users/" + profileId))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.totalElements").value(0));
+    }
+
+    @Test
     public void testThatGetAllStoriesForUserReturnsHttp404NotFoundIdUserDoesNotExist() throws Exception {
         UUID profileId = UUID.randomUUID();
         PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.notFound()));
@@ -128,6 +136,19 @@ public class StoryControllerIntegrationTests {
                 .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.available").value(true))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.image").value("New Image url"));
+    }
+
+    @Test
+    public void testThatCreateStoryForUserTriggersCircuitBreaker() throws Exception {
+        UUID profileId = UUID.randomUUID();
+        CreateStoryDto createStoryDto = CreateStoryDto.builder().image("New Image url").build();
+        String json = objectMapper.writeValueAsString(createStoryDto);
+        mockMvc.perform(MockMvcRequestBuilders.post("/stories/users/" + profileId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(MockMvcResultMatchers.status().isCreated())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.available").value(false))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.image").value("circuit-breaker.url"));
     }
 
     @Test
