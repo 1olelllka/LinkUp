@@ -90,4 +90,13 @@ public class FeedControllerIntegrationTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].image").value("img"));
     }
+
+    @Test
+    public void testWhenGetFeedForSpecificUserReturnsHttp500AndActivatesCircuitBreaker() throws Exception {
+        UUID profileId = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.serverError()));
+        mockMvc.perform(MockMvcRequestBuilders.get("/feeds/" + profileId))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.totalElements").value(0));
+    }
 }

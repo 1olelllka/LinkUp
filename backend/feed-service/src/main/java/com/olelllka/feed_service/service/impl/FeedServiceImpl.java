@@ -5,11 +5,14 @@ import com.olelllka.feed_service.feign.PostsInterface;
 import com.olelllka.feed_service.feign.ProfileInterface;
 import com.olelllka.feed_service.rest.exception.NotFoundException;
 import com.olelllka.feed_service.service.FeedService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +22,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Log
 public class FeedServiceImpl implements FeedService {
 
     private final RedisTemplate<String, String> redisTemplate;
@@ -26,9 +30,14 @@ public class FeedServiceImpl implements FeedService {
     private final ProfileInterface profileInterface;
 
     @Override
+    @CircuitBreaker(name = "feed-service", fallbackMethod = "fallbackMethod")
     public Page<PostDto> getFeedForProfile(UUID profileId, Pageable pageable) {
-        if (!profileInterface.getProfileById(profileId).getStatusCode().is2xxSuccessful()) {
+        ResponseEntity<?> profileResponse = profileInterface.getProfileById(profileId);
+        if (profileResponse.getStatusCode() == HttpStatus.NOT_FOUND) { // business logic
             throw new NotFoundException("User with such id does not exist");
+        }
+        if (!profileResponse.getStatusCode().is2xxSuccessful()) { // another errors
+            throw new RuntimeException("Profile Service Failure: " + profileResponse.getStatusCode());
         }
         int start = pageable.getPageNumber() * pageable.getPageSize();
         int end = start + pageable.getPageSize() - 1;
@@ -46,5 +55,13 @@ public class FeedServiceImpl implements FeedService {
             }
         }
         return new PageImpl<>(posts);
+    }
+
+    private Page<PostDto> fallbackMethod(UUID profileId, Pageable pageable, Throwable t) {
+        if (t instanceof NotFoundException) {
+            throw new NotFoundException(t.getMessage());
+        }
+        log.warning("Circuit Breaker triggered: " + t.getMessage());
+        return Page.empty();
     }
 }

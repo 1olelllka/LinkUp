@@ -3,7 +3,9 @@ package com.olelllka.feed_service.service;
 import com.olelllka.feed_service.domain.dto.NewPostEvent;
 import com.olelllka.feed_service.domain.dto.ProfileDto;
 import com.olelllka.feed_service.feign.ProfileInterface;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 @RequiredArgsConstructor
+@Log
 public class RabbitListenerImpl {
 
     private final RedisTemplate<String, String> redisTemplate;
@@ -60,7 +63,14 @@ public class RabbitListenerImpl {
         return CompletableFuture.completedFuture(null);
     }
 
+    // TODO (in future): Implement fallback strategy, so that followers don't lose new posts
+    @CircuitBreaker(name = "feed-service", fallbackMethod = "rabbitFallbackMethod")
     private Page<ProfileDto> getFollowers(UUID authorId, Pageable pageable) {
         return profileInterface.getAllFollowersForProfile(authorId, pageable).getBody();
+    }
+
+    private Page<ProfileDto> rabbitFallbackMethod(UUID authorId, Pageable pageable, Throwable e) {
+        log.warning("Failed to fetch followers for profile " + authorId + ": " + e.getMessage());
+        return Page.empty();
     }
 }
