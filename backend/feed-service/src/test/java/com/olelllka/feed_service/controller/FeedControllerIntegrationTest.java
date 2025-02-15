@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.olelllka.feed_service.TestDataUtil;
 import com.olelllka.feed_service.domain.dto.PostDto;
+import com.olelllka.feed_service.service.SHA256;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -80,7 +81,7 @@ public class FeedControllerIntegrationTest {
         PostDto postDto = TestDataUtil.createPostDto(UUID.randomUUID());
         String jsonPost = objectMapper.writeValueAsString(postDto);
         PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
-        redisTemplate.opsForList().leftPush("feed:profile:"+profileId, "1");
+        redisTemplate.opsForList().leftPush("feed:profile:"+ SHA256.hash(profileId.toString()), "1");
         POSTS_SERVICE.stubFor(WireMock.get("/posts/1")
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
@@ -92,7 +93,7 @@ public class FeedControllerIntegrationTest {
     }
 
     @Test
-    public void testWhenGetFeedForSpecificUserReturnsHttp500AndActivatesCircuitBreaker() throws Exception {
+    public void testWhenGetFeedForSpecificUserReturnsActivatesCircuitBreaker() throws Exception {
         UUID profileId = UUID.randomUUID();
         PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.serverError()));
         mockMvc.perform(MockMvcRequestBuilders.get("/feeds/" + profileId))

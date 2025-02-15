@@ -28,6 +28,7 @@ public class RabbitListenerImpl {
     private final RedisTemplate<String, String> redisTemplate;
     private final ProfileInterface profileInterface;
     public static final String queue = "feed_updates_queue";
+    public static final String delete_queue = "delete_profile_queue_feed";
 
     @RabbitListener(queues = queue)
     public void handleNewPost(NewPostEvent postEvent) {
@@ -54,8 +55,8 @@ public class RabbitListenerImpl {
     public CompletableFuture<Void> processFollowerBatch(String postId, List<ProfileDto> followers) {
         for (ProfileDto follower : followers) {
             try {
-                redisTemplate.opsForList().leftPush("feed:profile:"+follower.getId(), postId);
-                redisTemplate.expire("feed:profile:" + follower, Duration.ofHours(12)); // Set TTL to 0.5 day
+                redisTemplate.opsForList().leftPush("feed:profile:"+SHA256.hash(follower.getId().toString()), postId);
+                redisTemplate.expire("feed:profile:" + SHA256.hash(follower.getId().toString()), Duration.ofHours(24)); // Set TTL to 1 day
             } catch (Exception e) {
                 throw new RuntimeException(e.getMessage());
             }
@@ -72,5 +73,10 @@ public class RabbitListenerImpl {
     private Page<ProfileDto> rabbitFallbackMethod(UUID authorId, Pageable pageable, Throwable e) {
         log.warning("Failed to fetch followers for profile " + authorId + ": " + e.getMessage());
         return Page.empty();
+    }
+
+    @RabbitListener(queues = delete_queue)
+    public void handleDeleteProfile(UUID profileId) {
+        redisTemplate.delete("feed:profile:"+SHA256.hash(profileId.toString()));
     }
 }

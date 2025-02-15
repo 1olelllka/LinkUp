@@ -29,12 +29,11 @@ public class RabbitListenerUnitTest {
     private RedisTemplate<String, String> redisTemplate;
     @Mock
     private ProfileInterface profileInterface;
-    public static final String queue = "feed_updates_queue";
     @InjectMocks
     private RabbitListenerImpl rabbitListener;
 
     @Test
-    public void testThatRabbitListenerWorksAsExpected() {
+    public void testThatRabbitListenerHandlesThePostCreationCorrectly() {
         // given
         UUID profileId = UUID.randomUUID();
         NewPostEvent postEvent = TestDataUtil.createNewPostEvent(profileId);
@@ -51,7 +50,17 @@ public class RabbitListenerUnitTest {
         when(listOperations.leftPush(anyString(), anyString())).thenReturn(1L);
         rabbitListener.handleNewPost(postEvent);
         // then
-        verify(listOperations, times(1)).leftPush(eq("feed:profile:" + profileDto.getId()), eq(postEvent.getPostId()));
+        verify(listOperations, times(1)).leftPush(eq("feed:profile:" + SHA256.hash(profileDto.getId().toString())), eq(postEvent.getPostId()));
+    }
+
+    @Test
+    public void testThatRabbitListenerHandlesDeleteProfileCorrectly() {
+        // given
+        UUID profileId = UUID.randomUUID();
+        // when
+        rabbitListener.handleDeleteProfile(profileId);
+        // then
+        verify(redisTemplate, times(1)).delete("feed:profile:"+ SHA256.hash(profileId.toString()));
     }
 
 }

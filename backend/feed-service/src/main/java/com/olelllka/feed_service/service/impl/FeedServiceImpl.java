@@ -5,6 +5,7 @@ import com.olelllka.feed_service.feign.PostsInterface;
 import com.olelllka.feed_service.feign.ProfileInterface;
 import com.olelllka.feed_service.rest.exception.NotFoundException;
 import com.olelllka.feed_service.service.FeedService;
+import com.olelllka.feed_service.service.SHA256;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
@@ -41,7 +42,7 @@ public class FeedServiceImpl implements FeedService {
         }
         int start = pageable.getPageNumber() * pageable.getPageSize();
         int end = start + pageable.getPageSize() - 1;
-        List<String> postIds = redisTemplate.opsForList().range("feed:profile:"+profileId, start, end);
+        List<String> postIds = redisTemplate.opsForList().range("feed:profile:"+ SHA256.hash(profileId.toString()), start, end);
         return getPostsByIds(postIds.stream().map(Integer::parseInt).toList(), start, end);
     }
 
