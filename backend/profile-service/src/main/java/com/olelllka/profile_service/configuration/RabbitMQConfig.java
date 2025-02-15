@@ -16,6 +16,9 @@ public class RabbitMQConfig {
     public static final String profile_fanout_exchange = "profile_fanout_exchange";
     public static final String delete_queue_elastic = "delete_profile_queue_elastic";
     public static final String delete_queue_post = "delete_profile_queue_post";
+    public static final String delete_queue_story = "delete_profile_queue_story";
+    public static final String delete_queue_feed = "delete_profile_queue_feed";
+    public static final String delete_queue_notification = "delete_profile_queue_notification";
     public static final String notification_queue = "notification_queue";
     public static final String notification_exchange = "notification_exchange";
 
@@ -27,6 +30,21 @@ public class RabbitMQConfig {
     @Bean
     public Queue deletePostQueue() {
         return new Queue(delete_queue_post, true);
+    }
+
+    @Bean
+    public Queue deleteStoryQueue() {
+        return new Queue(delete_queue_story, true);
+    }
+
+    @Bean
+    public Queue deleteFeedQueue() {
+        return new Queue(delete_queue_feed, true);
+    }
+
+    @Bean
+    public Queue deleteNotificationQueue() {
+        return new Queue(delete_queue_notification, true);
     }
 
     @Bean
@@ -67,6 +85,21 @@ public class RabbitMQConfig {
     @Bean
     public Binding deleteProfilePostBinding(Queue deletePostQueue, FanoutExchange fanoutExchange) {
         return BindingBuilder.bind(deletePostQueue).to(fanoutExchange);
+    }
+
+    @Bean
+    public Binding deleteProfileStoryBinding(Queue deleteStoryQueue, FanoutExchange fanoutExchange) {
+        return BindingBuilder.bind(deleteStoryQueue).to(fanoutExchange);
+    }
+
+    @Bean
+    public Binding deleteProfileFeedBinding(Queue deleteFeedQueue, FanoutExchange fanoutExchange) {
+        return BindingBuilder.bind(deleteFeedQueue).to(fanoutExchange);
+    }
+
+    @Bean
+    public Binding deleteProfileNotificationBinding(Queue deleteNotificationQueue, FanoutExchange fanoutExchange) {
+        return BindingBuilder.bind(deleteNotificationQueue).to(fanoutExchange);
     }
 
     @Bean

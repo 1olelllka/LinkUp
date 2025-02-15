@@ -182,6 +182,10 @@ public class ProfileControllerIntegrationTest {
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
         Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_elastic).getMessageCount() == 0);
         assertFalse(documentRepository.existsById(profile.getId()));
+        assertTrue(rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_post).getMessageCount() == 1);
+        assertTrue(rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_feed).getMessageCount() == 1);
+        assertTrue(rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_story).getMessageCount() == 1);
+        assertTrue(rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_notification).getMessageCount() == 1);
     }
 
     @Test
