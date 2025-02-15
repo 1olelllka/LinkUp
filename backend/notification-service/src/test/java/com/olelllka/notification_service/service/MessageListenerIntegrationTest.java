@@ -3,6 +3,7 @@ package com.olelllka.notification_service.service;
 import com.olelllka.notification_service.RabbitMQTestConfig;
 import com.olelllka.notification_service.TestDataUtil;
 import com.olelllka.notification_service.domain.dto.NotificationDto;
+import com.olelllka.notification_service.domain.entity.NotificationEntity;
 import com.olelllka.notification_service.repository.NotificationRepository;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
@@ -23,7 +24,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Import(RabbitMQTestConfig.class)
@@ -71,5 +72,19 @@ public class MessageListenerIntegrationTest {
         // test
         Pageable pageable = PageRequest.of(0, 1);
         assertEquals(repository.findByUserId(UUID.fromString(dto.getUserId()), pageable).getTotalElements(), 1);
+    }
+
+    @Test
+    public void testThatMessageListenerHandlesProfileDeletionCorrectly() {
+        UUID profileId = UUID.randomUUID();
+        NotificationEntity notification = TestDataUtil.createNotificationEntity();
+        notification.setUserId(profileId);
+        NotificationEntity saved = repository.save(notification);
+        assertTrue(repository.existsById(saved.getId()));
+
+        rabbitTemplate.convertAndSend(RabbitMQTestConfig.fanout_exchange, "", profileId);
+        Awaitility.await().atMost(5, TimeUnit.SECONDS)
+                .until(() -> admin.getQueueInfo(RabbitMQTestConfig.delete_profile_queue).getMessageCount() == 0);
+        assertFalse(repository.existsById(saved.getId()));
     }
 }

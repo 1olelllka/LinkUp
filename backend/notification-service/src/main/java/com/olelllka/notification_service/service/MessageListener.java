@@ -18,6 +18,7 @@ public class MessageListener {
     private final NotificationRepository repository;
     private final WebSocketHandler webSocketHandler;
     public static final String notification_queue = "notification_queue";
+    public static final String delete_profile_queue = "delete_profile_queue_notification";
 
     @RabbitListener(id="notification", queues = notification_queue)
     public void createNotification(String notification) throws JsonProcessingException {
@@ -32,5 +33,10 @@ public class MessageListener {
                 .build();
         repository.save(entity);
         webSocketHandler.sendNotificationToUser(entity.getUserId(), entity.getText());
+    }
+
+    @RabbitListener(queues = delete_profile_queue)
+    public void handleProfileDeletion(UUID profileId) {
+        repository.deleteByUserId(profileId);
     }
 }
