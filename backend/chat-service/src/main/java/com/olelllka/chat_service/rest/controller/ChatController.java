@@ -40,17 +40,6 @@ public class ChatController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    @PostMapping("")
-    public ResponseEntity<ChatDto> createNewChat(@Valid @RequestBody CreateChatDto createChatDto,
-                                                 BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            String msg = bindingResult.getAllErrors().stream().map(err -> err.getDefaultMessage()).collect(Collectors.joining(" "));
-            throw new ValidationException(msg);
-        }
-        ChatEntity entity = chatService.createNewChat(createChatDto.getUser1Id(), createChatDto.getUser2Id());
-        return new ResponseEntity<>(chatMapper.toDto(entity), HttpStatus.CREATED);
-    }
-
     @DeleteMapping("/{chat_id}")
     public ResponseEntity deleteChat(@PathVariable String chat_id) {
         chatService.deleteChat(chat_id);

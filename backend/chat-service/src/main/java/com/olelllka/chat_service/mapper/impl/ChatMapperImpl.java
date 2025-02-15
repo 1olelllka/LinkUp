@@ -18,6 +18,7 @@ public class ChatMapperImpl implements Mapper<ChatEntity, ChatDto> {
     @Override
     public ChatDto toDto(ChatEntity entity) {
         return ChatDto.builder()
+                .id(entity.getId())
                 .participants(entity.getParticipants())
                 .build();
     }

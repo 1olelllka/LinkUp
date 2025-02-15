@@ -1,0 +1,65 @@
+spring:
+  application:
+    name: chat-service
+
+  data:
+    mongodb:
+      uri: mongodb://admin:admin@localhost:27015/chatDB?authSource=admin
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: myuser
+    password: secret
+
+server:
+  port: 8005
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+  instance:
+    preferIpAddress: true
+
+spring.cloud:
+  compatibility-verifier:
+    enabled: false
+
+feign:
+  circuitbreaker:
+    enabled: true
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: health
+  health:
+    circuitbreakers:
+      enabled: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      chat-service:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        failureRateThreshold: 40
+        slowCallRateThreshold: 75
+        slowCallDurationThreshold: 2s
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        registerHealthIndicator: true
+        ignoreExceptions:
+          - com.olelllka.chat_service.rest.exception.NotFoundException

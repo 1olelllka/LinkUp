@@ -4,7 +4,6 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.olelllka.chat_service.TestDataUtil;
-import com.olelllka.chat_service.domain.dto.CreateChatDto;
 import com.olelllka.chat_service.domain.dto.MessageDto;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
@@ -89,43 +88,12 @@ public class ChatControllerIntegrationTest {
     }
 
     @Test
-    public void testThatCreateChatReturnsHttp400BadRequestIfValidationFails() throws Exception {
-        CreateChatDto createChatDto = CreateChatDto.builder().user1Id(null).user2Id(null).build();
-        String json = objectMapper.writeValueAsString(createChatDto);
-        mockMvc.perform(MockMvcRequestBuilders.post("/chats")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
-    }
-
-    @Test
-    public void testThatCreateChatReturnsHttp201Created() throws Exception {
-        UUID user1 = UUID.randomUUID();
-        UUID user2 = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok()));
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok()));
-        CreateChatDto createChatDto = CreateChatDto.builder().user1Id(user1).user2Id(user2).build();
-        String json = objectMapper.writeValueAsString(createChatDto);
-        mockMvc.perform(MockMvcRequestBuilders.post("/chats")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(MockMvcResultMatchers.status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.participants[0]").value(createChatDto.getUser1Id().toString()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.participants[1]").value(createChatDto.getUser2Id().toString()));
-    }
-
-    @Test
-    public void testThatCreateChatReturnsHttp404Created() throws Exception {
-        UUID user1 = UUID.randomUUID();
-        UUID user2 = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok()));
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.notFound()));
-        CreateChatDto createChatDto = CreateChatDto.builder().user1Id(user1).user2Id(user2).build();
-        String json = objectMapper.writeValueAsString(createChatDto);
-        mockMvc.perform(MockMvcRequestBuilders.post("/chats")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
+    public void testThatGetChatsByUserTriggersCircuitBreaker() throws Exception {
+        UUID user = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user).willReturn(WireMock.serverError()));
+        mockMvc.perform(MockMvcRequestBuilders.get("/chats/users/" + user))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.totalElements").value(0));
     }
 
     @Test
