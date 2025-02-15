@@ -1,9 +1,6 @@
 package com.olelllka.stories_service;
 
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -13,8 +10,8 @@ import org.springframework.context.annotation.Bean;
 
 @TestConfiguration
 public class RabbitMQConfig {
-    public static final String delete_queue = "delete_profile_queue";
-    public static final String profile_exchange = "profile_exchange";
+    public static final String delete_queue = "delete_profile_queue_story";
+    public static final String profile_exchange = "profile_fanout_exchange";
 
     @Bean
     public Queue deleteQueue() {
@@ -22,13 +19,13 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public TopicExchange exchange() {
-        return new TopicExchange(profile_exchange);
+    public FanoutExchange exchange() {
+        return new FanoutExchange(profile_exchange);
     }
 
     @Bean
-    public Binding deleteProfileBinding(Queue deleteQueue, TopicExchange exchange) {
-        return BindingBuilder.bind(deleteQueue).to(exchange).with("delete_profile");
+    public Binding deleteProfileBinding(Queue deleteQueue, FanoutExchange exchange) {
+        return BindingBuilder.bind(deleteQueue).to(exchange);
     }
 
     @Bean

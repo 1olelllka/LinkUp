@@ -15,7 +15,6 @@ public class StoryMapperImpl implements StoryMapper<StoryEntity, StoryDto> {
                 .image(storyDto.getImage())
                 .userId(storyDto.getUserId())
                 .available(storyDto.getAvailable())
-                .likes(storyDto.getLikes())
                 .createdAt(storyDto.getCreatedAt())
                 .build();
     }
@@ -27,7 +26,6 @@ public class StoryMapperImpl implements StoryMapper<StoryEntity, StoryDto> {
                 .image(storyEntity.getImage())
                 .userId(storyEntity.getUserId())
                 .available(storyEntity.getAvailable())
-                .likes(storyEntity.getLikes())
                 .createdAt(storyEntity.getCreatedAt())
                 .build();
     }

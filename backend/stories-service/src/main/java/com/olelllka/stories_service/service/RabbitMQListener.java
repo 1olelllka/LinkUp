@@ -10,7 +10,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RabbitMQListener {
 
-    private final String deleteProfileQueue = "delete_profile_queue";
+    private final String deleteProfileQueue = "delete_profile_queue_story";
     private final StoryRepository storyRepository;
 
     @RabbitListener(queues = deleteProfileQueue)

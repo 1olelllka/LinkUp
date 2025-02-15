@@ -22,8 +22,6 @@ public class StoryEntity {
     private String image;
     @Indexed
     private UUID userId;
-    @Builder.Default
-    private Integer likes = 0;
     private Boolean available;
     @Builder.Default
     private Date createdAt = new Date();

@@ -86,7 +86,6 @@ public class StoryServiceImpl implements StoryService {
         return StoryEntity.builder()
                 .id("circuit-breaker.id")
                 .image("circuit-breaker.url")
-                .likes(0)
                 .available(false)
                 .userId(UUID.randomUUID())
                 .createdAt(new Date())

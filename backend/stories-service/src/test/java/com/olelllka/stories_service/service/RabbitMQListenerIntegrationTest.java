@@ -69,9 +69,9 @@ public class RabbitMQListenerIntegrationTest {
         Pageable pageable = PageRequest.of(0, 1);
         Page<StoryEntity> check1 = repository.findStoryByUserId(profileId, pageable);
         assertEquals(check1.getTotalElements(), 1);
-        rabbitTemplate.convertAndSend("profile_exchange", "delete_profile", profileId);
+        rabbitTemplate.convertAndSend(RabbitMQConfig.profile_exchange, "", profileId);
         Awaitility.await().atMost(5, TimeUnit.SECONDS)
-                .until(() -> admin.getQueueInfo("delete_profile_queue").getMessageCount() == 0);
+                .until(() -> admin.getQueueInfo(RabbitMQConfig.delete_queue).getMessageCount() == 0);
         Page<StoryEntity> check2 = repository.findStoryByUserId(profileId, pageable);
         assertEquals(check2.getTotalElements(), 0);
     }

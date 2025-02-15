@@ -16,7 +16,6 @@ public class StoryDto {
     private String id;
     private String image;
     private UUID userId;
-    private Integer likes;
     private Boolean available;
     private Date createdAt;
 }
