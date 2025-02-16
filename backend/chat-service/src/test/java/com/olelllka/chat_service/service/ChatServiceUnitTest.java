@@ -40,26 +40,12 @@ public class ChatServiceUnitTest {
     private ChatServiceImpl chatService;
 
     @Test
-    public void testThatGetChatsByUserIdThrowsException() {
-        // given
-        Pageable pageable = PageRequest.of(0, 1);
-        UUID userId = UUID.randomUUID();
-        // when
-        when(profileFeign.getProfileById(userId)).thenReturn(ResponseEntity.notFound().build());
-        // then
-        assertThrows(NotFoundException.class, () -> chatService.getChatsForUser(userId, pageable));
-
-        verify(chatRepository, never()).findChatsByUserId(userId, pageable);
-    }
-
-    @Test
     public void testThatGetChatsByUserIdWorks() {
         // given
         Page<ChatEntity> expected = new PageImpl<>(List.of(TestDataUtil.createChatEntity()));
         Pageable pageable = PageRequest.of(0, 1);
         UUID userId = UUID.randomUUID();
         // when
-        when(profileFeign.getProfileById(userId)).thenReturn(ResponseEntity.ok().build());
         when(chatRepository.findChatsByUserId(userId, pageable)).thenReturn(expected);
         Page<ChatEntity> result = chatService.getChatsForUser(userId, pageable);
         // then

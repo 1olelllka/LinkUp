@@ -6,10 +6,8 @@ import com.olelllka.chat_service.feign.ProfileFeign;
 import com.olelllka.chat_service.repository.ChatRepository;
 import com.olelllka.chat_service.rest.exception.NotFoundException;
 import com.olelllka.chat_service.service.ChatService;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -21,7 +19,6 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Log
 public class ChatServiceImpl implements ChatService {
 
     private final ChatRepository repository;
@@ -29,11 +26,7 @@ public class ChatServiceImpl implements ChatService {
     private final ProfileFeign profileService;
 
     @Override
-    @CircuitBreaker(name = "chat-service", fallbackMethod = "pageOfChatsFallback")
     public Page<ChatEntity> getChatsForUser(UUID userId, Pageable pageable) {
-        if (!profileService.getProfileById(userId).getStatusCode().is2xxSuccessful()) {
-            throw new NotFoundException("User with such id does not exist.");
-        }
         return repository.findChatsByUserId(userId, pageable);
     }
 
@@ -56,13 +49,5 @@ public class ChatServiceImpl implements ChatService {
         Query query = new Query();
         query.addCriteria(Criteria.where("chatId").is(chatId));
         mongoTemplate.findAllAndRemove(query, MessageEntity.class, "Message");
-    }
-
-    private Page<ChatEntity> pageOfChatsFallback(UUID userId, Pageable pageable, Throwable t) {
-        if (t instanceof NotFoundException) {
-            throw new NotFoundException(t.getMessage());
-        }
-        log.warning("Circuit Breaker Triggered: " + t.getMessage());
-        return Page.empty();
     }
 }

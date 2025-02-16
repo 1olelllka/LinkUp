@@ -80,23 +80,6 @@ public class ChatControllerIntegrationTest {
     }
 
     @Test
-    public void testThatGetChatsByUserReturnsHttp404() throws Exception {
-        UUID user1 = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.notFound()));
-        mockMvc.perform(MockMvcRequestBuilders.get("/chats/users/" + user1))
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
-    }
-
-    @Test
-    public void testThatGetChatsByUserTriggersCircuitBreaker() throws Exception {
-        UUID user = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user).willReturn(WireMock.serverError()));
-        mockMvc.perform(MockMvcRequestBuilders.get("/chats/users/" + user))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.totalElements").value(0));
-    }
-
-    @Test
     public void testThatDeleteChatWorks() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/chats/12345"))
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
