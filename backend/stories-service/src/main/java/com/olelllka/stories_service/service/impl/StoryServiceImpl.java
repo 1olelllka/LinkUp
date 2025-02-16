@@ -28,11 +28,7 @@ public class StoryServiceImpl implements StoryService {
     private final ProfileFeign profileService;
 
     @Override
-    @CircuitBreaker(name = "stories-service", fallbackMethod = "pageFallback")
     public Page<StoryEntity> getStoriesForUser(UUID id, Pageable pageable) {
-        if (!profileService.getProfileById(id).getStatusCode().is2xxSuccessful()) {
-            throw new NotFoundException("User with such id does not exist.");
-        }
         return repository.findStoryByUserId(id, pageable);
     }
 
@@ -68,14 +64,6 @@ public class StoryServiceImpl implements StoryService {
     @CacheEvict(value = "story", keyGenerator = "sha256KeyGenerator")
     public void deleteSpecificStory(String storyId) {
         repository.deleteById(storyId);
-    }
-
-    private Page<StoryEntity> pageFallback(UUID id, Pageable pageable, Throwable t) {
-        if (t instanceof NotFoundException) {
-            throw new NotFoundException(t.getMessage());
-        }
-        log.warning("Circuit Breaker triggered: " + t.getMessage());
-        return Page.empty();
     }
 
     private StoryEntity createFallback(UUID userId, StoryEntity entity, Throwable t) {

@@ -77,25 +77,8 @@ public class StoryControllerIntegrationTests {
     @Test
     public void testThatGetAllStoriesForUserReturnsHttp200Ok() throws Exception {
         UUID profileId = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
         mockMvc.perform(MockMvcRequestBuilders.get("/stories/users/" + profileId))
                 .andExpect(MockMvcResultMatchers.status().isOk());
-    }
-
-    @Test
-    public void testThatGetALlStoriesForUserTriggersCircuitBreaker() throws Exception {
-        UUID profileId = UUID.randomUUID();
-        mockMvc.perform(MockMvcRequestBuilders.get("/stories/users/" + profileId))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.totalElements").value(0));
-    }
-
-    @Test
-    public void testThatGetAllStoriesForUserReturnsHttp404NotFoundIdUserDoesNotExist() throws Exception {
-        UUID profileId = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.notFound()));
-        mockMvc.perform(MockMvcRequestBuilders.get("/stories/users/" + profileId))
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test

@@ -43,7 +43,6 @@ public class StoryServiceUnitTest {
         Page<StoryEntity> expected = new PageImpl<>(List.of(entity));
         // when
         when(repository.findStoryByUserId(id, pageable)).thenReturn(expected);
-        when(profileFeign.getProfileById(id)).thenReturn(ResponseEntity.ok().build());
         Page<StoryEntity> result = service.getStoriesForUser(id, pageable);
         // then
         assertAll(
@@ -51,17 +50,6 @@ public class StoryServiceUnitTest {
                 () -> assertEquals(result.getContent().get(0).getImage(), expected.getContent().get(0).getImage())
         );
         verify(repository, times(1)).findStoryByUserId(id, pageable);
-    }
-
-    @Test
-    public void testThatGetStoriesForUserThrowsException() {
-        // given
-        UUID id = UUID.randomUUID();
-        Pageable pageable = PageRequest.of(0, 1);
-        // when
-        when(profileFeign.getProfileById(id)).thenReturn(ResponseEntity.notFound().build());
-        assertThrows(NotFoundException.class, () -> service.getStoriesForUser(id, pageable));
-        verify(repository, never()).findStoryByUserId(id, pageable);
     }
 
     @Test
