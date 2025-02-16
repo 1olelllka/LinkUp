@@ -17,13 +17,9 @@ import java.util.UUID;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository repository;
-    private final ProfileFeign profileService;
 
     @Override
     public Page<NotificationEntity> getNotificationsForUser(UUID userId, Pageable pageable) {
-        if (!profileService.getProfileById(userId).getStatusCode().is2xxSuccessful()) {
-            throw new NotFoundException("User with such id does not exist.");
-        }
         return repository.findByUserId(userId, pageable);
     }
 
@@ -42,9 +38,6 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void deleteNotificationsForSpecificUser(UUID userId) {
-        if (!profileService.getProfileById(userId).getStatusCode().is2xxSuccessful()) {
-            throw new NotFoundException("User with such id does not exist.");
-        }
         repository.deleteByUserId(userId);
     }
 }

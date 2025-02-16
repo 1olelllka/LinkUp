@@ -1,8 +1,5 @@
 package com.olelllka.notification_service.controller;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.olelllka.notification_service.TestDataUtil;
 import com.olelllka.notification_service.domain.entity.NotificationEntity;
 import com.olelllka.notification_service.repository.NotificationRepository;
@@ -10,7 +7,6 @@ import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,10 +32,6 @@ public class NotificationControllerIntegrationTest {
     @ServiceConnection
     static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:8.0"));
 
-    @RegisterExtension
-    static WireMockExtension PROFILE_SERVICE = WireMockExtension.newInstance()
-            .options(WireMockConfiguration.options().port(8001)).build();
-
     static {
         mongoDBContainer.start();
     }
@@ -62,19 +54,8 @@ public class NotificationControllerIntegrationTest {
     @Test
     public void testThatGetListOfNotificationsForUserReturnsHttp200OkAndPage() throws Exception {
         UUID profileId = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
-
         mockMvc.perform(MockMvcRequestBuilders.get("/notifications/users/" + profileId))
                 .andExpect(MockMvcResultMatchers.status().isOk());
-    }
-
-    @Test
-    public void testThatGetListOfNotificationsForUserReturnsHttp404NotFound() throws Exception {
-        UUID profileId = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.notFound()));
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/notifications/users/" + profileId))
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test
@@ -98,21 +79,12 @@ public class NotificationControllerIntegrationTest {
         entity2.setUserId(id);
         repository.save(entity1);
         repository.save(entity2);
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + id).willReturn(WireMock.ok()));
         mockMvc.perform(MockMvcRequestBuilders.delete("/notifications/users/" + id))
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
         // check
         mockMvc.perform(MockMvcRequestBuilders.get("/notifications/users/" + id))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.totalElements").value("0"));
-    }
-
-    @Test
-    public void testThatDeleteAllNotificationsReturnsHttp404NotFound() throws Exception {
-        UUID id = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + id).willReturn(WireMock.notFound()));
-        mockMvc.perform(MockMvcRequestBuilders.delete("/notifications/users/" + id))
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
 }
