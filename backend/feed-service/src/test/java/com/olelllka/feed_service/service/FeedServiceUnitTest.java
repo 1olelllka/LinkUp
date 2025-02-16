@@ -3,8 +3,6 @@ package com.olelllka.feed_service.service;
 import com.olelllka.feed_service.TestDataUtil;
 import com.olelllka.feed_service.domain.dto.PostDto;
 import com.olelllka.feed_service.feign.PostsInterface;
-import com.olelllka.feed_service.feign.ProfileInterface;
-import com.olelllka.feed_service.rest.exception.NotFoundException;
 import com.olelllka.feed_service.service.impl.FeedServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,22 +30,8 @@ public class FeedServiceUnitTest {
     private RedisTemplate<String, String> redisTemplate;
     @Mock
     private PostsInterface postsInterface;
-    @Mock
-    private ProfileInterface profileInterface;
     @InjectMocks
     private FeedServiceImpl feedService;
-
-    @Test
-    public void testThatGetFeedForUserThrowsException() {
-        // given
-        UUID profileId = UUID.randomUUID();
-        Pageable pageable = PageRequest.of(0, 1);
-        // when
-        when(profileInterface.getProfileById(profileId)).thenReturn(ResponseEntity.notFound().build());
-        // then
-        assertThrows(NotFoundException.class, () -> feedService.getFeedForProfile(profileId, pageable));
-        verify(redisTemplate, never()).opsForList();
-    }
 
     @Test
     public void testThatGetFeedForUserReturnsEmptyPage() {
@@ -55,7 +39,6 @@ public class FeedServiceUnitTest {
         Pageable pageable = PageRequest.of(0, 1);
         Page<PostDto> expected = new PageImpl<>(List.of());
         // when
-        when(profileInterface.getProfileById(profileId)).thenReturn(ResponseEntity.ok().build());
         when(redisTemplate.opsForList()).thenReturn(mock(ListOperations.class));
         when(redisTemplate.opsForList().range("feed:profile:"+SHA256.hash(profileId.toString()), 0, 0)).thenReturn(List.of());
         Page<PostDto> result = feedService.getFeedForProfile(profileId, pageable);
@@ -76,7 +59,6 @@ public class FeedServiceUnitTest {
         PostDto postDto = TestDataUtil.createPostDto(profileId);
         Page<PostDto> expected = new PageImpl<>(List.of(postDto));
         // when
-        when(profileInterface.getProfileById(profileId)).thenReturn(ResponseEntity.ok().build());
         when(redisTemplate.opsForList()).thenReturn(mock(ListOperations.class));
         when(redisTemplate.opsForList().range("feed:profile:"+SHA256.hash(profileId.toString()), 0, 0)).thenReturn(List.of("1"));
         when(postsInterface.getPosts(1)).thenReturn(ResponseEntity.ok(postDto));

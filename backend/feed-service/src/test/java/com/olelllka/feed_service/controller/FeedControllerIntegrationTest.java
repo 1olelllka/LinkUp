@@ -35,10 +35,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 public class FeedControllerIntegrationTest {
 
     @RegisterExtension
-    static WireMockExtension PROFILE_SERVICE = WireMockExtension.newInstance()
-            .options(WireMockConfiguration.options().port(8001)).build();
-
-    @RegisterExtension
     static WireMockExtension POSTS_SERVICE = WireMockExtension.newInstance()
             .options(WireMockConfiguration.options().port(8000)).build();
 
@@ -66,21 +62,11 @@ public class FeedControllerIntegrationTest {
     }
 
     @Test
-    public void testThatGetFeedForSpecificUserReturnsHttp404IfUserDoesNotExist() throws Exception {
-        UUID profileId = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.notFound()));
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/feeds/" + profileId))
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
-    }
-
-    @Test
     public void testThatGetFeedForSpecificUserReturnsHttp200OkAndSomeMockedData() throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
         UUID profileId = UUID.randomUUID();
         PostDto postDto = TestDataUtil.createPostDto(UUID.randomUUID());
         String jsonPost = objectMapper.writeValueAsString(postDto);
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
         redisTemplate.opsForList().leftPush("feed:profile:"+ SHA256.hash(profileId.toString()), "1");
         POSTS_SERVICE.stubFor(WireMock.get("/posts/1")
                 .willReturn(aResponse()
@@ -95,7 +81,8 @@ public class FeedControllerIntegrationTest {
     @Test
     public void testWhenGetFeedForSpecificUserReturnsActivatesCircuitBreaker() throws Exception {
         UUID profileId = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.serverError()));
+        redisTemplate.opsForList().leftPush("feed:profile:"+SHA256.hash(profileId.toString()), "123");
+        POSTS_SERVICE.stubFor(WireMock.get("/posts/123").willReturn(WireMock.serverError()));
         mockMvc.perform(MockMvcRequestBuilders.get("/feeds/" + profileId))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.totalElements").value(0));
