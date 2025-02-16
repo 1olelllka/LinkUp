@@ -11,6 +11,13 @@ services:
       - NEO4J_server_memory_heap_max__size=2G
     volumes:
       - "neo4j_data:/data"
-
+  cache:
+    container_name: profile_cache
+    image: redis:7.2.6
+    ports:
+      - 6376:6379
+    volumes:
+      - "redis_data:/data"
 volumes:
   neo4j_data:
+  redis_data:

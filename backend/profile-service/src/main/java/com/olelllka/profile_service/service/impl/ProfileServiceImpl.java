@@ -15,6 +15,9 @@ import com.olelllka.profile_service.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.actuate.elasticsearch.ElasticsearchRestClientHealthIndicator;
 import org.springframework.boot.actuate.health.Status;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -49,12 +52,14 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
+    @Cacheable(value = "profile", keyGenerator = "sha256KeyGenerator")
     public ProfileEntity getProfileById(UUID profileId) {
         return repository.findByIdWithRelationships(profileId).orElseThrow(() -> new NotFoundException("Profile with such id was not found."));
     }
 
     @Override
     @Transactional
+    @CachePut(value = "profile", keyGenerator = "sha256KeyGenerator")
     public ProfileEntity updateProfile(UUID profileId, PatchProfileDto dto) {
         if (!repository.existsById(profileId)) {
             throw new NotFoundException("Profile with such id does not exist");
@@ -79,6 +84,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "profile", keyGenerator = "sha256KeyGenerator")
     public void deleteById(UUID profileId) {
         repository.deleteById(profileId);
         messagePublisher.deleteProfile(profileId);

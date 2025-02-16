@@ -10,7 +10,8 @@ import java.time.LocalDate;
 @Builder
 @Data
 public class CreateProfileDto {
-    @Pattern(regexp = "^.{8,}$", message = "Username must be from 8 characters")
+    @NotBlank(message = "Username must not be blank.")
+    @Pattern(regexp = "^\\w{8,}$", message = "Username must be at least 8 characters and contain only letters, digits, or underscores.")
     private String username;
     @NotBlank(message = "Password must not be blank.") // for now
     private String password;
