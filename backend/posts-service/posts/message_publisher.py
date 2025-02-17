@@ -1,6 +1,5 @@
 from pika import BlockingConnection, ConnectionParameters, PlainCredentials
 import json;
-from django.conf import settings
 
 def publish_message(message):
     connection = None
@@ -21,6 +20,3 @@ def publish_message(message):
         print(" [x] Sent %r" % message_json)
     except Exception as e:
         print("Error: %s" % e)
-    finally:
-        if 'connection' in locals() and connection.is_open:
-            connection.close()

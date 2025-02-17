@@ -1,19 +1,15 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
 from rest_framework.generics import DestroyAPIView
 from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
 from django.shortcuts import get_object_or_404
 from django.http import Http404
-import redis
 import hashlib
 from .message_publisher import publish_message
 from datetime import datetime, timedelta, timezone
 from django.core.cache import cache
 import requests
-
-redis_instance = redis.StrictRedis(host='localhost', port=6379, db=0)
 
 class UserPostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-created_at')
@@ -21,15 +17,20 @@ class UserPostViewSet(viewsets.ModelViewSet):
 
     def create(self, request, user_id):
         profile_response = requests.get(f"http://localhost:8001/profiles/{user_id}")
-        if profile_response.status_code != 200:
+        if profile_response.status_code == 404:
             return Response(data={"error": "User with such id does not exist"}, status=404)
-        response = super().create(request)
-        if response.status_code == 201:
-            post_id = response.data['id']
-            profile_id = response.data['user_id']
-            message_data = {"postId": f"{post_id}", "profileId": profile_id, "timestamp": datetime.now().isoformat()}
+        elif profile_response.status_code != 200:
+            return Response(data={"error": "An error occurred while processing your request"}, status=500)
+        mutable_data = request.data.copy()
+        mutable_data['user_id'] = user_id
+        serializer = self.get_serializer(data=mutable_data)
+        if serializer.is_valid():
+            serializer.save()
+            post_id = serializer.data['id']
+            message_data = {"postId": f"{post_id}", "profileId": user_id, "timestamp": datetime.now().isoformat()}
             publish_message(message=message_data)
-        return response
+            return Response(data=serializer.data, status=201)
+        return Response(data=serializer.errors, status=400)
     
     def get_queryset(self):
         return self.queryset.filter(user_id=self.kwargs['user_id'])
@@ -111,12 +112,3 @@ class CommentDeleteAPIView(DestroyAPIView):
             return Response(status=204)
         except Comment.DoesNotExist:
             return Response(status=204)
-        
-@api_view(["GET"])
-def get_posts_by_users(request):
-    if request.GET.get('user_ids') is None or request.GET.get('user_ids') == '{}':
-        return Response([])
-    user_ids = request.GET.get('user_ids')[1:-1].split(',')
-    posts = Post.objects.filter(user_id__in=user_ids).order_by('-created_at')
-    serializer = PostSerializer(posts, many=True)
-    return Response(serializer.data)

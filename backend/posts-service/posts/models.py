@@ -1,10 +1,9 @@
 from django.db import models
 
 class Post(models.Model):
-    user_id = models.CharField()
+    user_id = models.CharField(db_index=True, blank=True) # blank=True for validation purposes
     image = models.CharField(max_length=200)
     desc = models.TextField(null=True, blank=True)
-    likes = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

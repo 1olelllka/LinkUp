@@ -14,6 +14,8 @@ pika = "*"
 py-eureka-client = "*"
 requests = "*"
 wiremock = "*"
+testcontainers = "*"
+pytest-django = "*"
 
 [dev-packages]
 

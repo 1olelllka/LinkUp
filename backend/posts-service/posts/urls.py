@@ -6,5 +6,4 @@ urlpatterns = [
     path("<int:post_id>", views.PostViewSet.as_view({'get': 'retrieve', 'patch': 'partial_update', 'delete': 'destroy'}), name="posts"),
     path('<int:post_id>/comments', views.CommentViewSet.as_view({'get': 'list', 'post': 'create'}), name="comments"),
     path('comments/<int:comment_id>', views.CommentDeleteAPIView.as_view(), name="delete-comment"),
-    path('', views.get_posts_by_users, name="posts_by_ids")
 ]
