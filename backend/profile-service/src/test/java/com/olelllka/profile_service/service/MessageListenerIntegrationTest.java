@@ -81,6 +81,7 @@ public class MessageListenerIntegrationTest {
         registry.getListenerContainer("cu-profile").start();
         ProfileDocumentDto dto = TestDataUtil.createNewProfileDocumentDto();
         messagePublisher.createUpdateProfile(dto);
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> admin.getQueueInfo(RabbitMQConfig.create_update_queue).getMessageCount() == 0);
         // when
         messagePublisher.deleteProfile(dto.getId());
         Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> admin.getQueueInfo(RabbitMQConfig.delete_queue_elastic).getMessageCount() == 0);
