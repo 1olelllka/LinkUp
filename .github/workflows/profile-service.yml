@@ -1,0 +1,117 @@
+name: Microservices CI
+
+on:
+  push:
+    paths:
+      - 'backend/**'
+    branches:
+      - main
+  pull_request:
+    paths:
+      - 'backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [profile-service, feed-service, posts-service, stories-service, chat-service, notification-service]
+        include:
+          - service: profile-service
+            language: java
+          - service: feeds-service
+            language: java
+          - service: posts-service
+            language: python
+          - service: stories-service
+            language: python
+          - service: chat-service
+            language: python
+          - service: notifications-service
+            language: java
+
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+      neo4j:
+        image: neo4j:latest
+        ports:
+          - 7474:7474
+          - 7687:7687
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+      rabbitmq:
+        image: rabbitmq:management
+        ports:
+          - 5672:5672
+          - 15672:15672
+      elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+        env:
+          discovery.type: single-node
+        ports:
+          - 9200:9200
+          - 9300:9300
+      postgresql:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up JDK 17 (Java Services)
+        if: matrix.language == 'java'
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Cache Maven Dependencies (Java Services)
+        if: matrix.language == 'java'
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: maven-${{ hashFiles(format('backend/{0}/pom.xml', matrix.service)) }}
+          restore-keys: maven-
+
+      - name: Run Linting (Checkstyle for Java)
+        if: matrix.language == 'java'
+        run: mvn checkstyle:check --file backend/${{ matrix.service }}/pom.xml
+
+      - name: Run Tests (Java Services)
+        if: matrix.language == 'java'
+        run: mvn test --file backend/${{ matrix.service }}/pom.xml
+
+      - name: Set Up Python (Django Services)
+        if: matrix.language == 'python'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies (Django Services)
+        if: matrix.language == 'python'
+        run: |
+          cd backend/${{ matrix.service }}
+          pip install -r requirements.txt
+
+      - name: Run Linting (Flake8 for Python)
+        if: matrix.language == 'python'
+        run: |
+          cd backend/${{ matrix.service }}
+          flake8 .
+
+      - name: Run Tests (Django Services)
+        if: matrix.language == 'python'
+        run: |
+          cd backend/${{ matrix.service }}
+          python manage.py test
