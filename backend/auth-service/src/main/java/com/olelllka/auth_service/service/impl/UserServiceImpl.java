@@ -1,6 +1,7 @@
 package com.olelllka.auth_service.service.impl;
 
 import com.olelllka.auth_service.domain.dto.RegisterUserDto;
+import com.olelllka.auth_service.domain.dto.UserMessageDto;
 import com.olelllka.auth_service.domain.entity.AuthProvider;
 import com.olelllka.auth_service.domain.entity.Role;
 import com.olelllka.auth_service.domain.entity.UserEntity;
@@ -26,14 +27,14 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    @Transactional
     public UserEntity registerUser(RegisterUserDto userDto) {
         if (userRepository.existsByEmail(userDto.getEmail()) || userRepository.existsByUsername(userDto.getUsername())) {
             throw new DuplicateException("User with such credentials already exists.");
         }
+        UUID profileId = UUID.randomUUID();
         UserEntity entity = UserEntity.builder()
                 .email(userDto.getEmail())
-                .userId(UUID.randomUUID())
+                .userId(profileId)
                 .username(userDto.getUsername())
                 .password(passwordEncoder.encode(userDto.getPassword()))
                 .role(Role.USER)
@@ -41,8 +42,15 @@ public class UserServiceImpl implements UserService {
                 .providerId("")
                 .build();
         UserEntity saved = userRepository.save(entity);
-        log.info(saved.toString());
-        messagePublisher.sendCreateUserMessage(userDto);
+        UserMessageDto dtoToSend = UserMessageDto.builder()
+                        .profileId(profileId)
+                        .dateOfBirth(userDto.getDateOfBirth())
+                        .name(userDto.getName())
+                        .gender(userDto.getGender())
+                        .username(userDto.getUsername())
+                        .email(userDto.getEmail())
+                        .build();
+        messagePublisher.sendCreateUserMessage(dtoToSend);
         return saved;
     }
 }

@@ -1,8 +1,12 @@
 package com.olelllka.auth_service.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.olelllka.auth_service.domain.dto.ErrorMessage;
 import com.olelllka.auth_service.repository.UserRepository;
 import com.olelllka.auth_service.rest.exception.NotFoundException;
 import com.olelllka.auth_service.service.JWTFilter;
+import com.olelllka.auth_service.service.impl.OAuthSuccessHandler;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,15 +28,30 @@ public class SecurityConfig {
     final AuthenticationProvider provider;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, OAuthSuccessHandler oAuthSuccessHandler) throws Exception {
         http
                 .csrf(CsrfConfigurer::disable)
                 .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers(HttpMethod.POST, "/auth/register").permitAll();
+                    auth.requestMatchers("/auth/register", "/auth/login", "/auth/oauth2/**").permitAll()
+                            .anyRequest().authenticated();
                 })
+                .oauth2Login(login ->
+                        login.authorizationEndpoint(endpoint -> endpoint.baseUri("/auth/oauth2/authorization"))
+                                .successHandler(oAuthSuccessHandler))
+                .exceptionHandling(ex ->
+                        ex.authenticationEntryPoint((req, res, authEx) -> {
+                            res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            ObjectMapper objectMapper = new ObjectMapper();
+                            ErrorMessage errorMessage = ErrorMessage.builder().message("Access Denied").build();
+                            res.getWriter().write(objectMapper.writeValueAsString(errorMessage));
+                            res.setContentType("application/json");
+                        }))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                .authenticationProvider(provider);
+                .authenticationProvider(provider)
+                .logout(logout -> logout.logoutUrl("/auth/logout")
+                        .clearAuthentication(true)
+                        .invalidateHttpSession(true));
         return http.build();
     }
 }
