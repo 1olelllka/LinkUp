@@ -1,5 +1,6 @@
 package com.olelllka.notification_service.controller;
 
+import com.olelllka.notification_service.RabbitMQTestConfig;
 import com.olelllka.notification_service.TestDataUtil;
 import com.olelllka.notification_service.domain.entity.NotificationEntity;
 import com.olelllka.notification_service.repository.NotificationRepository;
@@ -11,12 +12,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import java.util.Date;
@@ -27,19 +30,26 @@ import java.util.UUID;
 @ExtendWith(SpringExtension.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureMockMvc
+@Import(RabbitMQTestConfig.class)
 public class NotificationControllerIntegrationTest {
 
     @ServiceConnection
     static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:8.0"));
 
+    @ServiceConnection
+    static RabbitMQContainer rabbitMQContainer = new RabbitMQContainer(DockerImageName.parse("rabbitmq:3.13-management"));
+
     static {
         mongoDBContainer.start();
+        rabbitMQContainer.start();
     }
 
     @AfterAll
     static void tearDown() {
         mongoDBContainer.stop();
         mongoDBContainer.close();
+        rabbitMQContainer.stop();
+        rabbitMQContainer.close();
     }
 
     private final MockMvc mockMvc;

@@ -2,8 +2,8 @@ name: Microservices CI
 
 on:
   push:
-    paths:
-      - 'backend/**'
+#    paths:
+#      - 'backend/**'
     branches:
       - main
   pull_request:
@@ -31,37 +31,11 @@ jobs:
             language: java
 
     services:
-      mongodb:
-        image: mongo:latest
-        ports:
-          - 27017:27017
-      neo4j:
-        image: neo4j:latest
-        ports:
-          - 7474:7474
-          - 7687:7687
-      redis:
-        image: redis:latest
-        ports:
-          - 6379:6379
-      rabbitmq:
-        image: rabbitmq:management
-        ports:
-          - 5672:5672
-          - 15672:15672
-      elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
-        env:
-          discovery.type: single-node
-        ports:
-          - 9200:9200
-          - 9300:9300
       postgresql:
         image: postgres:latest
         env:
-          POSTGRES_USER: user
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: testdb
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
         ports:
           - 5432:5432
 
