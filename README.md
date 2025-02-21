@@ -8,23 +8,23 @@
  - [License](#license)
 
 ## Tech Stack
-**Client**: React.js (in plans)
+- **Client**: React.js (in plans)
 
-**Server**: Spring Boot (Java), Django (Python)
+- **Server**: Spring Boot (Java), Django (Python)
 
-**Communication**: REST, WebSocket, RabbitMQ
+- **Communication**: REST, WebSocket, RabbitMQ
 
-**Database**: MongoDB, PostgreSQL, Neo4J, Redis, Amazon S3 (in plans)
+- **Database**: MongoDB, PostgreSQL, Neo4J, Redis, Amazon S3 (in plans)
 
-**Cache**: Redis
+- **Cache**: Redis
 
-**Search Engine**: ElasticSearch, Neo4J (in case of ElasticSearch's failure)
+- **Search Engine**: ElasticSearch, Neo4J (in case of ElasticSearch's failure)
 
-**Web Server**: nginx (in plans)
+- **Web Server**: nginx (in plans)
 
-**CDN**: Cloudflare (in plans)
+- **CDN**: Cloudflare (in plans)
 
-**Logs**: ELK Stack (in plans)
+- **Logs**: ELK Stack (in plans)
 
 ## Project Structure 
 *(it will be updated if changes occur)*
