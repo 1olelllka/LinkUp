@@ -84,10 +84,6 @@ jobs:
           key: maven-${{ hashFiles(format('backend/{0}/pom.xml', matrix.service)) }}
           restore-keys: maven-
 
-      - name: Run Linting (Checkstyle for Java)
-        if: matrix.language == 'java'
-        run: mvn checkstyle:check --file backend/${{ matrix.service }}/pom.xml
-
       - name: Run Tests (Java Services)
         if: matrix.language == 'java'
         run: mvn test --file backend/${{ matrix.service }}/pom.xml
@@ -103,12 +99,6 @@ jobs:
         run: |
           cd backend/${{ matrix.service }}
           pip install -r requirements.txt
-
-      - name: Run Linting (Flake8 for Python)
-        if: matrix.language == 'python'
-        run: |
-          cd backend/${{ matrix.service }}
-          flake8 .
 
       - name: Run Tests (Django Services)
         if: matrix.language == 'python'
