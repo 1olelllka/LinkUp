@@ -19,15 +19,15 @@ jobs:
         include:
           - service: profile-service
             language: java
-          - service: feeds-service
+          - service: feed-service
             language: java
           - service: posts-service
             language: python
           - service: stories-service
-            language: python
+            language: java
           - service: chat-service
-            language: python
-          - service: notifications-service
+            language: java
+          - service: notification-service
             language: java
 
     services:
