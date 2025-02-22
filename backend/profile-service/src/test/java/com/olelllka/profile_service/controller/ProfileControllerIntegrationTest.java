@@ -10,6 +10,7 @@ import com.olelllka.profile_service.domain.dto.ProfileDto;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
 import com.olelllka.profile_service.repository.ProfileDocumentRepository;
 import com.olelllka.profile_service.service.ProfileService;
+import com.redis.testcontainers.RedisContainer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,10 +51,14 @@ public class ProfileControllerIntegrationTest {
     @ServiceConnection
     static RabbitMQContainer rabbitContainer = new RabbitMQContainer(DockerImageName.parse("rabbitmq:3.13-management"));
 
+    @ServiceConnection
+    static RedisContainer redisContainer = new RedisContainer(DockerImageName.parse("redis:7.2.6"));
+
     static {
         neo4j.start();
         elasticsearchContainer.start();
         rabbitContainer.start();
+        redisContainer.start();
     }
 
     @AfterAll
@@ -64,6 +69,8 @@ public class ProfileControllerIntegrationTest {
         elasticsearchContainer.close();
         rabbitContainer.stop();
         rabbitContainer.close();
+        redisContainer.stop();
+        redisContainer.close();
     }
 
     private MockMvc mockMvc;
