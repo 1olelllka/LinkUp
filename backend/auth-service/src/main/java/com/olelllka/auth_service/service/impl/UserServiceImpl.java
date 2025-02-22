@@ -10,16 +10,13 @@ import com.olelllka.auth_service.rest.exception.DuplicateException;
 import com.olelllka.auth_service.service.MessagePublisher;
 import com.olelllka.auth_service.service.UserService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Log
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;

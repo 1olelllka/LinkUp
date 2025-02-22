@@ -9,7 +9,6 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
-import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -34,19 +33,16 @@ public class MessageListenerIntegrationTest {
         elasticsearchContainer.start();
     }
 
-    private final RabbitListenerEndpointRegistry registry;
     private final RabbitAdmin admin;
     private final MessagePublisher messagePublisher;
     private final ProfileDocumentRepository repository;
 
     @Autowired
-    public MessageListenerIntegrationTest(RabbitListenerEndpointRegistry registry,
-                                          RabbitAdmin admin,
+    public MessageListenerIntegrationTest(RabbitAdmin admin,
                                           MessagePublisher messagePublisher,
                                           ProfileDocumentRepository repository) {
         this.messagePublisher = messagePublisher;
         this.admin = admin;
-        this.registry = registry;
         this.repository = repository;
     }
 
@@ -61,8 +57,6 @@ public class MessageListenerIntegrationTest {
     @Test
     public void testThatCreateUpdateProfileOnElasticsearchListenerDoesItsJob() {
         // given
-        registry.stop();
-        registry.getListenerContainer("cu-profile").start();
         ProfileDocumentDto dto = TestDataUtil.createNewProfileDocumentDto();
         ProfileDocument entity = TestDataUtil.createNewProfileDocument();
         entity.setId(dto.getId());
@@ -76,9 +70,6 @@ public class MessageListenerIntegrationTest {
     @Test
     public void testThatDeleteProfileOnElasticSearchDoesItsJob() {
         // given
-        registry.stop();
-        registry.getListenerContainer("d-profile").start();
-        registry.getListenerContainer("cu-profile").start();
         ProfileDocumentDto dto = TestDataUtil.createNewProfileDocumentDto();
         messagePublisher.createUpdateProfile(dto);
         // when

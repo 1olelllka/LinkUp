@@ -37,8 +37,8 @@ public class JWTFilter extends OncePerRequestFilter {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             email = jwtUtil.extractUsername(jwt);
-        } catch (ExpiredJwtException ex) {
-            ErrorMessage errorMessage = ErrorMessage.builder().message("Your session is expired. Log in to proceed.").build();
+        } catch (Exception ex) {
+            ErrorMessage errorMessage = ErrorMessage.builder().message(ex.getMessage()).build();
             response.setContentType("application/json");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write(objectMapper.writeValueAsString(errorMessage));

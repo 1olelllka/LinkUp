@@ -50,6 +50,9 @@ public class SecurityConfig {
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .authenticationProvider(provider)
                 .logout(logout -> logout.logoutUrl("/auth/logout")
+                        .logoutSuccessHandler((req, res, auth) -> {
+                            res.setStatus(HttpServletResponse.SC_OK);
+                        })
                         .clearAuthentication(true)
                         .invalidateHttpSession(true));
         return http.build();
