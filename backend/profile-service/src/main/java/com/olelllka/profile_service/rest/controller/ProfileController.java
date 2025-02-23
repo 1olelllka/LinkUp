@@ -33,17 +33,6 @@ public class ProfileController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    @PostMapping("")
-    public ResponseEntity<ProfileDto> createNewProfile(@Valid @RequestBody CreateProfileDto dto,
-                                                       BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            String msg = bindingResult.getAllErrors().stream().map(err -> err.getDefaultMessage()).collect(Collectors.joining(" "));
-            throw new ValidationException(msg);
-        }
-        ProfileEntity entity = profileService.createProfile(mapCreateToEntity(dto));
-        return new ResponseEntity<>(profileMapper.toDto(entity), HttpStatus.CREATED);
-    }
-
     @GetMapping("/{profile_id}")
     public ResponseEntity<ProfileDto> getProfileById(@PathVariable UUID profile_id) {
         ProfileEntity profile = profileService.getProfileById(profile_id);
@@ -106,16 +95,4 @@ public class ProfileController {
                 .photo(entity.getPhoto())
                 .build();
     }
-
-    private ProfileEntity mapCreateToEntity(CreateProfileDto dto) {
-        return ProfileEntity.builder()
-                .username(dto.getUsername())
-                .password(dto.getPassword())
-                .gender(dto.getGender())
-                .name(dto.getName())
-                .email(dto.getEmail())
-                .dateOfBirth(dto.getDateOfBirth())
-                .build();
-    }
-
 }

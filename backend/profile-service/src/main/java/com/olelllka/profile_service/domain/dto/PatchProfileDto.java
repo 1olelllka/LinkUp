@@ -14,11 +14,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Data
 public class PatchProfileDto {
-    @Pattern(regexp = "^.{8,}$", message = "Username must be from 8 characters")
-    private String username;
     private String name;
-    @Email(message = "Invalid Email.")
-    private String email;
     private String aboutMe;
     private String photo;
     private Gender gender;

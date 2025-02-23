@@ -16,6 +16,7 @@ import org.testcontainers.containers.Neo4jContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -45,14 +46,18 @@ public class ProfileRepositoryTest {
 
     @Test
     public void testThatCustomUpdateProfileWorks() {
-        ProfileEntity profile = repository.save(TestDataUtil.createNewProfileEntity());
+        UUID profileId = UUID.randomUUID();
+        ProfileEntity entity = TestDataUtil.createNewProfileEntity();
+        entity.setId(profileId);
+        repository.save(entity);
         ProfileEntity updatedProfile = TestDataUtil.createNewProfileEntity();
-        updatedProfile.setName("UPDATED");
+        updatedProfile.setAboutMe("about me");
 
-        ProfileEntity result = repository.updateProfile(profile.getId(),
-                updatedProfile.getUsername(),
+        ProfileEntity result = repository.updateProfile(
+                profileId,
+                null,
                 updatedProfile.getName(),
-                updatedProfile.getEmail(),
+                null,
                 updatedProfile.getGender().toString(),
                 updatedProfile.getPhoto(),
                 updatedProfile.getAboutMe(),
@@ -60,25 +65,37 @@ public class ProfileRepositoryTest {
 
         assertAll(
                 () -> assertNotNull(result),
-                () -> assertEquals(result.getName(), updatedProfile.getName())
+                () -> assertEquals(result.getAboutMe(), updatedProfile.getAboutMe())
         );
     }
 
     @Test
     public void testThatFollowWorks() {
-        ProfileEntity profile1 = repository.save(TestDataUtil.createNewProfileEntity());
-        ProfileEntity profile2 = repository.save(TestDataUtil.createNewProfileEntity());
-        repository.follow(profile1.getId(), profile2.getId());
+        UUID profile1Id = UUID.randomUUID();
+        UUID profile2Id = UUID.randomUUID();
+        ProfileEntity profile1 = TestDataUtil.createNewProfileEntity();
+        profile1.setId(profile1Id);
+        ProfileEntity profile2 = TestDataUtil.createNewProfileEntity();
+        profile2.setId(profile2Id);
+        repository.save(profile1);
+        repository.save(profile2);
+        repository.follow(profile1Id, profile2Id);
         boolean check = repository.isFollowing(profile1.getId(), profile2.getId());
         assertTrue(check);
     }
 
     @Test
     public void testThatUnfollowWorks() {
-        ProfileEntity profile1 = repository.save(TestDataUtil.createNewProfileEntity());
-        ProfileEntity profile2 = repository.save(TestDataUtil.createNewProfileEntity());
-        repository.follow(profile1.getId(), profile2.getId());
-        boolean check = repository.isFollowing(profile1.getId(), profile2.getId());
+        UUID profile1Id = UUID.randomUUID();
+        UUID profile2Id = UUID.randomUUID();
+        ProfileEntity profile1 = TestDataUtil.createNewProfileEntity();
+        profile1.setId(profile1Id);
+        ProfileEntity profile2 = TestDataUtil.createNewProfileEntity();
+        profile2.setId(profile2Id);
+        repository.save(profile1);
+        repository.save(profile2);
+        repository.follow(profile1Id, profile2Id);
+        boolean check = repository.isFollowing(profile1Id, profile2Id);
         assertTrue(check);
         repository.unfollow(profile1.getId(), profile2.getId());
         boolean check2 = repository.isFollowing(profile1.getId(), profile2.getId());
@@ -87,8 +104,14 @@ public class ProfileRepositoryTest {
 
     @Test
     public void testThatFindAllFolloweeByProfileIdWorks() {
-        ProfileEntity profile1 = repository.save(TestDataUtil.createNewProfileEntity());
-        ProfileEntity profile2 = repository.save(TestDataUtil.createNewProfileEntity());
+        UUID profile1Id = UUID.randomUUID();
+        UUID profile2Id = UUID.randomUUID();
+        ProfileEntity profile1 = TestDataUtil.createNewProfileEntity();
+        profile1.setId(profile1Id);
+        ProfileEntity profile2 = TestDataUtil.createNewProfileEntity();
+        profile2.setId(profile2Id);
+        repository.save(profile1);
+        repository.save(profile2);
         repository.follow(profile1.getId(), profile2.getId());
         Pageable pageable = PageRequest.of(0, 1);
         Page<ProfileEntity> expected = new PageImpl<>(List.of(profile2));
@@ -104,8 +127,14 @@ public class ProfileRepositoryTest {
 
     @Test
     public void testThatFindAllFollowersByProfileIdWorks() {
-        ProfileEntity profile1 = repository.save(TestDataUtil.createNewProfileEntity());
-        ProfileEntity profile2 = repository.save(TestDataUtil.createNewProfileEntity());
+        UUID profile1Id = UUID.randomUUID();
+        UUID profile2Id = UUID.randomUUID();
+        ProfileEntity profile1 = TestDataUtil.createNewProfileEntity();
+        profile1.setId(profile1Id);
+        ProfileEntity profile2 = TestDataUtil.createNewProfileEntity();
+        profile2.setId(profile2Id);
+        repository.save(profile1);
+        repository.save(profile2);
         repository.follow(profile1.getId(), profile2.getId());
         Pageable pageable = PageRequest.of(0, 1);
         Page<ProfileEntity> expected = new PageImpl<>(List.of(profile1));
@@ -121,8 +150,14 @@ public class ProfileRepositoryTest {
 
     @Test
     public void testThatFindProfilesByParamWorks() {
-        ProfileEntity profile1 = repository.save(TestDataUtil.createNewProfileEntity());
-        ProfileEntity profile2 = repository.save(TestDataUtil.createNewProfileEntity());
+        UUID profile1Id = UUID.randomUUID();
+        UUID profile2Id = UUID.randomUUID();
+        ProfileEntity profile1 = TestDataUtil.createNewProfileEntity();
+        profile1.setId(profile1Id);
+        ProfileEntity profile2 = TestDataUtil.createNewProfileEntity();
+        profile2.setId(profile2Id);
+        repository.save(profile1);
+        repository.save(profile2);
         profile2.setUsername("u2");
         repository.save(profile1);
         repository.save(profile2);

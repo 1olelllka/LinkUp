@@ -2,24 +2,27 @@ package com.olelllka.profile_service.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.olelllka.profile_service.RabbitMQTestConfig;
 import com.olelllka.profile_service.TestDataUtil;
 import com.olelllka.profile_service.configuration.RabbitMQConfig;
-import com.olelllka.profile_service.domain.dto.CreateProfileDto;
 import com.olelllka.profile_service.domain.dto.PatchProfileDto;
 import com.olelllka.profile_service.domain.dto.ProfileDto;
+import com.olelllka.profile_service.domain.dto.UserMessageDto;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
 import com.olelllka.profile_service.repository.ProfileDocumentRepository;
+import com.olelllka.profile_service.repository.ProfileRepository;
 import com.olelllka.profile_service.service.ProfileService;
 import com.redis.testcontainers.RedisContainer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
-import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistry;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -31,6 +34,10 @@ import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
 import org.testcontainers.utility.DockerImageName;
+
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -40,6 +47,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(SpringExtension.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureMockMvc
+@Import(RabbitMQTestConfig.class)
 public class ProfileControllerIntegrationTest {
 
     @ServiceConnection
@@ -73,55 +81,29 @@ public class ProfileControllerIntegrationTest {
         redisContainer.close();
     }
 
-    private MockMvc mockMvc;
-    private ProfileService profileService;
-    private ProfileDocumentRepository documentRepository;
-    private RabbitAdmin rabbitAdmin;
-    private RabbitListenerEndpointRegistry registry;
-    private ObjectMapper objectMapper;
+    private final MockMvc mockMvc;
+    private final ProfileService profileService;
+    private final ProfileRepository profileRepository;
+    private final RabbitTemplate rabbitTemplate;
+    private final ProfileDocumentRepository documentRepository;
+    private final RabbitAdmin rabbitAdmin;
+    private final ObjectMapper objectMapper;
 
     @Autowired
     public ProfileControllerIntegrationTest(MockMvc mockMvc,
+                                            ProfileRepository profileRepository,
                                             ProfileService profileService,
+                                            RabbitTemplate rabbitTemplate,
                                             ProfileDocumentRepository documentRepository,
-                                            RabbitAdmin rabbitAdmin,
-                                            RabbitListenerEndpointRegistry registry) {
+                                            RabbitAdmin rabbitAdmin) {
         this.mockMvc = mockMvc;
         this.profileService = profileService;
+        this.profileRepository = profileRepository;
+        this.rabbitTemplate = rabbitTemplate;
         this.documentRepository = documentRepository;
         this.objectMapper = new ObjectMapper();
         this.rabbitAdmin = rabbitAdmin;
-        this.registry = registry;
         objectMapper.registerModule(new JavaTimeModule());
-    }
-
-    @Test
-    public void testThatCreateNewProfileReturnsHttp400BadRequestIfInvalidData() throws Exception {
-        CreateProfileDto dto = TestDataUtil.createNewCreateProfileDto();
-        dto.setUsername("");
-        String json = objectMapper.writeValueAsString(dto);
-        mockMvc.perform(MockMvcRequestBuilders.post("/profiles")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
-    }
-
-    @Test
-    public void testThatCreateNewProfileReturnsHttp201CreatedAndCreatedProfile() throws Exception {
-        registry.stop();
-        CreateProfileDto dto = TestDataUtil.createNewCreateProfileDto();
-        String json = objectMapper.writeValueAsString(dto);
-        registry.getListenerContainer("cu-profile").start();
-        String result = mockMvc.perform(MockMvcRequestBuilders.post("/profiles")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
-                .andExpect(MockMvcResultMatchers.status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.username").value(dto.getUsername()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists())
-                .andReturn().getResponse().getContentAsString();
-        ProfileDto resultDto = objectMapper.readValue(result, ProfileDto.class);
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.create_update_queue).getMessageCount() == 0);
-        assertTrue(documentRepository.existsById(resultDto.getId()));
     }
 
     @Test
@@ -132,7 +114,9 @@ public class ProfileControllerIntegrationTest {
 
     @Test
     public void testThatGetProfileReturnsHttp200OkIfProfileExists() throws Exception {
-        ProfileEntity profile = profileService.createProfile(TestDataUtil.createNewProfileEntity());
+        ProfileEntity profile = TestDataUtil.createNewProfileEntity();
+        profile.setId(UUID.randomUUID());
+        profileRepository.save(profile);
         mockMvc.perform(MockMvcRequestBuilders.get("/profiles/" + profile.getId()))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
@@ -140,7 +124,7 @@ public class ProfileControllerIntegrationTest {
     @Test
     public void testThatUpdateProfileByIdReturnsHttp400BadRequestIfInvalidData() throws Exception {
         PatchProfileDto patchProfileDto = TestDataUtil.createPatchProfileDto();
-        patchProfileDto.setUsername("");
+        patchProfileDto.setDateOfBirth(LocalDate.of(2026, 1, 1));
         String json = objectMapper.writeValueAsString(patchProfileDto);
         mockMvc.perform(MockMvcRequestBuilders.patch("/profiles/" + UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -160,35 +144,36 @@ public class ProfileControllerIntegrationTest {
 
     @Test
     public void testThatUpdateProfileByIdReturnsHttp200OkAndUpdatedProfile() throws Exception {
-        registry.stop();
-        ProfileEntity profile = profileService.createProfile(TestDataUtil.createNewProfileEntity());
+        UserMessageDto messageDto = TestDataUtil.createUserMessageDto();
+        messageDto.setProfileId(UUID.randomUUID());
+        createNewUser(messageDto);
+        assertTrue(profileRepository.existsById(messageDto.getProfileId()));
+        assertTrue(documentRepository.existsById(messageDto.getProfileId()));
         PatchProfileDto patchProfileDto = TestDataUtil.createPatchProfileDto();
         patchProfileDto.setName("UPDATED NAME");
         String json = objectMapper.writeValueAsString(patchProfileDto);
-        registry.getListenerContainer("cu-profile").start();
-        String result = mockMvc.perform(MockMvcRequestBuilders.patch("/profiles/" + profile.getId())
+        String result = mockMvc.perform(MockMvcRequestBuilders.patch("/profiles/" + messageDto.getProfileId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value("UPDATED NAME"))
                 .andReturn().getResponse().getContentAsString();
         ProfileDto resultDto = objectMapper.readValue(result, ProfileDto.class);
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.create_update_queue).getMessageCount() == 0);
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.update_elastic_queue).getMessageCount() == 0);
         assertEquals(documentRepository.findById(resultDto.getId()).get().getName(), patchProfileDto.getName());
     }
 
     @Test
     public void testThatDeleteProfileByIdReturnsHttp204NoContent() throws Exception {
-        registry.stop();
-        registry.getListenerContainer("cu-profile").start();
-        ProfileEntity profile = profileService.createProfile(TestDataUtil.createNewProfileEntity());
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.create_update_queue).getMessageCount() == 0);
-        assertTrue(documentRepository.existsById(profile.getId()));
-        registry.getListenerContainer("d-profile").start();
-        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/" + profile.getId()))
+        UUID profileId = UUID.randomUUID();
+        UserMessageDto userMessageDto = TestDataUtil.createUserMessageDto();
+        userMessageDto.setProfileId(profileId);
+        createNewUser(userMessageDto);
+        assertTrue(documentRepository.existsById(profileId));
+        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/" + profileId))
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
         Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_elastic).getMessageCount() == 0);
-        assertFalse(documentRepository.existsById(profile.getId()));
+        assertFalse(documentRepository.existsById(profileId));
         assertTrue(rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_post).getMessageCount() == 1);
         assertTrue(rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_feed).getMessageCount() == 1);
         assertTrue(rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_story).getMessageCount() == 1);
@@ -205,24 +190,27 @@ public class ProfileControllerIntegrationTest {
     @Test
     public void testThatFollowProfileReturnsHttp400BadRequestIfAlreadyFollowed() throws Exception {
         rabbitAdmin.purgeQueue(RabbitMQConfig.notification_queue);
-        ProfileEntity profile1 = TestDataUtil.createNewProfileEntity();
-        profileService.createProfile(profile1);
-        ProfileEntity profile2 = TestDataUtil.createNewProfileEntity();
-        profileService.createProfile(profile2);
-        profileService.followNewProfile(profile1.getId(), profile2.getId());
-        mockMvc.perform(MockMvcRequestBuilders.post("/profiles/" + profile1.getId() + "/follow?user=" + profile2.getId()))
+        UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
+        messageDto1.setProfileId(UUID.randomUUID());
+        createNewUser(messageDto1);
+        UserMessageDto messageDto2 = TestDataUtil.createUserMessageDto();
+        messageDto2.setProfileId(UUID.randomUUID());
+        createNewUser(messageDto2);
+        profileService.followNewProfile(messageDto1.getProfileId(), messageDto2.getProfileId());
+        mockMvc.perform(MockMvcRequestBuilders.post("/profiles/" + messageDto1.getProfileId() + "/follow?user=" + messageDto2.getProfileId()))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test
     public void testThatFollowProfileReturnsHttp200OkIfSuccessful() throws Exception {
-        registry.stop();
         rabbitAdmin.purgeQueue(RabbitMQConfig.notification_queue);
-        ProfileEntity profile1 = TestDataUtil.createNewProfileEntity();
-        profileService.createProfile(profile1);
-        ProfileEntity profile2 = TestDataUtil.createNewProfileEntity();
-        profileService.createProfile(profile2);
-        mockMvc.perform(MockMvcRequestBuilders.post("/profiles/" + profile1.getId() + "/follow?user=" + profile2.getId()))
+        UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
+        messageDto1.setProfileId(UUID.randomUUID());
+        createNewUser(messageDto1);
+        UserMessageDto messageDto2 = TestDataUtil.createUserMessageDto();
+        messageDto2.setProfileId(UUID.randomUUID());
+        createNewUser(messageDto2);
+        mockMvc.perform(MockMvcRequestBuilders.post("/profiles/" + messageDto1.getProfileId() + "/follow?user=" + messageDto2.getProfileId()))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         assertEquals(1, rabbitAdmin.getQueueInfo(RabbitMQConfig.notification_queue).getMessageCount());
     }
@@ -235,73 +223,86 @@ public class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatUnfollowProfileReturnsHttp400BadRequestIfAlreadyFollowed() throws Exception {
-        ProfileEntity profile1 = TestDataUtil.createNewProfileEntity();
-        profileService.createProfile(profile1);
-        ProfileEntity profile2 = TestDataUtil.createNewProfileEntity();
-        profileService.createProfile(profile2);
-        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/" + profile1.getId() + "/unfollow?user=" + profile2.getId()))
+    public void testThatUnfollowProfileReturnsHttp400BadRequestIfAlreadyUnfollowed() throws Exception {
+        UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
+        messageDto1.setProfileId(UUID.randomUUID());
+        createNewUser(messageDto1);
+        UserMessageDto messageDto2 = TestDataUtil.createUserMessageDto();
+        messageDto2.setProfileId(UUID.randomUUID());
+        createNewUser(messageDto2);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/" + messageDto1.getProfileId() + "/unfollow?user=" + messageDto2.getProfileId()))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test
     public void testThatUnfollowProfileReturnsHttp200OktIfSuccessful() throws Exception {
-        ProfileEntity profile1 = TestDataUtil.createNewProfileEntity();
-        profileService.createProfile(profile1);
-        ProfileEntity profile2 = TestDataUtil.createNewProfileEntity();
-        profileService.createProfile(profile2);
-        profileService.followNewProfile(profile1.getId(), profile2.getId());
-        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/" + profile1.getId() + "/unfollow?user=" + profile2.getId()))
+        UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
+        messageDto1.setProfileId(UUID.randomUUID());
+        createNewUser(messageDto1);
+        UserMessageDto messageDto2 = TestDataUtil.createUserMessageDto();
+        messageDto2.setProfileId(UUID.randomUUID());
+        createNewUser(messageDto2);
+        profileService.followNewProfile(messageDto1.getProfileId(), messageDto2.getProfileId());
+        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/" + messageDto1.getProfileId() + "/unfollow?user=" + messageDto2.getProfileId()))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     @Test
     public void testThatGetFollowersByIdReturnsHttp200Ok() throws Exception {
-        ProfileEntity profile1 = TestDataUtil.createNewProfileEntity();
-        profile1.setUsername("TEST");
-        profileService.createProfile(profile1);
-        ProfileEntity profile2 = TestDataUtil.createNewProfileEntity();
-        profileService.createProfile(profile2);
-        profileService.followNewProfile(profile1.getId(), profile2.getId());
-        mockMvc.perform(MockMvcRequestBuilders.get("/profiles/" + profile2.getId() + "/followers"))
+        UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
+        messageDto1.setProfileId(UUID.randomUUID());
+        messageDto1.setUsername("TEST");
+        createNewUser(messageDto1);
+        UserMessageDto messageDto2 = TestDataUtil.createUserMessageDto();
+        messageDto2.setProfileId(UUID.randomUUID());
+        createNewUser(messageDto2);
+        profileService.followNewProfile(messageDto1.getProfileId(), messageDto2.getProfileId());
+        mockMvc.perform(MockMvcRequestBuilders.get("/profiles/" + messageDto2.getProfileId() + "/followers"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].username").value("TEST"));
     }
 
     @Test
     public void testThatGetFolloweesByIdReturnsHttp200Ok() throws Exception {
-        ProfileEntity profile1 = TestDataUtil.createNewProfileEntity();
-        profileService.createProfile(profile1);
-        ProfileEntity profile2 = TestDataUtil.createNewProfileEntity();
-        profile2.setUsername("TEST");
-        profileService.createProfile(profile2);
-        profileService.followNewProfile(profile1.getId(), profile2.getId());
-        mockMvc.perform(MockMvcRequestBuilders.get("/profiles/" + profile1.getId() + "/followees"))
+        UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
+        messageDto1.setProfileId(UUID.randomUUID());
+        createNewUser(messageDto1);
+        UserMessageDto messageDto2 = TestDataUtil.createUserMessageDto();
+        messageDto2.setUsername("TEST");
+        messageDto2.setProfileId(UUID.randomUUID());
+        createNewUser(messageDto2);
+        profileService.followNewProfile(messageDto1.getProfileId(), messageDto2.getProfileId());
+        mockMvc.perform(MockMvcRequestBuilders.get("/profiles/" + messageDto1.getProfileId() + "/followees"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].username").value("TEST"));
     }
 
     @Test
     public void testThatSearchProfilesByElasticSearchReturnsHttp200Ok() throws Exception {
-        registry.stop();
-        ProfileEntity profile = TestDataUtil.createNewProfileEntity();
-        registry.getListenerContainer("cu-profile").start();
-        profileService.createProfile(profile);
+        UUID profileId = UUID.randomUUID();
+        UserMessageDto messageDto = TestDataUtil.createUserMessageDto();
+        messageDto.setProfileId(profileId);
+        createNewUser(messageDto);
         mockMvc.perform(MockMvcRequestBuilders.get("/profiles?search=F"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].username").value(profile.getUsername()));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].username").value(messageDto.getUsername()));
     }
 
     @Test
     public void testThatSearchProfilesByNeo4jReturnsHttp200OkIfElasticsearchIsDown() throws Exception {
-        registry.stop();
-        ProfileEntity profile = TestDataUtil.createNewProfileEntity();
-        registry.getListenerContainer("cu-profile").start();
-        profileService.createProfile(profile);
+        UserMessageDto messageDto = TestDataUtil.createUserMessageDto();
+        messageDto.setProfileId(UUID.randomUUID());
+        createNewUser(messageDto);
         elasticsearchContainer.stop();
-        mockMvc.perform(MockMvcRequestBuilders.get("/profiles?search=username"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/profiles?search=" + messageDto.getUsername()))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].username").value(profile.getUsername()));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].username").value(messageDto.getUsername()));
+    }
+
+    private void createNewUser(UserMessageDto messageDto) throws InterruptedException {
+        rabbitTemplate.convertAndSend(RabbitMQTestConfig.create_user_exchange, "create.user", messageDto);
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQTestConfig.create_user_queue).getMessageCount() == 0);
+        Thread.sleep(Duration.of(  1, ChronoUnit.SECONDS));
     }
 
 }

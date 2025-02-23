@@ -8,8 +8,6 @@ import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 public interface ProfileService {
-    ProfileEntity createProfile(ProfileEntity entity);
-
     ProfileEntity getProfileById(UUID profileId);
 
     ProfileEntity updateProfile(UUID profileId, PatchProfileDto dto);

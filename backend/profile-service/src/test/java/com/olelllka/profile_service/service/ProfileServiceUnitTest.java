@@ -48,28 +48,6 @@ public class ProfileServiceUnitTest {
     private ProfileServiceImpl service;
 
     @Test
-    public void testThatProfileServiceCreatesNewProfile() {
-        // given
-        ProfileEntity profile = TestDataUtil.createNewProfileEntity();
-        ProfileEntity expected = TestDataUtil.createNewProfileEntity();
-        expected.setCreatedAt(LocalDate.now());
-        // when
-        when(repository.save(expected)).thenReturn(expected);
-        ProfileEntity result = service.createProfile(profile);
-        // then
-        assertAll(
-                () -> assertNotNull(result),
-                () -> assertEquals(result.getCreatedAt(), LocalDate.now())
-        );
-        ProfileDocumentDto documentDto = ProfileDocumentDto.builder()
-                .id(result.getId())
-                .username(result.getUsername())
-                .name(result.getName())
-                .email(result.getEmail())
-                .build();
-        verify(messagePublisher, times(1)).createUpdateProfile(documentDto);    }
-
-    @Test
     public void testThatGetProfileByIdThrowsException() {
         // given
         UUID id = UUID.randomUUID();
@@ -112,16 +90,12 @@ public class ProfileServiceUnitTest {
         UUID id = UUID.randomUUID();
         PatchProfileDto patchProfileDto = TestDataUtil.createPatchProfileDto();
         patchProfileDto.setName("UPDATED NAME");
-        patchProfileDto.setUsername("UPDATED USERNAME");
-        patchProfileDto.setEmail("UPDATED EMAIL");
         patchProfileDto.setDateOfBirth(LocalDate.of(2021, 1, 1));
         patchProfileDto.setGender(Gender.FEMALE);
         patchProfileDto.setAboutMe("UPDATED");
         patchProfileDto.setPhoto("UPDATED PHOTO");
         ProfileEntity expected = TestDataUtil.createNewProfileEntity();
         expected.setName("UPDATED NAME");
-        expected.setUsername("UPDATED USERNAME");
-        expected.setEmail("UPDATED EMAIL");
         expected.setDateOfBirth(LocalDate.of(2021, 1, 1));
         expected.setGender(Gender.FEMALE);
         expected.setPhoto("UPDATED PHOTO");
@@ -129,9 +103,9 @@ public class ProfileServiceUnitTest {
         // when
         when(repository.existsById(id)).thenReturn(true);
         when(repository.updateProfile(id,
-                expected.getUsername(),
+                null,
                 expected.getName(),
-                expected.getEmail(),
+                null,
                 expected.getGender().toString(),
                 expected.getPhoto(),
                 expected.getAboutMe(),
@@ -142,26 +116,24 @@ public class ProfileServiceUnitTest {
                 () -> assertNotNull(result),
                 () -> assertEquals(result.getName(), patchProfileDto.getName()),
                 () -> assertEquals(result.getDateOfBirth(), patchProfileDto.getDateOfBirth()),
-                () -> assertEquals(result.getEmail(), patchProfileDto.getEmail()),
                 () -> assertEquals(result.getAboutMe(), patchProfileDto.getAboutMe()),
                 () -> assertEquals(result.getGender(), patchProfileDto.getGender()),
                 () -> assertEquals(result.getPhoto(), patchProfileDto.getPhoto()),
                 () -> assertEquals(result.getPhoto(), patchProfileDto.getPhoto()));
         verify(repository, times(1)).updateProfile(id,
-                expected.getUsername(),
+                null,
                 expected.getName(),
-                expected.getEmail(),
+                null,
                 expected.getGender().toString(),
                 expected.getPhoto(),
                 expected.getAboutMe(),
                 expected.getDateOfBirth());
         ProfileDocumentDto documentDto = ProfileDocumentDto.builder()
                 .id(result.getId())
-                .username(result.getUsername())
                 .name(result.getName())
-                .email(result.getEmail())
+                .photo(result.getPhoto())
                 .build();
-        verify(messagePublisher, times(1)).createUpdateProfile(documentDto);
+        verify(messagePublisher, times(1)).updateProfile(documentDto);
     }
 
     @Test

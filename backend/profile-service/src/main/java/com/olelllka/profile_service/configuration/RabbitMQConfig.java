@@ -11,7 +11,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
-    public static final String create_update_queue = "create_update_profile_queue";
+    public static final String update_elastic_queue = "update_profile_elastic_queue";
+    public static final String create_user_queue = "create_user_auth_queue";
+    public static final String update_user_queue = "update_user_auth_queue";
     public static final String profile_exchange = "profile_exchange";
     public static final String profile_fanout_exchange = "profile_fanout_exchange";
     public static final String delete_queue_elastic = "delete_profile_queue_elastic";
@@ -24,8 +26,8 @@ public class RabbitMQConfig {
     public static final String notification_exchange = "notification_exchange";
 
     @Bean
-    public Queue createUpdateQueue() {
-        return new Queue(create_update_queue, true);
+    public Queue updateQueue() {
+        return new Queue(update_elastic_queue, true);
     }
 
     @Bean
@@ -79,8 +81,8 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Binding createProfileBinding(Queue createUpdateQueue, TopicExchange exchange) {
-        return BindingBuilder.bind(createUpdateQueue).to(exchange).with("create_and_update_profile");
+    public Binding createProfileElasicBinding(Queue updateQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(updateQueue).to(exchange).with("update_profile");
     }
 
     @Bean

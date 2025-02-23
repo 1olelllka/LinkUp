@@ -13,14 +13,11 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class ProfileDto {
-    private UUID id;
+public class UserMessageDto {
+    private UUID profileId;
+    private String email;
     private String username;
     private String name;
-    private String email;
-    private String aboutMe;
-    private String photo;
     private Gender gender;
     private LocalDate dateOfBirth;
-    private LocalDate createdAt;
 }

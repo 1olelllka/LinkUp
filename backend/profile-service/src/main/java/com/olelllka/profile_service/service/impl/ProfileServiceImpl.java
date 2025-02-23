@@ -23,7 +23,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.Date;
 import java.util.UUID;
 
@@ -36,20 +35,6 @@ public class ProfileServiceImpl implements ProfileService {
     private final MessagePublisher messagePublisher;
     private final ElasticsearchRestClientHealthIndicator elasticHealth;
 
-    @Override
-    @Transactional
-    public ProfileEntity createProfile(ProfileEntity entity) {
-        entity.setCreatedAt(LocalDate.now());
-        ProfileEntity saved = repository.save(entity);
-        ProfileDocumentDto dto = ProfileDocumentDto.builder()
-                        .id(saved.getId())
-                        .name(saved.getName())
-                        .username(saved.getUsername())
-                        .email(saved.getEmail())
-                        .build();
-        messagePublisher.createUpdateProfile(dto);
-        return saved;
-    }
 
     @Override
     @Cacheable(value = "profile", keyGenerator = "sha256KeyGenerator")
@@ -65,20 +50,20 @@ public class ProfileServiceImpl implements ProfileService {
             throw new NotFoundException("Profile with such id does not exist");
         }
         ProfileEntity updated = repository.updateProfile(profileId,
-                dto.getUsername(),
+                null,
                 dto.getName(),
-                dto.getEmail(),
+                null,
                 dto.getGender() != null ? dto.getGender().toString() : null,
                 dto.getPhoto(),
                 dto.getAboutMe(),
-                dto.getDateOfBirth());
+                dto.getDateOfBirth()
+        );
         ProfileDocumentDto documentDto = ProfileDocumentDto.builder()
                 .id(updated.getId())
-                .email(updated.getEmail())
                 .name(updated.getName())
-                .username(updated.getUsername())
+                .photo(updated.getPhoto())
                 .build();
-        messagePublisher.createUpdateProfile(documentDto);
+        messagePublisher.updateProfile(documentDto);
         return updated;
     }
 
