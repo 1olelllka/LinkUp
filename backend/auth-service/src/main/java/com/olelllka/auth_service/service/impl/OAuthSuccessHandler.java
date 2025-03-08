@@ -58,7 +58,7 @@ public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
                     .gender(Gender.UNDEFINED)
                     .email(savedUser.getEmail())
                     .dateOfBirth(LocalDate.of(2000, 1, 1))
-                    .username(savedUser.getUsername())
+                    .username(username)
                     .profileId(newProfileId)
                     .name(name)
                     .build();

@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.olelllka.auth_service.RabbitMQTestConfig;
 import com.olelllka.auth_service.TestDataUtil;
+import com.olelllka.auth_service.config.RabbitMQConfig;
 import com.olelllka.auth_service.domain.dto.JWTToken;
 import com.olelllka.auth_service.domain.dto.LoginUser;
+import com.olelllka.auth_service.domain.dto.PatchUserDto;
 import com.olelllka.auth_service.domain.dto.RegisterUserDto;
 import com.olelllka.auth_service.repository.UserRepository;
 import com.olelllka.auth_service.service.impl.UserServiceImpl;
@@ -110,7 +112,7 @@ public class UserControllerIntegrationTest {
                         .contentType("application/json")
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isCreated());
-        assertTrue(admin.getQueueInfo("create_user_queue").getMessageCount() > 0);
+        assertTrue(admin.getQueueInfo(RabbitMQConfig.create_user_queue).getMessageCount() > 0);
     }
 
     @Test
@@ -148,6 +150,44 @@ public class UserControllerIntegrationTest {
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.token").exists());
+    }
+
+    @Test
+    public void testThatGetUserByJwtReturnsHttp200Ok() throws Exception {
+        LoginUser loginUser = TestDataUtil.createLoginUser();
+        RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
+        userService.registerUser(dto);
+        String json = objectMapper.writeValueAsString(loginUser);
+        String content = mockMvc.perform(MockMvcRequestBuilders.post("/auth/login")
+                        .contentType("application/json")
+                        .content(json))
+                .andReturn().getResponse().getContentAsString();
+        JWTToken jwtToken = objectMapper.readValue(content, JWTToken.class);
+        mockMvc.perform(MockMvcRequestBuilders.get("/auth/me")
+                .header("Authorization", "Bearer " + jwtToken.getToken()))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    public void testThatPatchUserReturnsHttp200Ok() throws Exception {
+        LoginUser loginUser = TestDataUtil.createLoginUser();
+        RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
+        userService.registerUser(dto);
+        String json = objectMapper.writeValueAsString(loginUser);
+        String content = mockMvc.perform(MockMvcRequestBuilders.post("/auth/login")
+                        .contentType("application/json")
+                        .content(json))
+                .andReturn().getResponse().getContentAsString();
+        JWTToken jwtToken = objectMapper.readValue(content, JWTToken.class);
+        PatchUserDto patchUserDto = PatchUserDto.builder().email("newemail@email.com").build();
+        String patchJson = objectMapper.writeValueAsString(patchUserDto);
+        mockMvc.perform(MockMvcRequestBuilders.patch("/auth/me")
+                .header("Authorization", "Bearer " + jwtToken.getToken())
+                .contentType("application/json")
+                .content(patchJson))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.email").value("newemail@email.com"));
+        assertEquals(admin.getQueueInfo(RabbitMQConfig.update_user_queue).getMessageCount(), 1);
     }
 
     @Test

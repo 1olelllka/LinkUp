@@ -1,9 +1,6 @@
 package com.olelllka.auth_service.rest.controller;
 
-import com.olelllka.auth_service.domain.dto.JWTToken;
-import com.olelllka.auth_service.domain.dto.LoginUser;
-import com.olelllka.auth_service.domain.dto.RegisterUserDto;
-import com.olelllka.auth_service.domain.dto.UserDto;
+import com.olelllka.auth_service.domain.dto.*;
 import com.olelllka.auth_service.domain.entity.UserEntity;
 import com.olelllka.auth_service.rest.exception.ValidationException;
 import com.olelllka.auth_service.service.JWTUtil;
@@ -16,10 +13,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.stream.Collectors;
 
@@ -59,6 +53,24 @@ public class UserController {
             return new ResponseEntity<>(JWTToken.builder().token(jwt).build(), HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> getMyUser(@RequestHeader(name = "Authorization") String header) {
+        UserEntity user = userService.getUserByJwt(header.substring(7));
+        return new ResponseEntity<>(mapToDto(user), HttpStatus.OK);
+    }
+
+    @PatchMapping("/me")
+    public ResponseEntity<UserDto> patchUser(@RequestHeader(name = "Authorization") String header,
+                                            @Valid @RequestBody PatchUserDto patchUserDto,
+                                             BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            String msg = bindingResult.getAllErrors().stream().map(err -> err.getDefaultMessage()).collect(Collectors.joining(" "));
+            throw new ValidationException(msg);
+        }
+        UserEntity patched = userService.patchUser(header.substring(7), patchUserDto);
+        return new ResponseEntity<>(mapToDto(patched), HttpStatus.OK);
     }
 
     private UserDto mapToDto(UserEntity entity) {

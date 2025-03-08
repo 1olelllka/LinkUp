@@ -15,4 +15,8 @@ public class MessagePublisher {
     public void sendCreateUserMessage(UserMessageDto userDto) {
         rabbitTemplate.convertAndSend(RabbitMQConfig.create_user_exchange, "create.user", userDto);
     }
+
+    public void sendUpdateUserMessage(UserMessageDto userDto) {
+        rabbitTemplate.convertAndSend(RabbitMQConfig.update_user_exchange, "update.user", userDto);
+    }
 }
