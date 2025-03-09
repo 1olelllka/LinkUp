@@ -34,16 +34,17 @@
   - [Profile Service](#profile-service)
   - [Posts Service](#posts-service)
   - [Feed Service](#feed-service)
+  - [Auth Service](#auth-service)
   - [Chat Service](#chat-service)
   - [Stories Service](#stories-service)
   - [Notification Service](#notification-service)
 
 #### Simplified Project Structure
-![CompleteProjectArchitecture](https://github.com/user-attachments/assets/ebf8c5c7-4ec2-4e37-81c1-3dd328df06c0)
+![CompleteProjectArchitecture](https://github.com/user-attachments/assets/361da87f-51a9-426e-9855-8d76a5c1d619)
 
 #### Profile Service 
 *🛑 Critical Service*
-![ProfileService](https://github.com/user-attachments/assets/49001b24-9f85-4b98-bb22-0ca72a3c3dfc)
+![ProfileService](https://github.com/user-attachments/assets/4646e2de-debe-4bb9-b2fc-dea55b5dd2ee)
 
 #### Posts Service
 ![PostsService](https://github.com/user-attachments/assets/366e1074-eb2b-45a4-b768-d0dfe4f85c19)
@@ -51,6 +52,9 @@
 #### Feed Service
 *⚠️ Dependent on Profile and Posts service*
 ![FeedService](https://github.com/user-attachments/assets/6c921ac1-5368-415b-8372-e3bdb0418067)
+
+#### Auth Service
+![AuthService](https://github.com/user-attachments/assets/29dc244d-4ebd-47d7-91e1-c2aca5632265)
 
 #### Chat Service
 ![ChatService](https://github.com/user-attachments/assets/ae6abfff-a324-4305-bbb8-d238800fde5c)
