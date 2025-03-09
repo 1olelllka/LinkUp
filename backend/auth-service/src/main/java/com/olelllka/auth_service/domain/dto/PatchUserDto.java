@@ -15,6 +15,6 @@ import lombok.NoArgsConstructor;
 public class PatchUserDto {
     @Email(message = "Invalid Email.")
     private String email;
-    @Pattern(regexp = "^\\w{8,}$", message = "Username must be at least 8 characters and contain only letters, digits, or underscores.")
-    private String username;
+    @Pattern(regexp = "^\\w{8,}$", message = "Alias must be at least 8 characters and contain only letters, digits, or underscores.")
+    private String alias;
 }

@@ -8,6 +8,7 @@ import com.olelllka.auth_service.domain.dto.UserMessageDto;
 import com.olelllka.auth_service.domain.entity.UserEntity;
 import com.olelllka.auth_service.repository.UserRepository;
 import com.olelllka.auth_service.rest.exception.DuplicateException;
+import com.olelllka.auth_service.service.impl.ProfileCacheHandlers;
 import com.olelllka.auth_service.service.impl.UserServiceImpl;
 import org.apache.catalina.User;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,8 @@ public class UserServiceUnitTest {
     private MessagePublisher messagePublisher;
     @Mock
     private JWTUtil jwtUtil;
+    @Mock
+    private ProfileCacheHandlers profileCacheHandlers;
     @InjectMocks
     private UserServiceImpl userService;
 
@@ -58,12 +61,9 @@ public class UserServiceUnitTest {
         expected.setEmail(patchUserDto.getEmail());
         // when
         when(jwtUtil.extractUsername(jwt)).thenReturn("email@email.com");
-        when(userRepository.findByEmail("email@email.com")).thenReturn(Optional.of(TestDataUtil.createUserEntity()));
-        when(userRepository.save(expected)).thenReturn(expected);
+        when(profileCacheHandlers.patchUserByEmail("email@email.com", patchUserDto)).thenReturn(expected);
         UserEntity result = userService.patchUser(jwt, patchUserDto);
         // then
-        UserMessageDto userMessageDto = UserMessageDto.builder().email(patchUserDto.getEmail()).username(expected.getUsername()).build();
-        verify(messagePublisher, times(1)).sendUpdateUserMessage(userMessageDto);
         assertAll(
                 () -> assertNotNull(result),
                 () -> assertEquals(result.getEmail(), expected.getEmail())
@@ -77,7 +77,7 @@ public class UserServiceUnitTest {
         UserEntity expected = TestDataUtil.createUserEntity();
         // when
         when(jwtUtil.extractUsername(jwt)).thenReturn(expected.getEmail());
-        when(userRepository.findByEmail(expected.getEmail())).thenReturn(Optional.of(expected));
+        when(profileCacheHandlers.getUserByEmail(expected.getEmail())).thenReturn(expected);
         UserEntity result = userService.getUserByJwt(jwt);
         // then
         assertAll(

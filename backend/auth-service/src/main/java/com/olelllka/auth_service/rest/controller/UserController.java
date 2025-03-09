@@ -78,7 +78,7 @@ public class UserController {
                 .userId(entity.getUserId())
                 .role(entity.getRole())
                 .email(entity.getEmail())
-                .username(entity.getUsername())
+                .alias(entity.getAlias())
                 .password(entity.getPassword())
                 .authProvider(entity.getAuthProvider())
                 .providerId(entity.getProviderId())

@@ -9,8 +9,11 @@ import com.olelllka.auth_service.domain.dto.JWTToken;
 import com.olelllka.auth_service.domain.dto.LoginUser;
 import com.olelllka.auth_service.domain.dto.PatchUserDto;
 import com.olelllka.auth_service.domain.dto.RegisterUserDto;
+import com.olelllka.auth_service.domain.entity.UserEntity;
 import com.olelllka.auth_service.repository.UserRepository;
+import com.olelllka.auth_service.service.SHA256;
 import com.olelllka.auth_service.service.impl.UserServiceImpl;
+import com.redis.testcontainers.RedisContainer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +24,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -44,10 +48,13 @@ public class UserControllerIntegrationTest {
     static RabbitMQContainer rabbitMQContainer = new RabbitMQContainer(DockerImageName.parse("rabbitmq:3.13-management"));
     @ServiceConnection
     static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:8.0"));
+    @ServiceConnection
+    static RedisContainer redisContainer = new RedisContainer(DockerImageName.parse("redis:7.2.6"));
 
     static {
         rabbitMQContainer.start();
         mongoDBContainer.start();
+        redisContainer.start();
     }
 
     @AfterAll
@@ -56,6 +63,8 @@ public class UserControllerIntegrationTest {
         rabbitMQContainer.close();
         mongoDBContainer.stop();
         mongoDBContainer.close();
+        redisContainer.stop();
+        redisContainer.close();
     }
 
     @AfterEach
@@ -68,18 +77,21 @@ public class UserControllerIntegrationTest {
     private final ObjectMapper objectMapper;
     private final RabbitAdmin admin;
     private final UserRepository userRepository;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Autowired
     public UserControllerIntegrationTest(UserServiceImpl userService,
                                          UserRepository userRepository,
                                          RabbitAdmin admin,
-                                         MockMvc mockMvc) {
+                                         MockMvc mockMvc,
+                                         RedisTemplate<String, String> redisTemplate) {
         this.userService = userService;
         this.mockMvc = mockMvc;
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new JavaTimeModule());
         this.admin = admin;
         this.userRepository = userRepository;
+        this.redisTemplate = redisTemplate;
     }
 
     @Test
@@ -153,7 +165,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void testThatGetUserByJwtReturnsHttp200Ok() throws Exception {
+    public void testThatGetUserByJwtReturnsHttp200OkAndCacheWorks() throws Exception {
         LoginUser loginUser = TestDataUtil.createLoginUser();
         RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
         userService.registerUser(dto);
@@ -166,6 +178,7 @@ public class UserControllerIntegrationTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/auth/me")
                 .header("Authorization", "Bearer " + jwtToken.getToken()))
                 .andExpect(MockMvcResultMatchers.status().isOk());
+        assertTrue(redisTemplate.hasKey("auth::" + SHA256.hash(loginUser.getEmail())));
     }
 
     @Test
@@ -188,6 +201,7 @@ public class UserControllerIntegrationTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.email").value("newemail@email.com"));
         assertEquals(admin.getQueueInfo(RabbitMQConfig.update_user_queue).getMessageCount(), 1);
+        assertTrue(redisTemplate.hasKey("auth::" + SHA256.hash(loginUser.getEmail())));
     }
 
     @Test

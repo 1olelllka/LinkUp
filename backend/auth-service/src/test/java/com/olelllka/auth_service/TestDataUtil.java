@@ -16,7 +16,7 @@ public class TestDataUtil {
         return RegisterUserDto.builder()
                 .email("email@email.com")
                 .name("name")
-                .username("username")
+                .alias("username")
                 .gender(Gender.UNDEFINED)
                 .dateOfBirth(LocalDate.of(2020, 1, 1))
                 .password("password")
@@ -33,7 +33,7 @@ public class TestDataUtil {
     public static UserEntity createUserEntity() {
         return UserEntity.builder()
                 .email("email@email.com")
-                .username("username")
+                .alias("username")
                 .authProvider(AuthProvider.LOCAL)
                 .providerId("")
                 .role(Role.USER)

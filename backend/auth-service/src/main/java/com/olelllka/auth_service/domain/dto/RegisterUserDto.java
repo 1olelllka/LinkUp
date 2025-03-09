@@ -17,8 +17,8 @@ public class RegisterUserDto {
     @NotEmpty(message = "Email must not be empty.")
     private String email;
     @NotBlank(message = "Username must not be blank.")
-    @Pattern(regexp = "^\\w{8,}$", message = "Username must be at least 8 characters and contain only letters, digits, or underscores.")
-    private String username;
+    @Pattern(regexp = "^\\w{8,}$", message = "Alias must be at least 8 characters and contain only letters, digits, or underscores.")
+    private String alias;
     @NotBlank(message = "Password must not be blank.")
     @Pattern(regexp = "^\\w{8,}$", message = "Password must be at least 8 characters and contain only letters, digits, or underscores.")
     private String password;

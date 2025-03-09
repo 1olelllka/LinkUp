@@ -10,6 +10,13 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=admin
     volumes:
       - "mongo_data:/data/db"
-
+  cache:
+    container_name: auth-redis
+    image: redis:7.2.6
+    ports:
+      - 6375:6379
+    volumes:
+      - "redis_data:/data"
 volumes:
   mongo_data:
+  redis_data:

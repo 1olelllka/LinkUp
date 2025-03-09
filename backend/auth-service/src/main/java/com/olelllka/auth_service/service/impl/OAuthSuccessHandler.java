@@ -50,7 +50,7 @@ public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
                     .providerId(providerId)
                     .authProvider(AuthProvider.GOOGLE)
                     .role(Role.USER)
-                    .username(username)
+                    .alias(username)
                     .userId(newProfileId)
                     .build();
             UserEntity savedUser = userRepository.save(newUser);

@@ -24,8 +24,8 @@ public class UserEntity implements UserDetails {
 
     @Id
     private UUID userId;
-    @Indexed(name = "username", unique = true)
-    private String username;
+    @Indexed(name = "alias", unique = true)
+    private String alias;
     @Indexed(name = "email", unique = true)
     private String email;
     private String password;
