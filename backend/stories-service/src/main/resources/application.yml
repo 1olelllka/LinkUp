@@ -9,6 +9,7 @@ spring:
   data:
     mongodb:
       uri: mongodb://admin:admin@localhost:27017/storiesDB?authSource=admin
+      uuid-representation: standard
 
   cache:
     type: redis

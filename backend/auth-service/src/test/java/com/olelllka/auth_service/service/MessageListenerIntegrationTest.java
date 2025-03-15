@@ -15,6 +15,8 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
@@ -36,6 +38,11 @@ public class MessageListenerIntegrationTest {
     static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:8.0"));
     @ServiceConnection
     static RedisContainer redisContainer = new RedisContainer(DockerImageName.parse("redis:7.2.6"));
+
+    @DynamicPropertySource
+    static void registerEurekaProperties(DynamicPropertyRegistry registry) {
+        registry.add("eureka.client.enabled", () -> false);
+    }
 
     static {
         rabbitMQContainer.start();

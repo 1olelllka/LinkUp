@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class GatewayController {
     @RequestMapping("/fallback")
     public ResponseEntity<ErrorMessage> fallback() {
-        return new ResponseEntity<>(ErrorMessage.builder()
-                .message("Service is temporarily unavailable. Please, try again later").build(), HttpStatus.SERVICE_UNAVAILABLE);
+        return new ResponseEntity<>(
+                ErrorMessage.builder()
+                .message("Service is temporarily unavailable. Please, try again later")
+                        .build(), HttpStatus.SERVICE_UNAVAILABLE);
     }
 }

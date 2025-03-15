@@ -5,6 +5,7 @@ spring:
   data:
     mongodb:
       uri: mongodb://admin:admin@localhost:27015/chatDB?authSource=admin
+      uuid-representation: standard
 
   rabbitmq:
     host: localhost

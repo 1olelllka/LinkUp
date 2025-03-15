@@ -9,7 +9,6 @@ import com.olelllka.auth_service.domain.dto.JWTToken;
 import com.olelllka.auth_service.domain.dto.LoginUser;
 import com.olelllka.auth_service.domain.dto.PatchUserDto;
 import com.olelllka.auth_service.domain.dto.RegisterUserDto;
-import com.olelllka.auth_service.domain.entity.UserEntity;
 import com.olelllka.auth_service.repository.UserRepository;
 import com.olelllka.auth_service.service.SHA256;
 import com.olelllka.auth_service.service.impl.UserServiceImpl;
@@ -27,6 +26,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -55,6 +56,11 @@ public class UserControllerIntegrationTest {
         rabbitMQContainer.start();
         mongoDBContainer.start();
         redisContainer.start();
+    }
+
+    @DynamicPropertySource
+    static void registerEurekaProperties(DynamicPropertyRegistry registry) {
+        registry.add("eureka.client.enabled", () -> false);
     }
 
     @AfterAll
