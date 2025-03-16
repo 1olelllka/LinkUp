@@ -1,9 +1,6 @@
 package com.olelllka.profile_service;
 
-import com.olelllka.profile_service.domain.dto.PatchProfileDto;
-import com.olelllka.profile_service.domain.dto.ProfileDocumentDto;
-import com.olelllka.profile_service.domain.dto.ProfileDto;
-import com.olelllka.profile_service.domain.dto.UserMessageDto;
+import com.olelllka.profile_service.domain.dto.*;
 import com.olelllka.profile_service.domain.entity.Gender;
 import com.olelllka.profile_service.domain.entity.ProfileDocument;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
@@ -22,6 +19,13 @@ public class TestDataUtil {
                 .photo("Photo url")
                 .username("username")
                 .aboutMe("About me")
+                .build();
+    }
+
+    public static FollowDto createFollowDto(UUID id1, UUID id2) {
+        return FollowDto.builder()
+                .followerId(id1)
+                .followeeId(id2)
                 .build();
     }
 

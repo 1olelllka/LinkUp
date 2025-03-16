@@ -5,6 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.olelllka.profile_service.RabbitMQTestConfig;
 import com.olelllka.profile_service.TestDataUtil;
 import com.olelllka.profile_service.configuration.RabbitMQConfig;
+import com.olelllka.profile_service.domain.dto.FollowDto;
 import com.olelllka.profile_service.domain.dto.PatchProfileDto;
 import com.olelllka.profile_service.domain.dto.ProfileDto;
 import com.olelllka.profile_service.domain.dto.UserMessageDto;
@@ -181,9 +182,21 @@ public class ProfileControllerIntegrationTest {
     }
 
     @Test
+    public void testThatFollowProfileReturnsHttp400BadRequestIfValidationFails() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.post("/profiles/follow")
+                        .contentType("application/json")
+                        .content(""))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
     public void testThatFollowProfileReturnsHttp400BadRequestIfTheSameIds() throws Exception {
         UUID id = UUID.randomUUID();
-        mockMvc.perform(MockMvcRequestBuilders.post("/profiles/" + id + "/follow?user=" + id))
+        FollowDto followDto = TestDataUtil.createFollowDto(id, id);
+        String json = objectMapper.writeValueAsString(followDto);
+        mockMvc.perform(MockMvcRequestBuilders.post("/profiles/follow")
+                        .contentType("application/json")
+                        .content(json))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
@@ -196,8 +209,12 @@ public class ProfileControllerIntegrationTest {
         UserMessageDto messageDto2 = TestDataUtil.createUserMessageDto();
         messageDto2.setProfileId(UUID.randomUUID());
         createNewUser(messageDto2);
+        FollowDto followDto = TestDataUtil.createFollowDto(messageDto1.getProfileId(), messageDto2.getProfileId());
+        String json = objectMapper.writeValueAsString(followDto);
         profileService.followNewProfile(messageDto1.getProfileId(), messageDto2.getProfileId());
-        mockMvc.perform(MockMvcRequestBuilders.post("/profiles/" + messageDto1.getProfileId() + "/follow?user=" + messageDto2.getProfileId()))
+        mockMvc.perform(MockMvcRequestBuilders.post("/profiles/follow")
+                        .contentType("application/json")
+                        .content(json))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
@@ -210,15 +227,31 @@ public class ProfileControllerIntegrationTest {
         UserMessageDto messageDto2 = TestDataUtil.createUserMessageDto();
         messageDto2.setProfileId(UUID.randomUUID());
         createNewUser(messageDto2);
-        mockMvc.perform(MockMvcRequestBuilders.post("/profiles/" + messageDto1.getProfileId() + "/follow?user=" + messageDto2.getProfileId()))
+        FollowDto followDto = TestDataUtil.createFollowDto(messageDto1.getProfileId(), messageDto2.getProfileId());
+        String json = objectMapper.writeValueAsString(followDto);
+        mockMvc.perform(MockMvcRequestBuilders.post("/profiles/follow")
+                        .contentType("application/json")
+                        .content(json))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         assertEquals(1, rabbitAdmin.getQueueInfo(RabbitMQConfig.notification_queue).getMessageCount());
     }
 
     @Test
+    public void testThatUnfollowProfileReturnsHttp400BadRequestIfValidationFails() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/unfollow")
+                        .contentType("application/json")
+                        .content("{}"))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
     public void testThatUnfollowProfileReturnsHttp400BadRequestIfTheSameIds() throws Exception {
         UUID id = UUID.randomUUID();
-        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/" + id + "/unfollow?user=" + id))
+        FollowDto followDto = TestDataUtil.createFollowDto(id, id);
+        String json = objectMapper.writeValueAsString(followDto);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/unfollow")
+                        .contentType("application/json")
+                        .content(json))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
@@ -230,7 +263,11 @@ public class ProfileControllerIntegrationTest {
         UserMessageDto messageDto2 = TestDataUtil.createUserMessageDto();
         messageDto2.setProfileId(UUID.randomUUID());
         createNewUser(messageDto2);
-        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/" + messageDto1.getProfileId() + "/unfollow?user=" + messageDto2.getProfileId()))
+        FollowDto followDto = TestDataUtil.createFollowDto(messageDto1.getProfileId(), messageDto2.getProfileId());
+        String json = objectMapper.writeValueAsString(followDto);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/unfollow")
+                        .contentType("application/json")
+                        .content(json))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
@@ -243,7 +280,11 @@ public class ProfileControllerIntegrationTest {
         messageDto2.setProfileId(UUID.randomUUID());
         createNewUser(messageDto2);
         profileService.followNewProfile(messageDto1.getProfileId(), messageDto2.getProfileId());
-        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/" + messageDto1.getProfileId() + "/unfollow?user=" + messageDto2.getProfileId()))
+        FollowDto followDto = TestDataUtil.createFollowDto(messageDto1.getProfileId(), messageDto2.getProfileId());
+        String json = objectMapper.writeValueAsString(followDto);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/unfollow")
+                        .contentType("application/json")
+                        .content(json))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 

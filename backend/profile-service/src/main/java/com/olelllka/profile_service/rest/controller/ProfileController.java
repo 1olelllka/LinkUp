@@ -57,18 +57,26 @@ public class ProfileController {
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
-    @PostMapping("/{profile_id}/follow")
-    public ResponseEntity<SuccessErrorMessage> followTheUser(@PathVariable UUID profile_id,
-                                                             @RequestParam(name = "user") UUID follow_id) {
-        profileService.followNewProfile(profile_id, follow_id);
-        return new ResponseEntity<>(SuccessErrorMessage.builder().message("User " + profile_id + " successfully followed user " + follow_id).build(), HttpStatus.OK);
+    @PostMapping("/follow")
+    public ResponseEntity<SuccessErrorMessage> followTheUser(@RequestBody @Valid FollowDto followDto,
+                                                             BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            String msg = bindingResult.getAllErrors().stream().map(err -> err.getDefaultMessage()).collect(Collectors.joining( " "));
+            throw new ValidationException(msg);
+        }
+        profileService.followNewProfile(followDto.getFollowerId(), followDto.getFolloweeId());
+        return new ResponseEntity<>(SuccessErrorMessage.builder().message("User " + followDto.getFollowerId() + " successfully followed user " + followDto.getFolloweeId()).build(), HttpStatus.OK);
     }
 
-    @DeleteMapping("/{profile_id}/unfollow")
-    public ResponseEntity<SuccessErrorMessage> unfollowTheUser(@PathVariable UUID profile_id,
-                                                               @RequestParam(name = "user") UUID follow_id) {
-        profileService.unfollowProfile(profile_id, follow_id);
-        return new ResponseEntity<>(SuccessErrorMessage.builder().message("User " + profile_id + " successfully unfollowed user " + follow_id).build(), HttpStatus.OK);
+    @DeleteMapping("/unfollow")
+    public ResponseEntity<SuccessErrorMessage> unfollowTheUser(@RequestBody @Valid FollowDto followDto,
+                                                               BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            String msg = bindingResult.getAllErrors().stream().map(err -> err.getDefaultMessage()).collect(Collectors.joining(" "));
+            throw new ValidationException(msg);
+        }
+        profileService.unfollowProfile(followDto.getFollowerId(), followDto.getFolloweeId());
+        return new ResponseEntity<>(SuccessErrorMessage.builder().message("User " + followDto.getFollowerId() + " successfully unfollowed user " + followDto.getFolloweeId()).build(), HttpStatus.OK);
     }
 
     @GetMapping("/{profile_id}/followers")
