@@ -19,14 +19,14 @@ public class TestDataUtil {
                 .alias("username")
                 .gender(Gender.UNDEFINED)
                 .dateOfBirth(LocalDate.of(2020, 1, 1))
-                .password("password")
+                .password("Password1234")
                 .build();
     }
 
     public static LoginUser createLoginUser() {
         return LoginUser.builder()
                 .email("email@email.com")
-                .password("password")
+                .password("Password1234")
                 .build();
     }
 

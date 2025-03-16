@@ -104,11 +104,22 @@ public class UserControllerIntegrationTest {
     @Test
     public void testThatRegisterANewUserReturnsHttp400BadRequestIfValidationFails() throws Exception {
         RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
-        dto.setPassword("");
+        dto.setAlias("");
         String json = objectMapper.writeValueAsString(dto);
         mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
                 .contentType("application/json")
                 .content(json))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
+    public void testThatRegisterANewUserReturnsHttp400BadRequestIfPasswordValidationFails() throws Exception {
+        RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
+        dto.setPassword("incorrect password");
+        String json = objectMapper.writeValueAsString(dto);
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
+                        .contentType("application/json")
+                        .content(json))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 

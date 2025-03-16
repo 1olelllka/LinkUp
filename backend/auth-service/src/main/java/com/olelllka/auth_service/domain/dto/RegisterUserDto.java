@@ -20,7 +20,7 @@ public class RegisterUserDto {
     @Pattern(regexp = "^\\w{8,}$", message = "Alias must be at least 8 characters and contain only letters, digits, or underscores.")
     private String alias;
     @NotBlank(message = "Password must not be blank.")
-    @Pattern(regexp = "^\\w{8,}$", message = "Password must be at least 8 characters and contain only letters, digits, or underscores.")
+    @Pattern(regexp = "^(?=.*\\d.*\\d)(?=.*[A-Z])(?=.*[a-z]).{8,}$", message = "Password must be at least 8 characters, contain at least two numbers, one capital letter, and one small letter.")
     private String password;
     @NotBlank(message = "Name must not be blank.")
     private String name;
