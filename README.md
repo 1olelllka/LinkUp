@@ -44,7 +44,7 @@
 
 #### Profile Service 
 *🛑 Critical Service*
-![ProfileService](https://github.com/user-attachments/assets/4646e2de-debe-4bb9-b2fc-dea55b5dd2ee)
+![ProfileService](https://github.com/user-attachments/assets/548e812b-d985-4dfa-8fdd-5bb9f9152b52)
 
 #### Posts Service
 ![PostsService](https://github.com/user-attachments/assets/366e1074-eb2b-45a4-b768-d0dfe4f85c19)
@@ -54,7 +54,7 @@
 ![FeedService](https://github.com/user-attachments/assets/6c921ac1-5368-415b-8372-e3bdb0418067)
 
 #### Auth Service
-![AuthService](https://github.com/user-attachments/assets/29dc244d-4ebd-47d7-91e1-c2aca5632265)
+![AuthService](https://github.com/user-attachments/assets/1c40e8da-2ded-4710-9859-3b056e392ca2)
 
 #### Chat Service
 ![ChatService](https://github.com/user-attachments/assets/ae6abfff-a324-4305-bbb8-d238800fde5c)
