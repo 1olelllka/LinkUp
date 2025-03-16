@@ -9,6 +9,7 @@ import com.olelllka.auth_service.domain.dto.JWTToken;
 import com.olelllka.auth_service.domain.dto.LoginUser;
 import com.olelllka.auth_service.domain.dto.PatchUserDto;
 import com.olelllka.auth_service.domain.dto.RegisterUserDto;
+import com.olelllka.auth_service.domain.entity.UserEntity;
 import com.olelllka.auth_service.repository.UserRepository;
 import com.olelllka.auth_service.service.SHA256;
 import com.olelllka.auth_service.service.impl.UserServiceImpl;
@@ -174,30 +175,20 @@ public class UserControllerIntegrationTest {
     public void testThatGetUserByJwtReturnsHttp200OkAndCacheWorks() throws Exception {
         LoginUser loginUser = TestDataUtil.createLoginUser();
         RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
-        userService.registerUser(dto);
-        String json = objectMapper.writeValueAsString(loginUser);
-        String content = mockMvc.perform(MockMvcRequestBuilders.post("/auth/login")
-                        .contentType("application/json")
-                        .content(json))
-                .andReturn().getResponse().getContentAsString();
-        JWTToken jwtToken = objectMapper.readValue(content, JWTToken.class);
+        UserEntity user = userService.registerUser(dto);
+        JWTToken jwtToken = getJwtToken(loginUser);
         mockMvc.perform(MockMvcRequestBuilders.get("/auth/me")
                 .header("Authorization", "Bearer " + jwtToken.getToken()))
                 .andExpect(MockMvcResultMatchers.status().isOk());
-        assertTrue(redisTemplate.hasKey("auth::" + SHA256.hash(loginUser.getEmail())));
+        assertTrue(redisTemplate.hasKey("auth::" + SHA256.hash(user.getUserId().toString())));
     }
 
     @Test
     public void testThatPatchUserReturnsHttp200Ok() throws Exception {
         LoginUser loginUser = TestDataUtil.createLoginUser();
         RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
-        userService.registerUser(dto);
-        String json = objectMapper.writeValueAsString(loginUser);
-        String content = mockMvc.perform(MockMvcRequestBuilders.post("/auth/login")
-                        .contentType("application/json")
-                        .content(json))
-                .andReturn().getResponse().getContentAsString();
-        JWTToken jwtToken = objectMapper.readValue(content, JWTToken.class);
+        UserEntity user = userService.registerUser(dto);
+        JWTToken jwtToken = getJwtToken(loginUser);
         PatchUserDto patchUserDto = PatchUserDto.builder().email("newemail@email.com").build();
         String patchJson = objectMapper.writeValueAsString(patchUserDto);
         mockMvc.perform(MockMvcRequestBuilders.patch("/auth/me")
@@ -207,7 +198,7 @@ public class UserControllerIntegrationTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.email").value("newemail@email.com"));
         assertEquals(admin.getQueueInfo(RabbitMQConfig.update_user_queue).getMessageCount(), 1);
-        assertTrue(redisTemplate.hasKey("auth::" + SHA256.hash(loginUser.getEmail())));
+        assertTrue(redisTemplate.hasKey("auth::" + SHA256.hash(user.getUserId().toString())));
     }
 
     @Test
@@ -215,15 +206,20 @@ public class UserControllerIntegrationTest {
         LoginUser loginUser = TestDataUtil.createLoginUser();
         RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
         userService.registerUser(dto);
+        JWTToken token = getJwtToken(loginUser);
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/logout")
+                .header("Authorization", "Bearer " + token.getToken()))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    private JWTToken getJwtToken(LoginUser loginUser) throws Exception {
         String json = objectMapper.writeValueAsString(loginUser);
         String response = mockMvc.perform(MockMvcRequestBuilders.post("/auth/login")
                         .contentType("application/json")
                         .content(json)).andReturn().getResponse().getContentAsString();
         JWTToken token = objectMapper.readValue(response, JWTToken.class);
-        mockMvc.perform(MockMvcRequestBuilders.post("/auth/logout")
-                .header("Authorization", "Bearer " + token.getToken()))
-                .andExpect(MockMvcResultMatchers.status().isOk());
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        return token;
     }
 
 }

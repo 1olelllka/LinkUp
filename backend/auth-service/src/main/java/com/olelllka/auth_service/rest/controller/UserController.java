@@ -49,7 +49,7 @@ public class UserController {
                 loginUser.getPassword()
         ));
         if (authentication.isAuthenticated()) {
-            String jwt = jwtUtil.generateJWT(loginUser.getEmail());
+            String jwt = userService.generateJWTViaEmail(loginUser.getEmail());
             return new ResponseEntity<>(JWTToken.builder().token(jwt).build(), HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);

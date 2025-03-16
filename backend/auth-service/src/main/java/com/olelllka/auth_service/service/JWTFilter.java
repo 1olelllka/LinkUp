@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.olelllka.auth_service.domain.dto.ErrorMessage;
 import com.olelllka.auth_service.repository.UserRepository;
 import com.olelllka.auth_service.rest.exception.UnauthorizedException;
-import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -33,10 +33,10 @@ public class JWTFilter extends OncePerRequestFilter {
             return;
         }
         String jwt = request.getHeader("Authorization").substring(7);
-        String email = "";
+        UUID userId;
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            email = jwtUtil.extractUsername(jwt);
+            userId = UUID.fromString(jwtUtil.extractId(jwt));
         } catch (Exception ex) {
             ErrorMessage errorMessage = ErrorMessage.builder().message(ex.getMessage()).build();
             response.setContentType("application/json");
@@ -45,9 +45,9 @@ public class JWTFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userRepository.findByEmail(email).orElseThrow(() -> new UnauthorizedException("Unauthorized."));
-            if (jwtUtil.isTokenValid(email, jwt)) {
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = userRepository.findById(userId).orElseThrow(() -> new UnauthorizedException("Unauthorized."));
+            if (jwtUtil.isTokenValid(userId, jwt)) {
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,

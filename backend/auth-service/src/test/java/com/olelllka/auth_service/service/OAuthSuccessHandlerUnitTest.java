@@ -2,6 +2,7 @@ package com.olelllka.auth_service.service;
 
 import com.olelllka.auth_service.TestDataUtil;
 import com.olelllka.auth_service.domain.dto.UserMessageDto;
+import com.olelllka.auth_service.domain.entity.AuthProvider;
 import com.olelllka.auth_service.domain.entity.UserEntity;
 import com.olelllka.auth_service.repository.UserRepository;
 import com.olelllka.auth_service.service.impl.OAuthSuccessHandler;
@@ -19,6 +20,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -45,13 +47,15 @@ public class OAuthSuccessHandlerUnitTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
         UserEntity user = TestDataUtil.createUserEntity();
+        UUID id = UUID.randomUUID();
+        user.setUserId(id);
         // when
         when(authentication.getPrincipal()).thenReturn(oAuth2User);
         when(oAuth2User.getAttribute("email")).thenReturn(user.getEmail());
         when(oAuth2User.getAttribute("name")).thenReturn("name");
         when(oAuth2User.getAttribute("sub")).thenReturn("2345");
         when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-        when(jwtUtil.generateJWT(user.getEmail())).thenReturn("TOKEN");
+        when(jwtUtil.generateJWT(id)).thenReturn("TOKEN");
         oAuthSuccessHandler.onAuthenticationSuccess(request, response, authentication);
         // then
         assertEquals(response.getStatus(), HttpServletResponse.SC_OK);
@@ -74,7 +78,7 @@ public class OAuthSuccessHandlerUnitTest {
         when(oAuth2User.getAttribute("sub")).thenReturn(sub);
         when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
         when(userRepository.save(any(UserEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(jwtUtil.generateJWT(email)).thenReturn("TOKEN");
+        when(jwtUtil.generateJWT(any(UUID.class))).thenReturn("TOKEN");
         oAuthSuccessHandler.onAuthenticationSuccess(request, response, authentication);
         // then
         assertEquals(response.getStatus(), HttpServletResponse.SC_OK);

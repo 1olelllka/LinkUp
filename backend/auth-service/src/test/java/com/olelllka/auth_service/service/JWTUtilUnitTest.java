@@ -1,10 +1,11 @@
 package com.olelllka.auth_service.service;
 
-import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -18,12 +19,12 @@ public class JWTUtilUnitTest {
     @Test
     public void testThatJWTIsBeingGeneratedCorrectlyAndIsValid() {
         // given
-        String email = "email@email.com";
+        UUID id = UUID.randomUUID();
         // when
-        String jwt = jwtUtil.generateJWT(email);
+        String jwt = jwtUtil.generateJWT(id);
         // then
-        assertEquals(jwtUtil.extractUsername(jwt), email);
-        assertTrue(jwtUtil.isTokenValid(email, jwt));
+        assertEquals(jwtUtil.extractId(jwt), id.toString());
+        assertTrue(jwtUtil.isTokenValid(id, jwt));
     }
 
 }

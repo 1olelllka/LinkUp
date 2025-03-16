@@ -19,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -46,9 +47,9 @@ public class JWTFilterUnitTest {
         jwtFilter.doFilterInternal(request, response, filterChain);
         // then
         assertNull(SecurityContextHolder.getContext().getAuthentication());
-        verify(userRepository, never()).findByEmail(anyString());
-        verify(jwtUtil, never()).extractUsername(anyString());
-        verify(jwtUtil, never()).isTokenValid(anyString(), anyString());
+        verify(userRepository, never()).findById(any(UUID.class));
+        verify(jwtUtil, never()).extractId(anyString());
+        verify(jwtUtil, never()).isTokenValid(any(UUID.class), anyString());
     }
 
     @Test
@@ -59,13 +60,13 @@ public class JWTFilterUnitTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain filterChain = new MockFilterChain();
         // when
-        when(jwtUtil.extractUsername("TOKEN")).thenThrow(new JwtException(""));
+        when(jwtUtil.extractId("TOKEN")).thenThrow(new JwtException(""));
         jwtFilter.doFilterInternal(request, response, filterChain);
         // then
         assertEquals(response.getStatus(), HttpServletResponse.SC_UNAUTHORIZED);
         assertNull(SecurityContextHolder.getContext().getAuthentication());
-        verify(userRepository, never()).findByEmail(anyString());
-        verify(jwtUtil, never()).isTokenValid(anyString(), anyString());
+        verify(userRepository, never()).findById(any(UUID.class));
+        verify(jwtUtil, never()).isTokenValid(any(UUID.class), anyString());
     }
 
     @Test
@@ -74,13 +75,14 @@ public class JWTFilterUnitTest {
         request.addHeader("Authorization", "Bearer TOKEN");
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain filterChain = new MockFilterChain();
+        UUID id = UUID.randomUUID();
         // when
-        when(jwtUtil.extractUsername("TOKEN")).thenReturn("email@email.com");
-        when(userRepository.findByEmail("email@email.com")).thenReturn(Optional.empty());
+        when(jwtUtil.extractId("TOKEN")).thenReturn(id.toString());
+        when(userRepository.findById(id)).thenReturn(Optional.empty());
         // then
         assertThrows(UnauthorizedException.class, () -> jwtFilter.doFilterInternal(request, response, filterChain));
         assertNull(SecurityContextHolder.getContext().getAuthentication());
-        verify(jwtUtil, never()).isTokenValid(anyString(), anyString());
+        verify(jwtUtil, never()).isTokenValid(any(UUID.class), anyString());
     }
 
     @Test
@@ -89,10 +91,11 @@ public class JWTFilterUnitTest {
         request.addHeader("Authorization", "Bearer TOKEN");
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain filterChain = new MockFilterChain();
+        UUID id = UUID.randomUUID();
         // when
-        when(jwtUtil.extractUsername("TOKEN")).thenReturn("email@email.com");
-        when(userRepository.findByEmail("email@email.com")).thenReturn(Optional.of(TestDataUtil.createUserEntity()));
-        when(jwtUtil.isTokenValid("email@email.com", "TOKEN")).thenReturn(true);
+        when(jwtUtil.extractId("TOKEN")).thenReturn(id.toString());
+        when(userRepository.findById(id)).thenReturn(Optional.of(TestDataUtil.createUserEntity()));
+        when(jwtUtil.isTokenValid(id, "TOKEN")).thenReturn(true);
         jwtFilter.doFilterInternal(request, response, filterChain);
         // then
         assertNotNull(SecurityContextHolder.getContext().getAuthentication());

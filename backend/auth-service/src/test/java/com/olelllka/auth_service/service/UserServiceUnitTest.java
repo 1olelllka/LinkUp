@@ -1,7 +1,6 @@
 package com.olelllka.auth_service.service;
 
 import com.olelllka.auth_service.TestDataUtil;
-import com.olelllka.auth_service.domain.dto.JWTToken;
 import com.olelllka.auth_service.domain.dto.PatchUserDto;
 import com.olelllka.auth_service.domain.dto.RegisterUserDto;
 import com.olelllka.auth_service.domain.dto.UserMessageDto;
@@ -10,15 +9,11 @@ import com.olelllka.auth_service.repository.UserRepository;
 import com.olelllka.auth_service.rest.exception.DuplicateException;
 import com.olelllka.auth_service.service.impl.ProfileCacheHandlers;
 import com.olelllka.auth_service.service.impl.UserServiceImpl;
-import org.apache.catalina.User;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -60,8 +55,8 @@ public class UserServiceUnitTest {
         UserEntity expected = TestDataUtil.createUserEntity();
         expected.setEmail(patchUserDto.getEmail());
         // when
-        when(jwtUtil.extractUsername(jwt)).thenReturn("email@email.com");
-        when(profileCacheHandlers.patchUserByEmail("email@email.com", patchUserDto)).thenReturn(expected);
+        when(jwtUtil.extractId(jwt)).thenReturn("email@email.com");
+        when(profileCacheHandlers.patchUserById("email@email.com", patchUserDto)).thenReturn(expected);
         UserEntity result = userService.patchUser(jwt, patchUserDto);
         // then
         assertAll(
@@ -76,8 +71,8 @@ public class UserServiceUnitTest {
         String jwt = "jwt";
         UserEntity expected = TestDataUtil.createUserEntity();
         // when
-        when(jwtUtil.extractUsername(jwt)).thenReturn(expected.getEmail());
-        when(profileCacheHandlers.getUserByEmail(expected.getEmail())).thenReturn(expected);
+        when(jwtUtil.extractId(jwt)).thenReturn(expected.getEmail());
+        when(profileCacheHandlers.getUserById(expected.getEmail())).thenReturn(expected);
         UserEntity result = userService.getUserByJwt(jwt);
         // then
         assertAll(

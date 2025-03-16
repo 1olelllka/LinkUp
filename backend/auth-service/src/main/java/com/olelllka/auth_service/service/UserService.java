@@ -3,6 +3,8 @@ package com.olelllka.auth_service.service;
 import com.olelllka.auth_service.domain.dto.PatchUserDto;
 import com.olelllka.auth_service.domain.dto.RegisterUserDto;
 import com.olelllka.auth_service.domain.entity.UserEntity;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
 
 public interface UserService {
     UserEntity registerUser(RegisterUserDto userDto);
@@ -10,4 +12,6 @@ public interface UserService {
     UserEntity patchUser(String jwt, PatchUserDto patchUserDto);
 
     UserEntity getUserByJwt(String jwt);
+
+    String generateJWTViaEmail(@Email(message = "Invalid Email.") @NotEmpty(message = "Email must not be empty.") String email);
 }

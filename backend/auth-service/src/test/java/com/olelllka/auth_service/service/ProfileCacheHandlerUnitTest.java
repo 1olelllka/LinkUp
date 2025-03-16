@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -31,21 +32,21 @@ public class ProfileCacheHandlerUnitTest {
     @Test
     public void testThatGetUserByEmailThrowsException() {
         // given
-        String email = "email@email.com";
+        UUID id = UUID.randomUUID();
         // when
-        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+        when(userRepository.findById(id)).thenReturn(Optional.empty());
         // then
-        assertThrows(NotFoundException.class, () -> profileCacheHandlers.getUserByEmail(email));
+        assertThrows(NotFoundException.class, () -> profileCacheHandlers.getUserById(id.toString()));
     }
 
     @Test
     public void testThatGetUserByEmailReturnsUser() {
         // given
-        String email = "email@email.com";
         UserEntity user = TestDataUtil.createUserEntity();
+        UUID id = UUID.randomUUID();
         // when
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        UserEntity result = profileCacheHandlers.getUserByEmail(email);
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
+        UserEntity result = profileCacheHandlers.getUserById(id.toString());
         // then
         assertAll(
                 () -> assertNotNull(result),
@@ -56,28 +57,27 @@ public class ProfileCacheHandlerUnitTest {
     @Test
     public void testThatPatchUserByEmailThrowsException() {
         // given
-        String email = "email@email.com";
         PatchUserDto patchUserDto = PatchUserDto.builder().alias("alias").email("newemail@email.com").build();
+        UUID id = UUID.randomUUID();
         // when
-        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+        when(userRepository.findById(id)).thenReturn(Optional.empty());
         // then
-        assertThrows(NotFoundException.class, () -> profileCacheHandlers.patchUserByEmail(email, patchUserDto));
+        assertThrows(NotFoundException.class, () -> profileCacheHandlers.patchUserById(id.toString(), patchUserDto));
         verify(userRepository, never()).save(any(UserEntity.class));
     }
 
     @Test
     public void testThatPatchUserByEmailUpdatesTheUser() {
         // given
-        String email = "email@email.com";
         PatchUserDto patchUserDto = PatchUserDto.builder().alias("alias").email("newemail@email.com").build();
-
+        UUID id = UUID.randomUUID();
         UserEntity expected = TestDataUtil.createUserEntity();
         expected.setAlias(patchUserDto.getAlias());
         expected.setEmail(patchUserDto.getEmail());
         // when
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(TestDataUtil.createUserEntity()));
+        when(userRepository.findById(id)).thenReturn(Optional.of(TestDataUtil.createUserEntity()));
         when(userRepository.save(expected)).thenReturn(expected);
-        UserEntity result = profileCacheHandlers.patchUserByEmail(email, patchUserDto);
+        UserEntity result = profileCacheHandlers.patchUserById(id.toString(), patchUserDto);
         // then
         assertAll(
                 () -> assertNotNull(result),

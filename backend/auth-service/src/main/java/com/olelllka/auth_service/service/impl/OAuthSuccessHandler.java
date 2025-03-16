@@ -65,7 +65,7 @@ public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
             messagePublisher.sendCreateUserMessage(toSend);
             return savedUser;
         });
-        String jwtToken = jwtUtil.generateJWT(user.getEmail());
+        String jwtToken = jwtUtil.generateJWT(user.getUserId());
         JWTToken jwt = JWTToken.builder().token(jwtToken).build();
         ObjectMapper objectMapper = new ObjectMapper();
         response.setStatus(HttpServletResponse.SC_OK);

@@ -12,6 +12,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -21,13 +22,13 @@ public class ProfileCacheHandlers {
     private final MessagePublisher messagePublisher;
 
     @Cacheable(value = "auth", keyGenerator = "keyGenerator")
-    public UserEntity getUserByEmail(String email) {
-        return userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User with such email was not found."));
+    public UserEntity getUserById(String id) {
+        return userRepository.findById(UUID.fromString(id)).orElseThrow(() -> new NotFoundException("User with such email was not found."));
     }
 
     @CachePut(value = "auth", keyGenerator = "keyGenerator")
-    public UserEntity patchUserByEmail(String email, PatchUserDto patchUserDto) {
-        return userRepository.findByEmail(email).map(user -> {
+    public UserEntity patchUserById(String id, PatchUserDto patchUserDto) {
+        return userRepository.findById(UUID.fromString(id)).map(user -> {
             Optional.ofNullable(patchUserDto.getEmail()).ifPresent(user::setEmail);
             Optional.ofNullable(patchUserDto.getAlias()).ifPresent(user::setAlias);
             UserEntity saved = userRepository.save(user);
