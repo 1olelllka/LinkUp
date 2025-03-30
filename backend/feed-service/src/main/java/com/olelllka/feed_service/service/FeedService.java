@@ -6,5 +6,5 @@ import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 public interface FeedService {
-    Page<PostDto> getFeedForProfile(UUID profileId, Pageable pageable);
+    Page<PostDto> getFeedForProfile(UUID profileId, Pageable pageable, String jwt);
 }

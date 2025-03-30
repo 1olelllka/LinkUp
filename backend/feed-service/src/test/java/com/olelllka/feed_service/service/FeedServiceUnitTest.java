@@ -3,6 +3,7 @@ package com.olelllka.feed_service.service;
 import com.olelllka.feed_service.TestDataUtil;
 import com.olelllka.feed_service.domain.dto.PostDto;
 import com.olelllka.feed_service.feign.PostsInterface;
+import com.olelllka.feed_service.rest.exception.AuthException;
 import com.olelllka.feed_service.service.impl.FeedServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,18 +31,34 @@ public class FeedServiceUnitTest {
     private RedisTemplate<String, String> redisTemplate;
     @Mock
     private PostsInterface postsInterface;
+    @Mock
+    private JWTUtil jwtUtil;
     @InjectMocks
     private FeedServiceImpl feedService;
+
+    @Test
+    public void testThatGetFeedThrowsException() {
+        UUID profileId = UUID.randomUUID();
+        Pageable pageable = PageRequest.of(0, 1);
+        String jwt = "jwt";
+        // when
+        when(jwtUtil.extractId(jwt)).thenReturn(UUID.randomUUID().toString());
+        // then
+        assertThrows(AuthException.class, () -> feedService.getFeedForProfile(profileId, pageable, jwt));
+        verify(redisTemplate, never()).opsForList();
+    }
 
     @Test
     public void testThatGetFeedForUserReturnsEmptyPage() {
         UUID profileId = UUID.randomUUID();
         Pageable pageable = PageRequest.of(0, 1);
         Page<PostDto> expected = new PageImpl<>(List.of());
+        String jwt = "jwt";
         // when
         when(redisTemplate.opsForList()).thenReturn(mock(ListOperations.class));
+        when(jwtUtil.extractId(jwt)).thenReturn(profileId.toString());
         when(redisTemplate.opsForList().range("feed:profile:"+SHA256.hash(profileId.toString()), 0, 0)).thenReturn(List.of());
-        Page<PostDto> result = feedService.getFeedForProfile(profileId, pageable);
+        Page<PostDto> result = feedService.getFeedForProfile(profileId, pageable, jwt);
         // then
         assertAll(
                 () -> assertNotNull(result),
@@ -58,11 +75,13 @@ public class FeedServiceUnitTest {
         Pageable pageable = PageRequest.of(0, 1);
         PostDto postDto = TestDataUtil.createPostDto(profileId);
         Page<PostDto> expected = new PageImpl<>(List.of(postDto));
+        String jwt = "jwt";
         // when
         when(redisTemplate.opsForList()).thenReturn(mock(ListOperations.class));
         when(redisTemplate.opsForList().range("feed:profile:"+SHA256.hash(profileId.toString()), 0, 0)).thenReturn(List.of("1"));
         when(postsInterface.getPosts(1)).thenReturn(ResponseEntity.ok(postDto));
-        Page<PostDto> result = feedService.getFeedForProfile(profileId, pageable);
+        when(jwtUtil.extractId(jwt)).thenReturn(profileId.toString());
+        Page<PostDto> result = feedService.getFeedForProfile(profileId, pageable, jwt);
         // then
         assertAll(
                 () -> assertNotNull(result),

@@ -6,6 +6,8 @@ import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.olelllka.feed_service.TestDataUtil;
 import com.olelllka.feed_service.domain.dto.PostDto;
 import com.olelllka.feed_service.service.SHA256;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +26,8 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import org.testcontainers.utility.DockerImageName;
 
+import java.util.Base64;
+import java.util.Date;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
@@ -53,6 +57,7 @@ public class FeedControllerIntegrationTest {
 
     private final MockMvc mockMvc;
     private final RedisTemplate<String, String> redisTemplate;
+    private String key = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
     @Autowired
     public FeedControllerIntegrationTest(MockMvc mockMvc,
@@ -73,7 +78,8 @@ public class FeedControllerIntegrationTest {
                         .withHeader("Content-Type", "application/json")
                         .withBody(jsonPost)));
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/feeds/" + profileId))
+        mockMvc.perform(MockMvcRequestBuilders.get("/feeds/" + profileId)
+                        .header("Authorization", "Bearer " + generateJwt(profileId)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].image").value("img"));
     }
@@ -83,8 +89,19 @@ public class FeedControllerIntegrationTest {
         UUID profileId = UUID.randomUUID();
         redisTemplate.opsForList().leftPush("feed:profile:"+SHA256.hash(profileId.toString()), "123");
         POSTS_SERVICE.stubFor(WireMock.get("/posts/123").willReturn(WireMock.serverError()));
-        mockMvc.perform(MockMvcRequestBuilders.get("/feeds/" + profileId))
+        mockMvc.perform(MockMvcRequestBuilders.get("/feeds/" + profileId)
+                        .header("Authorization", "Bearer " + generateJwt(profileId)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.totalElements").value(0));
+    }
+
+    private String generateJwt(UUID id) {
+        return Jwts.builder()
+                .issuer("LinkUp")
+                .subject(id.toString())
+                .issuedAt(new Date())
+                .signWith(Keys.hmacShaKeyFor(Base64.getDecoder().decode(key)))
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1hr
+                .compact();
     }
 }

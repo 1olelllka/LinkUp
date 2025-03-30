@@ -1,6 +1,7 @@
 package com.olelllka.feed_service.rest.controller;
 
 import com.olelllka.feed_service.domain.dto.ErrorMessage;
+import com.olelllka.feed_service.rest.exception.AuthException;
 import com.olelllka.feed_service.rest.exception.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,5 +14,10 @@ public class AdviceController {
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorMessage> notFoundException(NotFoundException ex) {
         return new ResponseEntity<>(ErrorMessage.builder().message(ex.getMessage()).build(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(AuthException.class)
+    public ResponseEntity<ErrorMessage> authException(AuthException ex) {
+        return new ResponseEntity<>(ErrorMessage.builder().message(ex.getMessage()).build(), HttpStatus.UNAUTHORIZED);
     }
 }

@@ -2,10 +2,12 @@ package com.olelllka.feed_service.service.impl;
 
 import com.olelllka.feed_service.domain.dto.PostDto;
 import com.olelllka.feed_service.feign.PostsInterface;
-import com.olelllka.feed_service.rest.exception.NotFoundException;
+import com.olelllka.feed_service.rest.exception.AuthException;
 import com.olelllka.feed_service.service.FeedService;
+import com.olelllka.feed_service.service.JWTUtil;
 import com.olelllka.feed_service.service.SHA256;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.jsonwebtoken.security.SignatureException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.data.domain.Page;
@@ -26,10 +28,18 @@ public class FeedServiceImpl implements FeedService {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final PostsInterface postsInterface;
+    private final JWTUtil jwtUtil;
 
     @Override
     @CircuitBreaker(name = "feed-service", fallbackMethod = "fallbackMethod")
-    public Page<PostDto> getFeedForProfile(UUID profileId, Pageable pageable) {
+    public Page<PostDto> getFeedForProfile(UUID profileId, Pageable pageable, String jwt) {
+        try {
+            if (!profileId.toString().equals(jwtUtil.extractId(jwt))) {
+                throw new AuthException("You're unauthorized to perform this action.");
+            }
+        } catch (SignatureException ex) {
+            throw new AuthException(ex.getMessage());
+        }
         int start = pageable.getPageNumber() * pageable.getPageSize();
         int end = start + pageable.getPageSize() - 1;
         List<String> postIds = redisTemplate.opsForList().range("feed:profile:"+ SHA256.hash(profileId.toString()), start, end);
@@ -50,7 +60,7 @@ public class FeedServiceImpl implements FeedService {
         return new PageImpl<>(posts);
     }
 
-    private Page<PostDto> fallbackMethod(UUID profileId, Pageable pageable, Throwable t) {
+    private Page<PostDto> fallbackMethod(UUID profileId, Pageable pageable, String jwt, Throwable t) {
         log.warning("Circuit Breaker triggered: " + t.getMessage());
         return Page.empty();
     }

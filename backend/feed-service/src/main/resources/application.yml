@@ -62,3 +62,4 @@ resilience4j:
         registerHealthIndicator: true
         ignoreExceptions:
           - com.olelllka.feed_service.rest.exception.NotFoundException
+          - com.olelllka.feed_service.rest.exception.AuthException
