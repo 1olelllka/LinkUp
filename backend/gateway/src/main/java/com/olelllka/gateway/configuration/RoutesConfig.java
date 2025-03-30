@@ -26,13 +26,19 @@ public class RoutesConfig {
                         r -> r.path("/api/profiles/**")
                                 .filters(f -> f.stripPrefix(1)
                                         .filter(rateLimitingFilter)
-                                        .circuitBreaker(c -> c.setName("profile-and-feed-services").setFallbackUri("forward:/fallback")))
+                                        .circuitBreaker(c -> c.setName("profile-auth-and-feed-services").setFallbackUri("forward:/fallback")))
                                 .uri("lb://profile-service"))
+                .route("auth-service",
+                        r -> r.path("/api/auth/**")
+                                .filters(f -> f.stripPrefix(1)
+                                        .filter(rateLimitingFilter)
+                                        .circuitBreaker(c -> c.setName("profile-auth-and-feed-services").setFallbackUri("forward:/fallback")))
+                                .uri("lb://auth-service"))
                 .route("feed-service",
                         r -> r.path("/api/feeds/**")
                                 .filters(f -> f.stripPrefix(1)
                                         .filter(rateLimitingFilter)
-                                        .circuitBreaker(c -> c.setName("profile-and-feed-services").setFallbackUri("forward:/fallback")))
+                                        .circuitBreaker(c -> c.setName("profile-auth-and-feed-services").setFallbackUri("forward:/fallback")))
                                 .uri("lb://feed-service"))
                 .route("stories-service",
                         r -> r.path("/api/stories/**")

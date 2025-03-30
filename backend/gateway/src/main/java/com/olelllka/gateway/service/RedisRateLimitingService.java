@@ -12,6 +12,7 @@ public class RedisRateLimitingService {
     private final int TIME_WINDOW = 60;
     // I set 60 requests per minute for every service for now. In future this will be adjusted
     private final Map<String, Integer> rateLimits = Map.of(
+            "/api/auth", 60,
             "/api/posts", 60,
             "/api/profiles", 60,
             "/api/feeds", 60,
