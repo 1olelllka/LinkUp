@@ -8,10 +8,13 @@ import com.olelllka.profile_service.domain.entity.ProfileDocument;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
 import com.olelllka.profile_service.repository.ProfileDocumentRepository;
 import com.olelllka.profile_service.repository.ProfileRepository;
+import com.olelllka.profile_service.rest.exception.AuthException;
 import com.olelllka.profile_service.rest.exception.NotFoundException;
 import com.olelllka.profile_service.rest.exception.ValidationException;
+import com.olelllka.profile_service.service.JWTUtil;
 import com.olelllka.profile_service.service.MessagePublisher;
 import com.olelllka.profile_service.service.ProfileService;
+import io.jsonwebtoken.security.SignatureException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.actuate.elasticsearch.ElasticsearchRestClientHealthIndicator;
 import org.springframework.boot.actuate.health.Status;
@@ -33,8 +36,8 @@ public class ProfileServiceImpl implements ProfileService {
     private final ProfileRepository repository;
     private final ProfileDocumentRepository elasticRepository;
     private final MessagePublisher messagePublisher;
+    private final JWTUtil jwtUtil;
     private final ElasticsearchRestClientHealthIndicator elasticHealth;
-
 
     @Override
     @Cacheable(value = "profile", keyGenerator = "sha256KeyGenerator")
@@ -45,9 +48,16 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     @Transactional
     @CachePut(value = "profile", keyGenerator = "sha256KeyGenerator")
-    public ProfileEntity updateProfile(UUID profileId, PatchProfileDto dto) {
+    public ProfileEntity updateProfile(UUID profileId, PatchProfileDto dto, String jwt) {
         if (!repository.existsById(profileId)) {
             throw new NotFoundException("Profile with such id does not exist");
+        }
+        try {
+            if (!profileId.toString().equals(jwtUtil.extractId(jwt))) {
+                throw new AuthException("You're unauthorized to perform such operation.");
+            }
+        } catch (SignatureException ex) {
+            throw new AuthException(ex.getMessage());
         }
         ProfileEntity updated = repository.updateProfile(profileId,
                 null,
@@ -70,19 +80,33 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     @Transactional
     @CacheEvict(value = "profile", keyGenerator = "sha256KeyGenerator")
-    public void deleteById(UUID profileId) {
+    public void deleteById(UUID profileId, String jwt) {
+        try {
+            if (!profileId.toString().equals(jwtUtil.extractId(jwt))) {
+                throw new AuthException("You're unauthorized to perform such action.");
+            }
+        } catch (SignatureException ex) {
+            throw new AuthException(ex.getMessage());
+        }
         repository.deleteById(profileId);
         messagePublisher.deleteProfile(profileId);
     }
 
     @Override
     @Transactional
-    public void followNewProfile(UUID profileId, UUID follow) {
+    public void followNewProfile(UUID profileId, UUID follow, String jwt) {
         if (profileId.equals(follow)) {
             throw new ValidationException("Follower id and Followee id must not be the same");
         }
         if (!repository.existsById(profileId) || !repository.existsById(follow)) {
             throw new NotFoundException("Profile/s with such id/s is/are not found.");
+        }
+        try {
+            if (!profileId.toString().equals(jwtUtil.extractId(jwt))) {
+                throw new AuthException("You're unauthorized to perform such action.");
+            }
+        } catch (SignatureException ex) {
+            throw new AuthException(ex.getMessage());
         }
         if (!repository.isFollowing(profileId, follow)) {
             repository.follow(profileId, follow);
@@ -104,12 +128,19 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public void unfollowProfile(UUID profileId, UUID followId) {
+    public void unfollowProfile(UUID profileId, UUID followId, String jwt) {
         if (profileId.equals(followId)) {
             throw new ValidationException("Follower id and Followee id must not be the same.");
         }
         if (!repository.existsById(profileId) || !repository.existsById(followId)) {
             throw new NotFoundException("Profile/s with such id/s is/are not found.");
+        }
+        try {
+            if (!profileId.toString().equals(jwtUtil.extractId(jwt))) {
+                throw new AuthException("You're unauthorized to perform such operation.");
+            }
+        } catch (SignatureException ex) {
+            throw new AuthException(ex.getMessage());
         }
         if (repository.isFollowing(profileId, followId)) {
             repository.unfollow(profileId, followId);

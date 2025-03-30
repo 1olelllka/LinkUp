@@ -10,13 +10,13 @@ import java.util.UUID;
 public interface ProfileService {
     ProfileEntity getProfileById(UUID profileId);
 
-    ProfileEntity updateProfile(UUID profileId, PatchProfileDto dto);
+    ProfileEntity updateProfile(UUID profileId, PatchProfileDto dto, String jwt);
 
-    void deleteById(UUID profileId);
+    void deleteById(UUID profileId, String jwt);
 
-    void followNewProfile(UUID profileId, UUID profileId1);
+    void followNewProfile(UUID profileId, UUID profileId1, String jwt);
 
-    void unfollowProfile(UUID profileId, UUID followId);
+    void unfollowProfile(UUID profileId, UUID followId, String jwt);
 
     Page<ProfileEntity> getFollowersById(UUID profileId, Pageable pageable);
 

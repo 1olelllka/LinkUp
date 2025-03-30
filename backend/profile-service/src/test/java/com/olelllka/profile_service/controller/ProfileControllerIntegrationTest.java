@@ -14,6 +14,8 @@ import com.olelllka.profile_service.repository.ProfileDocumentRepository;
 import com.olelllka.profile_service.repository.ProfileRepository;
 import com.olelllka.profile_service.service.ProfileService;
 import com.redis.testcontainers.RedisContainer;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +41,8 @@ import org.testcontainers.utility.DockerImageName;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.Base64;
+import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -62,6 +66,7 @@ public class ProfileControllerIntegrationTest {
 
     @ServiceConnection
     static RedisContainer redisContainer = new RedisContainer(DockerImageName.parse("redis:7.2.6"));
+    private String key = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
     static {
         neo4j.start();
@@ -134,10 +139,24 @@ public class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatUpdateProfileByIdReturnsHttp404NotFoundIfProfileDoesNotExist() throws Exception {
+    public void testThatUpdateProfileByIdReturnsHttp401UnauthorizedIfJwtIncorrect() throws Exception {
         PatchProfileDto patchProfileDto = TestDataUtil.createPatchProfileDto();
+        patchProfileDto.setDateOfBirth(LocalDate.of(2026, 1, 1));
         String json = objectMapper.writeValueAsString(patchProfileDto);
         mockMvc.perform(MockMvcRequestBuilders.patch("/profiles/" + UUID.randomUUID())
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
+    public void testThatUpdateProfileByIdReturnsHttp404NotFoundIfProfileDoesNotExist() throws Exception {
+        PatchProfileDto patchProfileDto = TestDataUtil.createPatchProfileDto();
+        UUID id = UUID.randomUUID();
+        String json = objectMapper.writeValueAsString(patchProfileDto);
+        mockMvc.perform(MockMvcRequestBuilders.patch("/profiles/" + id)
+                        .header("Authorization", "Bearer " + generateJwt(id))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
@@ -154,6 +173,7 @@ public class ProfileControllerIntegrationTest {
         patchProfileDto.setName("UPDATED NAME");
         String json = objectMapper.writeValueAsString(patchProfileDto);
         String result = mockMvc.perform(MockMvcRequestBuilders.patch("/profiles/" + messageDto.getProfileId())
+                        .header("Authorization", "Bearer " + generateJwt(messageDto.getProfileId()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -165,13 +185,22 @@ public class ProfileControllerIntegrationTest {
     }
 
     @Test
+    public void testThatDeleteProfileByIdReturnsHttp401UnauthorizedIfJWTInvalid() throws Exception {
+        UUID profileId = UUID.randomUUID();
+        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/" + profileId)
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+    }
+
+    @Test
     public void testThatDeleteProfileByIdReturnsHttp204NoContent() throws Exception {
         UUID profileId = UUID.randomUUID();
         UserMessageDto userMessageDto = TestDataUtil.createUserMessageDto();
         userMessageDto.setProfileId(profileId);
         createNewUser(userMessageDto);
         assertTrue(documentRepository.existsById(profileId));
-        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/" + profileId))
+        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/" + profileId)
+                        .header("Authorization", "Bearer " + generateJwt(profileId)))
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
         Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_elastic).getMessageCount() == 0);
         assertFalse(documentRepository.existsById(profileId));
@@ -201,6 +230,24 @@ public class ProfileControllerIntegrationTest {
     }
 
     @Test
+    public void testThatFollowProfileReturnsHttp401UnauthorizedIfJWTInvalid() throws Exception {
+        rabbitAdmin.purgeQueue(RabbitMQConfig.notification_queue);
+        UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
+        messageDto1.setProfileId(UUID.randomUUID());
+        createNewUser(messageDto1);
+        UserMessageDto messageDto2 = TestDataUtil.createUserMessageDto();
+        messageDto2.setProfileId(UUID.randomUUID());
+        createNewUser(messageDto2);
+        FollowDto followDto = TestDataUtil.createFollowDto(messageDto1.getProfileId(), messageDto2.getProfileId());
+        String json = objectMapper.writeValueAsString(followDto);
+        mockMvc.perform(MockMvcRequestBuilders.post("/profiles/follow")
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID()))
+                        .contentType("application/json")
+                        .content(json))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+    }
+
+    @Test
     public void testThatFollowProfileReturnsHttp400BadRequestIfAlreadyFollowed() throws Exception {
         rabbitAdmin.purgeQueue(RabbitMQConfig.notification_queue);
         UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
@@ -211,8 +258,9 @@ public class ProfileControllerIntegrationTest {
         createNewUser(messageDto2);
         FollowDto followDto = TestDataUtil.createFollowDto(messageDto1.getProfileId(), messageDto2.getProfileId());
         String json = objectMapper.writeValueAsString(followDto);
-        profileService.followNewProfile(messageDto1.getProfileId(), messageDto2.getProfileId());
+        profileService.followNewProfile(messageDto1.getProfileId(), messageDto2.getProfileId(), generateJwt(messageDto1.getProfileId()));
         mockMvc.perform(MockMvcRequestBuilders.post("/profiles/follow")
+                        .header("Authorization", "Bearer " + generateJwt(messageDto1.getProfileId()))
                         .contentType("application/json")
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
@@ -230,6 +278,7 @@ public class ProfileControllerIntegrationTest {
         FollowDto followDto = TestDataUtil.createFollowDto(messageDto1.getProfileId(), messageDto2.getProfileId());
         String json = objectMapper.writeValueAsString(followDto);
         mockMvc.perform(MockMvcRequestBuilders.post("/profiles/follow")
+                        .header("Authorization", "Bearer " + generateJwt(messageDto1.getProfileId()))
                         .contentType("application/json")
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isOk());
@@ -256,6 +305,23 @@ public class ProfileControllerIntegrationTest {
     }
 
     @Test
+    public void testThatUnfollowProfileReturnsHttp401UnauthorizedIfJWTInvalid() throws Exception {
+        UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
+        messageDto1.setProfileId(UUID.randomUUID());
+        createNewUser(messageDto1);
+        UserMessageDto messageDto2 = TestDataUtil.createUserMessageDto();
+        messageDto2.setProfileId(UUID.randomUUID());
+        createNewUser(messageDto2);
+        FollowDto followDto = TestDataUtil.createFollowDto(messageDto1.getProfileId(), messageDto2.getProfileId());
+        String json = objectMapper.writeValueAsString(followDto);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/unfollow")
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID()))
+                        .contentType("application/json")
+                        .content(json))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+    }
+
+    @Test
     public void testThatUnfollowProfileReturnsHttp400BadRequestIfAlreadyUnfollowed() throws Exception {
         UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
         messageDto1.setProfileId(UUID.randomUUID());
@@ -266,23 +332,25 @@ public class ProfileControllerIntegrationTest {
         FollowDto followDto = TestDataUtil.createFollowDto(messageDto1.getProfileId(), messageDto2.getProfileId());
         String json = objectMapper.writeValueAsString(followDto);
         mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/unfollow")
+                        .header("Authorization", "Bearer " + generateJwt(messageDto1.getProfileId()))
                         .contentType("application/json")
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     @Test
-    public void testThatUnfollowProfileReturnsHttp200OktIfSuccessful() throws Exception {
+    public void testThatUnfollowProfileReturnsHttp200OkIfSuccessful() throws Exception {
         UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
         messageDto1.setProfileId(UUID.randomUUID());
         createNewUser(messageDto1);
         UserMessageDto messageDto2 = TestDataUtil.createUserMessageDto();
         messageDto2.setProfileId(UUID.randomUUID());
         createNewUser(messageDto2);
-        profileService.followNewProfile(messageDto1.getProfileId(), messageDto2.getProfileId());
+        profileService.followNewProfile(messageDto1.getProfileId(), messageDto2.getProfileId(), generateJwt(messageDto1.getProfileId()));
         FollowDto followDto = TestDataUtil.createFollowDto(messageDto1.getProfileId(), messageDto2.getProfileId());
         String json = objectMapper.writeValueAsString(followDto);
         mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/unfollow")
+                        .header("Authorization", "Bearer " + generateJwt(messageDto1.getProfileId()))
                         .contentType("application/json")
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isOk());
@@ -297,7 +365,7 @@ public class ProfileControllerIntegrationTest {
         UserMessageDto messageDto2 = TestDataUtil.createUserMessageDto();
         messageDto2.setProfileId(UUID.randomUUID());
         createNewUser(messageDto2);
-        profileService.followNewProfile(messageDto1.getProfileId(), messageDto2.getProfileId());
+        profileService.followNewProfile(messageDto1.getProfileId(), messageDto2.getProfileId(), generateJwt(messageDto1.getProfileId()));
         mockMvc.perform(MockMvcRequestBuilders.get("/profiles/" + messageDto2.getProfileId() + "/followers"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].username").value("TEST"));
@@ -312,7 +380,7 @@ public class ProfileControllerIntegrationTest {
         messageDto2.setUsername("TEST");
         messageDto2.setProfileId(UUID.randomUUID());
         createNewUser(messageDto2);
-        profileService.followNewProfile(messageDto1.getProfileId(), messageDto2.getProfileId());
+        profileService.followNewProfile(messageDto1.getProfileId(), messageDto2.getProfileId(), generateJwt(messageDto1.getProfileId()));
         mockMvc.perform(MockMvcRequestBuilders.get("/profiles/" + messageDto1.getProfileId() + "/followees"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].username").value("TEST"));
@@ -344,6 +412,16 @@ public class ProfileControllerIntegrationTest {
         rabbitTemplate.convertAndSend(RabbitMQTestConfig.create_user_exchange, "create.user", messageDto);
         Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQTestConfig.create_user_queue).getMessageCount() == 0);
         Thread.sleep(Duration.of(  1, ChronoUnit.SECONDS));
+    }
+
+    private String generateJwt(UUID id) {
+        return Jwts.builder()
+                .issuer("LinkUp")
+                .subject(id.toString())
+                .issuedAt(new Date())
+                .signWith(Keys.hmacShaKeyFor(Base64.getDecoder().decode(key)))
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1hr
+                .compact();
     }
 
 }

@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,40 +43,44 @@ public class ProfileController {
     @PatchMapping("/{profile_id}")
     public ResponseEntity<ProfileDto> updateProfileById(@PathVariable UUID profile_id,
                                                         @Valid @RequestBody PatchProfileDto dto,
+                                                        @RequestHeader(name="Authorization") String header,
                                                         BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             String msg = bindingResult.getAllErrors().stream().map(err -> err.getDefaultMessage()).collect(Collectors.joining(" "));
             throw new ValidationException(msg);
         }
-        ProfileEntity updatedProfile = profileService.updateProfile(profile_id, dto);
+        ProfileEntity updatedProfile = profileService.updateProfile(profile_id, dto, header.substring(7));
         return new ResponseEntity<>(profileMapper.toDto(updatedProfile), HttpStatus.OK);
     }
 
     @DeleteMapping("/{profile_id}")
-    public ResponseEntity deleteProfileById(@PathVariable UUID profile_id) {
-        profileService.deleteById(profile_id);
+    public ResponseEntity deleteProfileById(@PathVariable UUID profile_id,
+                                            @RequestHeader(name = "Authorization") String header) {
+        profileService.deleteById(profile_id, header.substring(7));
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
     @PostMapping("/follow")
     public ResponseEntity<SuccessErrorMessage> followTheUser(@RequestBody @Valid FollowDto followDto,
-                                                             BindingResult bindingResult) {
+                                                             BindingResult bindingResult,
+                                                             @RequestHeader(name="Authorization") String header) {
         if (bindingResult.hasErrors()) {
             String msg = bindingResult.getAllErrors().stream().map(err -> err.getDefaultMessage()).collect(Collectors.joining( " "));
             throw new ValidationException(msg);
         }
-        profileService.followNewProfile(followDto.getFollowerId(), followDto.getFolloweeId());
+        profileService.followNewProfile(followDto.getFollowerId(), followDto.getFolloweeId(), header.substring(7));
         return new ResponseEntity<>(SuccessErrorMessage.builder().message("User " + followDto.getFollowerId() + " successfully followed user " + followDto.getFolloweeId()).build(), HttpStatus.OK);
     }
 
     @DeleteMapping("/unfollow")
     public ResponseEntity<SuccessErrorMessage> unfollowTheUser(@RequestBody @Valid FollowDto followDto,
-                                                               BindingResult bindingResult) {
+                                                               BindingResult bindingResult,
+                                                               @RequestHeader(name = "Authorization") String header) {
         if (bindingResult.hasErrors()) {
             String msg = bindingResult.getAllErrors().stream().map(err -> err.getDefaultMessage()).collect(Collectors.joining(" "));
             throw new ValidationException(msg);
         }
-        profileService.unfollowProfile(followDto.getFollowerId(), followDto.getFolloweeId());
+        profileService.unfollowProfile(followDto.getFollowerId(), followDto.getFolloweeId(), header.substring(7));
         return new ResponseEntity<>(SuccessErrorMessage.builder().message("User " + followDto.getFollowerId() + " successfully unfollowed user " + followDto.getFolloweeId()).build(), HttpStatus.OK);
     }
 

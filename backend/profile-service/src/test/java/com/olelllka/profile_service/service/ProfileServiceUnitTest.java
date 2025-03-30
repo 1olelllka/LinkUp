@@ -10,6 +10,7 @@ import com.olelllka.profile_service.domain.entity.ProfileDocument;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
 import com.olelllka.profile_service.repository.ProfileDocumentRepository;
 import com.olelllka.profile_service.repository.ProfileRepository;
+import com.olelllka.profile_service.rest.exception.AuthException;
 import com.olelllka.profile_service.rest.exception.NotFoundException;
 import com.olelllka.profile_service.rest.exception.ValidationException;
 import com.olelllka.profile_service.service.impl.ProfileServiceImpl;
@@ -44,6 +45,8 @@ public class ProfileServiceUnitTest {
     private ElasticsearchRestClientHealthIndicator elasticHealth;
     @Mock
     private MessagePublisher messagePublisher;
+    @Mock
+    private JWTUtil jwtUtil;
     @InjectMocks
     private ProfileServiceImpl service;
 
@@ -74,13 +77,16 @@ public class ProfileServiceUnitTest {
 
     @Test
     public void testThatUpdateProfileThrowsException() {
-        // given
         UUID id = UUID.randomUUID();
         PatchProfileDto patchProfileDto = TestDataUtil.createPatchProfileDto();
-        // when
+        String jwt = "jwt";
+
         when(repository.existsById(id)).thenReturn(false);
-        // then
-        assertThrows(NotFoundException.class, () -> service.updateProfile(id, patchProfileDto));
+        assertThrows(NotFoundException.class, () -> service.updateProfile(id, patchProfileDto, jwt));
+        when(repository.existsById(id)).thenReturn(true);
+        when(jwtUtil.extractId(jwt)).thenReturn("incorrect");
+        assertThrows(AuthException.class, () -> service.updateProfile(id, patchProfileDto, jwt));
+
         verify(repository, never()).save(any(ProfileEntity.class));
     }
 
@@ -100,8 +106,10 @@ public class ProfileServiceUnitTest {
         expected.setGender(Gender.FEMALE);
         expected.setPhoto("UPDATED PHOTO");
         expected.setAboutMe("UPDATED");
+        String jwt = "jwt";
         // when
         when(repository.existsById(id)).thenReturn(true);
+        when(jwtUtil.extractId(jwt)).thenReturn(id.toString());
         when(repository.updateProfile(id,
                 null,
                 expected.getName(),
@@ -110,7 +118,7 @@ public class ProfileServiceUnitTest {
                 expected.getPhoto(),
                 expected.getAboutMe(),
                 expected.getDateOfBirth())).thenReturn(expected);
-        ProfileEntity result = service.updateProfile(id, patchProfileDto);
+        ProfileEntity result = service.updateProfile(id, patchProfileDto, jwt);
         // then
         assertAll(
                 () -> assertNotNull(result),
@@ -140,8 +148,10 @@ public class ProfileServiceUnitTest {
     public void testThatServicePerformsDeleteCorrectly() {
         // given
         UUID uid = UUID.randomUUID();
+        String jwt = "jwt";
         // when
-        service.deleteById(uid);
+        when(jwtUtil.extractId(jwt)).thenReturn(uid.toString());
+        service.deleteById(uid, jwt);
         // then
         verify(repository, times(1)).deleteById(uid);
         verify(messagePublisher, times(1)).deleteProfile(uid);
@@ -150,25 +160,31 @@ public class ProfileServiceUnitTest {
     @Test
     public void testThatFollowNewProfileThrowsExceptions() {
         UUID id = UUID.randomUUID();
-        assertThrows(ValidationException.class, () -> service.followNewProfile(id, id));
+        String jwt = "jwt";
+        assertThrows(ValidationException.class, () -> service.followNewProfile(id, id, jwt));
         UUID id2 = UUID.randomUUID();
-        assertThrows(NotFoundException.class, () -> service.followNewProfile(id, id2));
+        assertThrows(NotFoundException.class, () -> service.followNewProfile(id, id2, jwt));
         when(repository.existsById(id)).thenReturn(true);
         when(repository.existsById(id2)).thenReturn(true);
         when(repository.isFollowing(id, id2)).thenReturn(true);
-        assertThrows(ValidationException.class, () -> service.followNewProfile(id, id2));
+        when(jwtUtil.extractId(jwt)).thenReturn(id.toString());
+        assertThrows(ValidationException.class, () -> service.followNewProfile(id, id2, jwt));
+        when(jwtUtil.extractId(jwt)).thenReturn("incorrect");
+        assertThrows(AuthException.class, () -> service.followNewProfile(id, id2, jwt));
     }
 
     @Test
     public void testThatFollowNewProfileWorks() throws JsonProcessingException {
         UUID id1 = UUID.randomUUID();
         UUID id2 = UUID.randomUUID();
+        String jwt = "jwt";
         ProfileEntity entity = TestDataUtil.createNewProfileEntity();
         when(repository.existsById(id1)).thenReturn(true);
         when(repository.existsById(id2)).thenReturn(true);
         when(repository.findByIdWithRelationships(id1)).thenReturn(Optional.of(entity));
         when(repository.isFollowing(id1, id2)).thenReturn(false);
-        service.followNewProfile(id1, id2);
+        when(jwtUtil.extractId(jwt)).thenReturn(id1.toString());
+        service.followNewProfile(id1, id2, jwt);
         verify(repository, times(1)).follow(id1, id2);
         verify(messagePublisher, times(1)).createFollowNotification(any(NotificationDto.class));
     }
@@ -176,23 +192,29 @@ public class ProfileServiceUnitTest {
     @Test
     public void testThatUnfollowProfileThrowsException() {
         UUID id = UUID.randomUUID();
-        assertThrows(ValidationException.class, () -> service.unfollowProfile(id, id));
+        String jwt = "jwt";
+        assertThrows(ValidationException.class, () -> service.unfollowProfile(id, id, jwt));
         UUID id2 = UUID.randomUUID();
-        assertThrows(NotFoundException.class, () -> service.unfollowProfile(id, id2));
+        assertThrows(NotFoundException.class, () -> service.unfollowProfile(id, id2, jwt));
         when(repository.existsById(id)).thenReturn(true);
         when(repository.existsById(id2)).thenReturn(true);
         when(repository.isFollowing(id, id2)).thenReturn(false);
-        assertThrows(ValidationException.class, () -> service.unfollowProfile(id, id2));
+        when(jwtUtil.extractId(jwt)).thenReturn(id.toString());
+        assertThrows(ValidationException.class, () -> service.unfollowProfile(id, id2, jwt));
+        when(jwtUtil.extractId(jwt)).thenReturn("incorrect");
+        assertThrows(AuthException.class, () -> service.unfollowProfile(id, id2, jwt));
     }
 
     @Test
     public void testThatUnfollowProfileWorks() {
         UUID id1 = UUID.randomUUID();
         UUID id2 = UUID.randomUUID();
+        String jwt = "jwt";
         when(repository.existsById(id1)).thenReturn(true);
         when(repository.existsById(id2)).thenReturn(true);
         when(repository.isFollowing(id1, id2)).thenReturn(true);
-        service.unfollowProfile(id1, id2);
+        when(jwtUtil.extractId(jwt)).thenReturn(id1.toString());
+        service.unfollowProfile(id1, id2, jwt);
         verify(repository, times(1)).unfollow(id1, id2);
     }
 
