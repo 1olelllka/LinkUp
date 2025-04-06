@@ -28,14 +28,16 @@ public class StoryController {
 
     @GetMapping("/users/{user_id}")
     public ResponseEntity<Page<StoryDto>> getAllStoriesForUser(@PathVariable UUID user_id,
+                                                               @RequestHeader(name="Authorization") String header,
                                                                Pageable pageable) {
-        Page<StoryEntity> entities = service.getStoriesForUser(user_id, pageable);
+        Page<StoryEntity> entities = service.getStoriesForUser(user_id, header.substring(7), pageable);
         Page<StoryDto> result = entities.map(mapper::toDto);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     @PostMapping("/users/{user_id}")
     public ResponseEntity<StoryDto> createNewStoryForUser(@PathVariable UUID user_id,
+                                                          @RequestHeader(name="Authorization") String header,
                                                           @RequestBody @Valid  CreateStoryDto dto,
                                                           BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
@@ -43,18 +45,20 @@ public class StoryController {
             throw new ValidationException(msg);
         }
         StoryEntity entity = StoryEntity.builder().image(dto.getImage()).build();
-        StoryEntity saved = service.createStory(user_id, entity);
+        StoryEntity saved = service.createStory(user_id, entity, header.substring(7));
         return new ResponseEntity<>(mapper.toDto(saved), HttpStatus.CREATED);
     }
 
     @GetMapping("/{story_id}")
-    public ResponseEntity<StoryDto> getSpecificStory(@PathVariable String story_id) {
-        StoryEntity entity = service.getSpecificStory(story_id);
+    public ResponseEntity<StoryDto> getSpecificStory(@PathVariable String story_id,
+                                                     @RequestHeader(name = "Authorization") String header) {
+        StoryEntity entity = service.getSpecificStory(story_id, header.substring(7));
         return new ResponseEntity<>(mapper.toDto(entity), HttpStatus.OK);
     }
 
     @PatchMapping("/{story_id}")
     public ResponseEntity<StoryDto> updateSpecificStory(@PathVariable String story_id,
+                                                        @RequestHeader(name="Authorization") String header,
                                                         @RequestBody @Valid CreateStoryDto dto,
                                                         BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
@@ -62,13 +66,14 @@ public class StoryController {
             throw new ValidationException(msg);
         }
         StoryEntity entity = StoryEntity.builder().image(dto.getImage()).build();
-        StoryEntity saved = service.updateSpecificStory(story_id, entity);
+        StoryEntity saved = service.updateSpecificStory(story_id, entity, header.substring(7));
         return new ResponseEntity<>(mapper.toDto(saved), HttpStatus.OK);
     }
 
     @DeleteMapping("/{story_id}")
-    public ResponseEntity deleteSpecificStory(@PathVariable String story_id) {
-        service.deleteSpecificStory(story_id);
+    public ResponseEntity deleteSpecificStory(@PathVariable String story_id,
+                                              @RequestHeader(name="Authorization") String header) {
+        service.deleteSpecificStory(story_id, header.substring(7));
         return new ResponseEntity(null, HttpStatus.NO_CONTENT);
     }
 }

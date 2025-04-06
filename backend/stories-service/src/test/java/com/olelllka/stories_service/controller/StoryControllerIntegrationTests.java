@@ -8,6 +8,8 @@ import com.olelllka.stories_service.domain.dto.CreateStoryDto;
 import com.olelllka.stories_service.domain.entity.StoryEntity;
 import com.olelllka.stories_service.service.SHA256;
 import com.olelllka.stories_service.service.StoryService;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +30,8 @@ import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import org.testcontainers.utility.DockerImageName;
 
+import java.util.Base64;
+import java.util.Date;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -52,6 +56,7 @@ public class StoryControllerIntegrationTests {
     private StoryService service;
     private ObjectMapper objectMapper;
     private RedisTemplate<String, String> redisTemplate;
+    private String key = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
     @Autowired
     public StoryControllerIntegrationTests(MockMvc mockMvc, StoryService service, RedisTemplate<String, String> redisTemplate) {
@@ -75,24 +80,46 @@ public class StoryControllerIntegrationTests {
     }
 
     @Test
+    public void testThatGetAllStoriesForUserReturnsHttp401Unauthorized() throws Exception {
+        UUID profileId = UUID.randomUUID();
+        mockMvc.perform(MockMvcRequestBuilders.get("/stories/users/" + profileId)
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+    }
+
+    @Test
     public void testThatGetAllStoriesForUserReturnsHttp200Ok() throws Exception {
         UUID profileId = UUID.randomUUID();
-        mockMvc.perform(MockMvcRequestBuilders.get("/stories/users/" + profileId))
+        mockMvc.perform(MockMvcRequestBuilders.get("/stories/users/" + profileId)
+                .header("Authorization", "Bearer " + generateJwt(profileId)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     @Test
     public void testThatGetSpecificStoryReturnsHttp404NotFoundIfDoesNotExist() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/stories/1234"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/stories/1234")
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test
-    public void testThatGetSpecificStoryReturnsHttp200OkIfExistsAndThenCacheWorks() throws Exception {
+    public void testThatGetSpecificStoryForOthersReturnsHttp200OkIfExistsAndAvailableAndThenCacheWorks() throws Exception {
         UUID profileId = UUID.randomUUID();
         PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
-        StoryEntity story = service.createStory(profileId, TestDataUtil.createStoryEntity());
-        mockMvc.perform(MockMvcRequestBuilders.get("/stories/" + story.getId()))
+        StoryEntity story = service.createStory(profileId, TestDataUtil.createStoryEntity(), generateJwt(profileId));
+        mockMvc.perform(MockMvcRequestBuilders.get("/stories/" + story.getId())
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        assertTrue(redisTemplate.hasKey("story::"+SHA256.generate(story.getId())));
+    }
+
+    @Test
+    public void testThatGetSpecificStoryForOwnerReturnsHttp200OkIfExistsAndThenCacheWorks() throws Exception {
+        UUID profileId = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
+        StoryEntity story = service.createStory(profileId, TestDataUtil.createStoryEntity(), generateJwt(profileId));
+        mockMvc.perform(MockMvcRequestBuilders.get("/stories/" + story.getId())
+                        .header("Authorization", "Bearer " + generateJwt(profileId)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         assertTrue(redisTemplate.hasKey("story::"+SHA256.generate(story.getId())));
     }
@@ -102,6 +129,7 @@ public class StoryControllerIntegrationTests {
         CreateStoryDto createStoryDto = CreateStoryDto.builder().image("").build();
         String json = objectMapper.writeValueAsString(createStoryDto);
         mockMvc.perform(MockMvcRequestBuilders.post("/stories/users/1234")
+                .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
@@ -114,6 +142,7 @@ public class StoryControllerIntegrationTests {
         CreateStoryDto createStoryDto = CreateStoryDto.builder().image("New Image url").build();
         String json = objectMapper.writeValueAsString(createStoryDto);
         mockMvc.perform(MockMvcRequestBuilders.post("/stories/users/" + profileId)
+                        .header("Authorization", "Bearer " + generateJwt(profileId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isCreated())
@@ -122,11 +151,25 @@ public class StoryControllerIntegrationTests {
     }
 
     @Test
+    public void testThatCreateStoryForUserReturnsHttp401Unauthorized() throws Exception {
+        UUID profileId = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
+        CreateStoryDto createStoryDto = CreateStoryDto.builder().image("New Image url").build();
+        String json = objectMapper.writeValueAsString(createStoryDto);
+        mockMvc.perform(MockMvcRequestBuilders.post("/stories/users/" + profileId)
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+    }
+
+    @Test
     public void testThatCreateStoryForUserTriggersCircuitBreaker() throws Exception {
         UUID profileId = UUID.randomUUID();
         CreateStoryDto createStoryDto = CreateStoryDto.builder().image("New Image url").build();
         String json = objectMapper.writeValueAsString(createStoryDto);
         mockMvc.perform(MockMvcRequestBuilders.post("/stories/users/" + profileId)
+                        .header("Authorization", "Bearer " + generateJwt(profileId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isCreated())
@@ -141,6 +184,7 @@ public class StoryControllerIntegrationTests {
         CreateStoryDto createStoryDto = CreateStoryDto.builder().image("New Image url").build();
         String json = objectMapper.writeValueAsString(createStoryDto);
         mockMvc.perform(MockMvcRequestBuilders.post("/stories/users/" + profileId)
+                        .header("Authorization", "Bearer " + generateJwt(profileId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
@@ -161,6 +205,7 @@ public class StoryControllerIntegrationTests {
         CreateStoryDto createStoryDto = CreateStoryDto.builder().image("Updated url").build();
         String json = objectMapper.writeValueAsString(createStoryDto);
         mockMvc.perform(MockMvcRequestBuilders.patch("/stories/1234")
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
@@ -170,10 +215,11 @@ public class StoryControllerIntegrationTests {
     public void testThatUpdateStoryReturnsHttp200IfSuccessful() throws Exception {
         UUID profileId = UUID.randomUUID();
         PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
-        StoryEntity entity = service.createStory(profileId, TestDataUtil.createStoryEntity());
+        StoryEntity entity = service.createStory(profileId, TestDataUtil.createStoryEntity(), generateJwt(profileId));
         CreateStoryDto createStoryDto = CreateStoryDto.builder().image("Updated url").build();
         String json = objectMapper.writeValueAsString(createStoryDto);
         mockMvc.perform(MockMvcRequestBuilders.patch("/stories/" + entity.getId())
+                        .header("Authorization", "Bearer " + generateJwt(profileId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -183,9 +229,44 @@ public class StoryControllerIntegrationTests {
     }
 
     @Test
+    public void testThatUpdateStoryReturnsHttp401Unauthorized() throws Exception {
+        UUID profileId = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
+        StoryEntity entity = service.createStory(profileId, TestDataUtil.createStoryEntity(), generateJwt(profileId));
+        CreateStoryDto createStoryDto = CreateStoryDto.builder().image("Updated url").build();
+        String json = objectMapper.writeValueAsString(createStoryDto);
+        mockMvc.perform(MockMvcRequestBuilders.patch("/stories/" + entity.getId())
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+    }
+
+    @Test
     public void testThatDeleteStoryReturnsHttp204NoContent() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.delete("/stories/1234"))
+        mockMvc.perform(MockMvcRequestBuilders.delete("/stories/1234")
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
         assertFalse(redisTemplate.hasKey("story::"+SHA256.generate("1234")));
+    }
+
+    @Test
+    public void testThatDeleteStoryReturnsHttp401Unauthorized() throws Exception {
+        UUID profileId = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
+        StoryEntity entity = service.createStory(profileId, TestDataUtil.createStoryEntity(), generateJwt(profileId));
+        mockMvc.perform(MockMvcRequestBuilders.delete("/stories/" + entity.getId())
+                .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+    }
+
+    private String generateJwt(UUID id) {
+        return Jwts.builder()
+                .issuer("LinkUp")
+                .subject(id.toString())
+                .issuedAt(new Date())
+                .signWith(Keys.hmacShaKeyFor(Base64.getDecoder().decode(key)))
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1hr
+                .compact();
     }
 }

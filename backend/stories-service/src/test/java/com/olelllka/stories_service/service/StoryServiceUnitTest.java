@@ -4,6 +4,7 @@ import com.olelllka.stories_service.TestDataUtil;
 import com.olelllka.stories_service.domain.entity.StoryEntity;
 import com.olelllka.stories_service.feign.ProfileFeign;
 import com.olelllka.stories_service.repository.StoryRepository;
+import com.olelllka.stories_service.rest.exception.AuthException;
 import com.olelllka.stories_service.rest.exception.NotFoundException;
 import com.olelllka.stories_service.service.impl.StoryServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,8 @@ public class StoryServiceUnitTest {
     private StoryRepository repository;
     @Mock
     private ProfileFeign profileFeign;
+    @Mock
+    private JWTUtil jwtUtil;
     @InjectMocks
     private StoryServiceImpl service;
 
@@ -38,12 +41,14 @@ public class StoryServiceUnitTest {
     public void testThatGetStoriesForUserReturnsPageOfResults() {
         // given
         UUID id = UUID.randomUUID();
+        String jwt = "jwt";
         Pageable pageable = PageRequest.of(0, 1);
         StoryEntity entity = TestDataUtil.createStoryEntity();
         Page<StoryEntity> expected = new PageImpl<>(List.of(entity));
         // when
         when(repository.findStoryByUserId(id, pageable)).thenReturn(expected);
-        Page<StoryEntity> result = service.getStoriesForUser(id, pageable);
+        when(jwtUtil.extractId(jwt)).thenReturn(id.toString());
+        Page<StoryEntity> result = service.getStoriesForUser(id, jwt, pageable);
         // then
         assertAll(
                 () -> assertNotNull(result),
@@ -53,23 +58,76 @@ public class StoryServiceUnitTest {
     }
 
     @Test
-    public void testThatGetSpecificStoryThrowsNotFoundException() {
+    public void testThatGetStoriesForUserThrowsAuthException() {
         // given
-        String id = "1234";
+        UUID id = UUID.randomUUID();
+        String jwt = "jwt";
+        Pageable pageable = PageRequest.of(0, 1);
         // when
-        when(repository.findById(id)).thenReturn(Optional.empty());
+        when(jwtUtil.extractId(jwt)).thenReturn("incorrect");
+        assertThrows(AuthException.class, () -> service.getStoriesForUser(id, jwt, pageable));
         // then
-        assertThrows(NotFoundException.class, () -> service.getSpecificStory(id));
+        verify(repository, never()).findStoryByUserId(id, pageable);
     }
 
     @Test
-    public void testThatGetSpecificStoryReturnsStory() {
+    public void testThatGetSpecificStoryThrowsNotFoundException() {
         // given
         String id = "1234";
+        String jwt = "jwt";
+        // when
+        when(repository.findById(id)).thenReturn(Optional.empty());
+        // then
+        assertThrows(NotFoundException.class, () -> service.getSpecificStory(id, jwt));
+    }
+
+    @Test
+    public void testThatGetSpecificStoryThrowsAuthException() {
+        // given
+        String id = "1235";
+        String jwt = "jwt";
         StoryEntity story = TestDataUtil.createStoryEntity();
+        story.setUserId(UUID.randomUUID());
+        story.setAvailable(false);
         // when
         when(repository.findById(id)).thenReturn(Optional.of(story));
-        StoryEntity result = service.getSpecificStory(id);
+        when(jwtUtil.extractId(jwt)).thenReturn("incorrect");
+        // then
+        assertThrows(AuthException.class, () -> service.getSpecificStory(id, jwt));
+    }
+
+    @Test
+    public void testThatGetSpecificStoryReturnsStoryForAuthorized() {
+        // given
+        String id = "1234";
+        String jwt = "jwt";
+        StoryEntity story = TestDataUtil.createStoryEntity();
+        story.setUserId(UUID.randomUUID());
+        story.setAvailable(false);
+        // when
+        when(repository.findById(id)).thenReturn(Optional.of(story));
+        when(jwtUtil.extractId(jwt)).thenReturn(story.getUserId().toString());
+        StoryEntity result = service.getSpecificStory(id, jwt);
+        // then
+        assertAll(
+                () -> assertNotNull(result),
+                () -> assertEquals(result.getImage(), story.getImage())
+        );
+        verify(repository, times(1)).findById(id);
+    }
+
+    @Test
+    public void testThatGetSpecificStoryReturnsStoryForOthers() {
+        // given
+        String id = "1234";
+        String jwt = "jwt";
+        StoryEntity story = TestDataUtil.createStoryEntity();
+        story.setUserId(UUID.randomUUID());
+        story.setAvailable(true);
+        // when
+        when(repository.findById(id)).thenReturn(Optional.of(story));
+        when(jwtUtil.extractId(jwt)).thenReturn("another user");
+        StoryEntity result = service.getSpecificStory(id, jwt);
         // then
         assertAll(
                 () -> assertNotNull(result),
@@ -86,10 +144,12 @@ public class StoryServiceUnitTest {
         expected.setAvailable(true);
         expected.setUserId(userId);
         StoryEntity story = TestDataUtil.createStoryEntity();
+        String jwt = "jwt";
         // when
         when(repository.save(expected)).thenReturn(story);
+        when(jwtUtil.extractId(jwt)).thenReturn(userId.toString());
         when(profileFeign.getProfileById(userId)).thenReturn(ResponseEntity.ok().build());
-        StoryEntity result = service.createStory(userId, story);
+        StoryEntity result = service.createStory(userId, story, jwt);
         // then
         assertAll(
                 () -> assertNotNull(result),
@@ -101,15 +161,16 @@ public class StoryServiceUnitTest {
     }
 
     @Test
-    public void testThatCreateStoryThrowsException () {
-        // given
+    public void testThatCreateStoryThrowsExceptions () {
         UUID userId = UUID.randomUUID();
         StoryEntity story = TestDataUtil.createStoryEntity();
-        // when
+        String jwt = "jwt";
         when(profileFeign.getProfileById(userId)).thenReturn(ResponseEntity.notFound().build());
-        assertThrows(NotFoundException.class, () -> service.createStory(userId, story));
-        // then
+        when(jwtUtil.extractId(jwt)).thenReturn(userId.toString());
+        assertThrows(NotFoundException.class, () -> service.createStory(userId, story, jwt));
         verify(repository, never()).save(any(StoryEntity.class));
+        when(jwtUtil.extractId(jwt)).thenReturn(UUID.randomUUID().toString());
+        assertThrows(AuthException.class, () -> service.createStory(userId, story, jwt));
     }
 
     @Test
@@ -117,10 +178,26 @@ public class StoryServiceUnitTest {
         // given
         String storyId = "1234";
         StoryEntity entity = TestDataUtil.createStoryEntity();
+        String jwt = "jwt";
         // when
         when(repository.findById(storyId)).thenReturn(Optional.empty());
         // then
-        assertThrows(NotFoundException.class, () -> service.updateSpecificStory(storyId, entity));
+        assertThrows(NotFoundException.class, () -> service.updateSpecificStory(storyId, entity, jwt));
+        verify(repository, never()).save(any(StoryEntity.class));
+    }
+
+    @Test
+    public void testThatUpdateStoryThrowsAuthException() {
+        // given
+        String storyId = "1234";
+        StoryEntity entity = TestDataUtil.createStoryEntity();
+        entity.setUserId(UUID.randomUUID());
+        String jwt = "jwt";
+        // when
+        when(repository.findById(storyId)).thenReturn(Optional.of(entity));
+        when(jwtUtil.extractId(jwt)).thenReturn(UUID.randomUUID().toString());
+        // then
+        assertThrows(AuthException.class, () -> service.updateSpecificStory(storyId, entity, jwt));
         verify(repository, never()).save(any(StoryEntity.class));
     }
 
@@ -128,15 +205,20 @@ public class StoryServiceUnitTest {
     public void testThatUpdateStoryReturnsUpdatedStory() {
         // given
         String storyId = "1234";
+        String jwt = "jwt";
+        UUID userId = UUID.randomUUID();
+        StoryEntity found = TestDataUtil.createStoryEntity();
+        found.setUserId(userId);
         StoryEntity updated = TestDataUtil.createStoryEntity();
         updated.setImage("UPDATED");
         StoryEntity expected = TestDataUtil.createStoryEntity();
         expected.setImage(updated.getImage());
         expected.setAvailable(true);
         // when
-        when(repository.findById(storyId)).thenReturn(Optional.of(TestDataUtil.createStoryEntity()));
+        when(repository.findById(storyId)).thenReturn(Optional.of(found));
         when(repository.save(any(StoryEntity.class))).thenReturn(expected); // if I put expected in save it'll throw error 'coz of date
-        StoryEntity result = service.updateSpecificStory(storyId, updated);
+        when(jwtUtil.extractId(jwt)).thenReturn(found.getUserId().toString());
+        StoryEntity result = service.updateSpecificStory(storyId, updated, jwt);
         // then
         assertAll(
                 () -> assertNotNull(result),
@@ -150,12 +232,45 @@ public class StoryServiceUnitTest {
     }
 
     @Test
-    public void testThatDeleteStoryWorksWell() {
+    public void testThatDeleteStoryThrowsAuthException() {
+        // given
+        String id = "1234";
+        StoryEntity entity = TestDataUtil.createStoryEntity();
+        String jwt = "jwt";
+        entity.setUserId(UUID.randomUUID());
+        // when
+        when(repository.existsById(id)).thenReturn(true);
+        when(repository.findById(id)).thenReturn(Optional.of(entity));
+        when(jwtUtil.extractId(jwt)).thenReturn(UUID.randomUUID().toString());
+        // then
+        assertThrows(AuthException.class, () -> service.deleteSpecificStory(id, jwt));
+        verify(repository, never()).deleteById(anyString());
+    }
+
+    @Test
+    public void testThatDeleteStoryWorksWellWhenStoryDoesNotExist() {
         // given
         String id = "1234";
         // when
-        service.deleteSpecificStory(id);
+        when(repository.existsById(id)).thenReturn(false);
+        service.deleteSpecificStory(id, "jwt");
         // then
+        verify(repository, times(1)).deleteById(id);
+    }
+
+    @Test
+    public void testThatDeleteStoryWorksWellWhenStoryExists() {
+        // given
+        String id = "1234";
+        String jwt = "jwt";
+        StoryEntity entity = TestDataUtil.createStoryEntity();
+        entity.setUserId(UUID.randomUUID());
+        // when
+        when(repository.existsById(id)).thenReturn(true);
+        when(repository.findById(id)).thenReturn(Optional.of(entity));
+        when(jwtUtil.extractId(jwt)).thenReturn(entity.getUserId().toString());
+        // then
+        service.deleteSpecificStory(id, jwt);
         verify(repository, times(1)).deleteById(id);
     }
 }

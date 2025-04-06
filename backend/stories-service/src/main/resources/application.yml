@@ -59,6 +59,7 @@ resilience4j:
         registerHealthIndicator: true
         ignoreExceptions:
           - com.olelllka.stories_service.rest.exception.NotFoundException
+          - com.olelllka.stories_service.rest.exception.AuthException
 
 server:
   port: 8002
