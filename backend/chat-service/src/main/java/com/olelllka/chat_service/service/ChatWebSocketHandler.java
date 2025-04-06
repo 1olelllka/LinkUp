@@ -44,7 +44,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         String userId = session.getUri().getQuery().split("=")[1];
         if (!profileService.getProfileById(UUID.fromString(userId)).getStatusCode().is2xxSuccessful()){
-            throw new NotFoundException("User with such id does not exist");
+            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("External Service Unavailable."));
+            return;
         }
         sessions.put(userId, session);
         session.sendMessage(new TextMessage("Connection established! Your userId: " + userId));
@@ -58,7 +59,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         UUID senderId = UUID.fromString(session.getUri().getQuery().split("=")[1]);
         UUID targetUserId = msg.getTo();
         if (!profileService.getProfileById(targetUserId).getStatusCode().is2xxSuccessful()){
-            throw new NotFoundException("User with such id does not exist");
+            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("External Service Unavailable."));
         }
         String chatMessage = msg.getContent();
 
