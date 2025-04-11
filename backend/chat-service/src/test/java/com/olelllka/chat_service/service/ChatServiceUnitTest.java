@@ -5,6 +5,7 @@ import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
 import com.olelllka.chat_service.feign.ProfileFeign;
 import com.olelllka.chat_service.repository.ChatRepository;
+import com.olelllka.chat_service.rest.exception.AuthException;
 import com.olelllka.chat_service.rest.exception.NotFoundException;
 import com.olelllka.chat_service.service.impl.ChatServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,6 +38,8 @@ public class ChatServiceUnitTest {
     private MongoTemplate mongoTemplate;
     @Mock
     private ProfileFeign profileFeign;
+    @Mock
+    private JWTUtil jwtUtil;
     @InjectMocks
     private ChatServiceImpl chatService;
 
@@ -45,9 +49,11 @@ public class ChatServiceUnitTest {
         Page<ChatEntity> expected = new PageImpl<>(List.of(TestDataUtil.createChatEntity()));
         Pageable pageable = PageRequest.of(0, 1);
         UUID userId = UUID.randomUUID();
+        String jwt = "jwt";
         // when
+        when(jwtUtil.extractId(jwt)).thenReturn(userId.toString());
         when(chatRepository.findChatsByUserId(userId, pageable)).thenReturn(expected);
-        Page<ChatEntity> result = chatService.getChatsForUser(userId, pageable);
+        Page<ChatEntity> result = chatService.getChatsForUser(userId, pageable, jwt);
         // then
         assertAll(
                 () -> assertNotNull(result),
@@ -55,6 +61,19 @@ public class ChatServiceUnitTest {
                 () -> assertEquals(result.getContent().get(0).getParticipants()[1], expected.getContent().get(0).getParticipants()[1])
         );
         verify(chatRepository, times(1)).findChatsByUserId(userId, pageable);
+    }
+
+    @Test
+    public void testThatGetChatsByUserIdThrowsAuthException() {
+        // given
+        Pageable pageable = PageRequest.of(0, 1);
+        UUID userId = UUID.randomUUID();
+        String jwt = "jwt";
+        // when
+        when(jwtUtil.extractId(jwt)).thenReturn(UUID.randomUUID().toString());
+        // then
+        assertThrows(AuthException.class, () -> chatService.getChatsForUser(userId, pageable, jwt));
+        verify(chatRepository, times(0)).findChatsByUserId(any(UUID.class), any(Pageable.class));
     }
 
     @Test
@@ -91,15 +110,58 @@ public class ChatServiceUnitTest {
     }
 
     @Test
-    public void testThatDeleteChatWorks() {
+    public void testThatDeleteChatWorksWhenChatDoesNotExist() {
         // given
         String chatId = "1235";
         Query query = new Query();
+        String jwt = "jwt";
         query.addCriteria(Criteria.where("chatId").is(chatId));
         // when
-        chatService.deleteChat(chatId);
+        when(chatRepository.existsById(chatId)).thenReturn(false);
+        chatService.deleteChat(chatId, jwt);
         // then
         verify(chatRepository, times(1)).deleteById(chatId);
+        verify(chatRepository, never()).findById(anyString());
         verify(mongoTemplate, times(1)).findAllAndRemove(query, MessageEntity.class, "Message");
+    }
+
+    @Test
+    public void testThatDeleteChatWorksWhenChatExists() {
+        // given
+        String chatId = "1235";
+        Query query = new Query();
+        String jwt = "jwt";
+        ChatEntity chat = TestDataUtil.createChatEntity();
+        query.addCriteria(Criteria.where("chatId").is(chatId));
+        // when
+        when(chatRepository.existsById(chatId)).thenReturn(true);
+        when(chatRepository.findById(chatId)).thenReturn(Optional.of(chat));
+        when(jwtUtil.extractId(jwt)).thenReturn(chat.getParticipants()[1].toString());
+        chatService.deleteChat(chatId, jwt);
+        // then
+        verify(chatRepository, times(1)).deleteById(chatId);
+        verify(chatRepository, times(1)).findById(chatId);
+        verify(chatRepository, times(1)).existsById(chatId);
+        verify(mongoTemplate, times(1)).findAllAndRemove(query, MessageEntity.class, "Message");
+    }
+
+    @Test
+    public void testThatDeleteChatThrowsAuthException() {
+        String chatId = "1235";
+        Query query = new Query();
+        String jwt = "jwt";
+        ChatEntity chat = TestDataUtil.createChatEntity();
+        query.addCriteria(Criteria.where("chatId").is(chatId));
+        // when
+        when(chatRepository.existsById(chatId)).thenReturn(true);
+        when(chatRepository.findById(chatId)).thenReturn(Optional.of(chat));
+        when(jwtUtil.extractId(jwt)).thenReturn(UUID.randomUUID().toString());
+
+        // then
+        assertThrows(AuthException.class, () -> chatService.deleteChat(chatId, jwt));
+        verify(chatRepository, never()).deleteById(chatId);
+        verify(chatRepository, times(1)).findById(chatId);
+        verify(chatRepository, times(1)).existsById(chatId);
+        verify(mongoTemplate, never()).findAllAndRemove(query, MessageEntity.class, "Message");
     }
 }

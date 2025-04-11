@@ -6,9 +6,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface MessageService {
-    Page<MessageEntity> getMessagesForChat(String chatId, Pageable pageable);
+    Page<MessageEntity> getMessagesForChat(String chatId, Pageable pageable, String jwt);
 
-    MessageEntity updateMessage(String msgId, MessageDto updatedMsg);
+    MessageEntity updateMessage(String msgId, MessageDto updatedMsg, String jwt);
 
-    void deleteSpecificMessage(String msgId);
+    void deleteSpecificMessage(String msgId, String jwt);
 }

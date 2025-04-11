@@ -1,7 +1,5 @@
 package com.olelllka.chat_service.rest.controller;
 
-import com.olelllka.chat_service.domain.dto.ChatDto;
-import com.olelllka.chat_service.domain.dto.CreateChatDto;
 import com.olelllka.chat_service.domain.dto.ListOfChatsDto;
 import com.olelllka.chat_service.domain.dto.MessageDto;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
@@ -34,40 +32,46 @@ public class ChatController {
     private final MessageMapperImpl messageMapper;
 
     @GetMapping("/users/{user_id}")
-    public ResponseEntity<Page<ListOfChatsDto>> getAllChatsForUser(Pageable pageable, @PathVariable UUID user_id) {
-        Page<ChatEntity> entities = chatService.getChatsForUser(user_id, pageable);
+    public ResponseEntity<Page<ListOfChatsDto>> getAllChatsForUser(@RequestHeader(name="Authorization") String header,
+                                                                    Pageable pageable,
+                                                                   @PathVariable UUID user_id) {
+        Page<ChatEntity> entities = chatService.getChatsForUser(user_id, pageable, header.substring(7));
         Page<ListOfChatsDto> result = entities.map(this::mapToListOfChats);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     @DeleteMapping("/{chat_id}")
-    public ResponseEntity deleteChat(@PathVariable String chat_id) {
-        chatService.deleteChat(chat_id);
+    public ResponseEntity deleteChat(@RequestHeader(name="Authorization") String header,
+                                    @PathVariable String chat_id) {
+        chatService.deleteChat(chat_id, header.substring(7));
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping("/{chat_id}/messages")
-    public ResponseEntity<Page<MessageDto>> getAllMessagesForChat(@PathVariable String chat_id, Pageable pageable) {
-        Page<MessageEntity> messages = messageService.getMessagesForChat(chat_id, pageable);
+    public ResponseEntity<Page<MessageDto>> getAllMessagesForChat(@RequestHeader(name="Authorization") String header,
+                                                                    @PathVariable String chat_id, Pageable pageable) {
+        Page<MessageEntity> messages = messageService.getMessagesForChat(chat_id, pageable, header.substring(7));
         Page<MessageDto> result = messages.map(messageMapper::toDto);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     @PatchMapping("/messages/{msg_id}")
-    public ResponseEntity<MessageDto> updateSpecificMessage(@PathVariable String msg_id,
+    public ResponseEntity<MessageDto> updateSpecificMessage(@RequestHeader(name="Authorization") String header,
+                                                            @PathVariable String msg_id,
                                                             @Valid @RequestBody MessageDto updatedMsg,
                                                             BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             String msg = bindingResult.getAllErrors().stream().map(err -> err.getDefaultMessage()).collect(Collectors.joining(" "));
             throw new ValidationException(msg);
         }
-        MessageEntity updated = messageService.updateMessage(msg_id, updatedMsg);
+        MessageEntity updated = messageService.updateMessage(msg_id, updatedMsg, header.substring(7));
         return new ResponseEntity<>(messageMapper.toDto(updated), HttpStatus.OK);
     }
 
     @DeleteMapping("/messages/{msg_id}")
-    public ResponseEntity deleteSpecificMessage(@PathVariable String msg_id) {
-        messageService.deleteSpecificMessage(msg_id);
+    public ResponseEntity deleteSpecificMessage(@RequestHeader(name="Authorization") String header,
+                                                @PathVariable String msg_id) {
+        messageService.deleteSpecificMessage(msg_id, header.substring(7));
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 

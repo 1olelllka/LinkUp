@@ -9,6 +9,8 @@ import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
 import com.olelllka.chat_service.repository.MessageRepository;
 import com.olelllka.chat_service.service.ChatService;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,6 +28,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.Base64;
+import java.util.Date;
 import java.util.UUID;
 
 
@@ -41,6 +45,7 @@ public class ChatControllerIntegrationTest {
 
     @ServiceConnection
     static MongoDBContainer mongo = new MongoDBContainer("mongo:8.0");
+    private String key = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
     static {
         mongo.start();
@@ -74,15 +79,67 @@ public class ChatControllerIntegrationTest {
         PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok()));
         PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok()));
         ChatEntity saved = chatService.createNewChat(user1, user2);
-        mockMvc.perform(MockMvcRequestBuilders.get("/chats/users/" + saved.getParticipants()[0]))
+        mockMvc.perform(MockMvcRequestBuilders.get("/chats/users/" + saved.getParticipants()[0])
+                        .header("Authorization", "Bearer " + generateJwt(user1)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content[0]").exists());
     }
 
     @Test
+    public void testThatGetChatsByUserReturnsHttp401Unauthorized() throws Exception {
+        UUID user1 = UUID.randomUUID();
+        UUID user2 = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok()));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok()));
+        ChatEntity saved = chatService.createNewChat(user1, user2);
+        mockMvc.perform(MockMvcRequestBuilders.get("/chats/users/" + saved.getParticipants()[0])
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+    }
+
+    @Test
     public void testThatDeleteChatWorks() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.delete("/chats/12345"))
+        mockMvc.perform(MockMvcRequestBuilders.delete("/chats/12345")
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
+    }
+
+    @Test
+    public void testThatDeleteChatReturnsHttp401Unauthorized() throws Exception {
+        UUID user1 = UUID.randomUUID();
+        UUID user2 = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok()));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok()));
+        ChatEntity saved = chatService.createNewChat(user1, user2);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/chats/" + saved.getId())
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+    }
+
+    @Test
+    public void testThatDeleteChatReturnsHttp200Ok() throws Exception {
+        UUID user1 = UUID.randomUUID();
+        UUID user2 = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok()));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok()));
+        ChatEntity saved = chatService.createNewChat(user1, user2);
+        mockMvc.perform(MockMvcRequestBuilders.delete("/chats/" + saved.getId())
+                        .header("Authorization", "Bearer " + generateJwt(user1)))
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
+    }
+
+    @Test
+    public void testThatGetMessagesByChatIdReturnsHttp401Unauthorized() throws Exception {
+        UUID user1 = UUID.randomUUID();
+        UUID user2 = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok()));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok()));
+        ChatEntity chat = chatService.createNewChat(user1, user2);
+        MessageEntity msg = TestDataUtil.createMessageEntity(chat.getId());
+        repository.save(msg);
+        mockMvc.perform(MockMvcRequestBuilders.get("/chats/" + chat.getId() + "/messages")
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
     }
 
     @Test
@@ -92,7 +149,8 @@ public class ChatControllerIntegrationTest {
         PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok()));
         PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok()));
         ChatEntity chat = chatService.createNewChat(user1, user2);
-        mockMvc.perform(MockMvcRequestBuilders.get("/chats/" + chat.getId() + "/messages"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/chats/" + chat.getId() + "/messages")
+                        .header("Authorization", "Bearer " + generateJwt(user1)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.totalElements").value(0));
     }
@@ -103,6 +161,7 @@ public class ChatControllerIntegrationTest {
         dto.setContent("");
         String json = objectMapper.writeValueAsString(dto);
         mockMvc.perform(MockMvcRequestBuilders.patch("/chats/messages/1234")
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
@@ -113,9 +172,23 @@ public class ChatControllerIntegrationTest {
         MessageDto dto = TestDataUtil.createMessageDto("12345");
         String json = objectMapper.writeValueAsString(dto);
         mockMvc.perform(MockMvcRequestBuilders.patch("/chats/messages/12345")
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
+    public void testThatUpdateSpecificMessageReturnsHttp401Unauthorized() throws Exception {
+        MessageDto dto = TestDataUtil.createMessageDto("123456");
+        dto.setContent("UPDATED");
+        MessageEntity original = repository.save(TestDataUtil.createMessageEntity("123456"));
+        String json = objectMapper.writeValueAsString(dto);
+        mockMvc.perform(MockMvcRequestBuilders.patch("/chats/messages/" + original.getId())
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
     }
 
     @Test
@@ -125,6 +198,7 @@ public class ChatControllerIntegrationTest {
         MessageEntity original = repository.save(TestDataUtil.createMessageEntity("123456"));
         String json = objectMapper.writeValueAsString(dto);
         mockMvc.perform(MockMvcRequestBuilders.patch("/chats/messages/" + original.getId())
+                        .header("Authorization", "Bearer " + generateJwt(original.getFrom()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -132,9 +206,36 @@ public class ChatControllerIntegrationTest {
     }
 
     @Test
-    public void testThatDeleteSpecificMessageReturnsHttp204NoContentAndDeletesMsg() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.delete("/chats/messages/12345"))
+    public void testThatDeleteSpecificMessageReturnsHttp204NoContentIfThereIsNoMessage() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.delete("/chats/messages/12345")
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
+    }
+
+    @Test
+    public void testThatDeleteSpecificMessageReturnsHttp401UnauthorizedIfUnauthorized() throws Exception {
+        MessageEntity msg = repository.save(TestDataUtil.createMessageEntity("123456"));
+        mockMvc.perform(MockMvcRequestBuilders.delete("/chats/messages/" + msg.getId())
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+    }
+
+    @Test
+    public void testThatDeleteSpecificMessageReturnsHttp204NoContentIfMessageExistsAndAuthorized() throws Exception {
+        MessageEntity msg = repository.save(TestDataUtil.createMessageEntity("123456"));
+        mockMvc.perform(MockMvcRequestBuilders.delete("/chats/messages/" + msg.getId())
+                        .header("Authorization", "Bearer " + generateJwt(msg.getFrom())))
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
+    }
+
+    private String generateJwt(UUID id) {
+        return Jwts.builder()
+                .issuer("LinkUp")
+                .subject(id.toString())
+                .issuedAt(new Date())
+                .signWith(Keys.hmacShaKeyFor(Base64.getDecoder().decode(key)))
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1hr
+                .compact();
     }
 
 }

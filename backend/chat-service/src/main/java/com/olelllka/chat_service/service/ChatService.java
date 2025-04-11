@@ -8,9 +8,9 @@ import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 public interface ChatService {
-    Page<ChatEntity> getChatsForUser(UUID userId, Pageable pageable);
+    Page<ChatEntity> getChatsForUser(UUID userId, Pageable pageable, String jwt);
 
     ChatEntity createNewChat(@NotEmpty UUID userId1, @NotEmpty UUID userId2);
 
-    void deleteChat(String chatId);
+    void deleteChat(String chatId, String jwt);
 }

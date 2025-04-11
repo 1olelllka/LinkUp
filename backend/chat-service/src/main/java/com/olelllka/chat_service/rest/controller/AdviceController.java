@@ -1,6 +1,7 @@
 package com.olelllka.chat_service.rest.controller;
 
 import com.olelllka.chat_service.domain.dto.ErrorMessage;
+import com.olelllka.chat_service.rest.exception.AuthException;
 import com.olelllka.chat_service.rest.exception.NotFoundException;
 import com.olelllka.chat_service.rest.exception.ValidationException;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,11 @@ public class AdviceController {
     public ResponseEntity<ErrorMessage> validationException(ValidationException ex) {
         return new ResponseEntity<>(ErrorMessage.builder()
                 .message(ex.getMessage()).build(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(AuthException.class)
+    public ResponseEntity<ErrorMessage> authException(AuthException ex) {
+        return new ResponseEntity<>(ErrorMessage.builder().message(ex.getMessage()).build(), HttpStatus.UNAUTHORIZED);
     }
 
 }
