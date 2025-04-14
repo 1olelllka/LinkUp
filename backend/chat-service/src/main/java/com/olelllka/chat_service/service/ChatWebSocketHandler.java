@@ -43,9 +43,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         String userId = session.getUri().getQuery().split("=")[1];
-        if (!profileService.getProfileById(UUID.fromString(userId)).getStatusCode().is2xxSuccessful()){
-            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("External Service Unavailable."));
-            return;
+        if (profileService.getProfileById(UUID.fromString(userId)).getStatusCode().is4xxClientError()) {
+            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A client error occurred on external service."));
+        } else if (profileService.getProfileById(UUID.fromString(userId)).getStatusCode().is5xxServerError()) {
+            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A server error occurred on external service."));
         }
         sessions.put(userId, session);
         session.sendMessage(new TextMessage("Connection established! Your userId: " + userId));
@@ -58,8 +59,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         MessageEntity msg = objectMapper.readValue(payload, MessageEntity.class);
         UUID senderId = UUID.fromString(session.getUri().getQuery().split("=")[1]);
         UUID targetUserId = msg.getTo();
-        if (!profileService.getProfileById(targetUserId).getStatusCode().is2xxSuccessful()){
-            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("External Service Unavailable."));
+        if (profileService.getProfileById(targetUserId).getStatusCode().is4xxClientError()) {
+            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A client error occurred on external service."));
+        } else if (profileService.getProfileById(targetUserId).getStatusCode().is5xxServerError()) {
+            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A server error occurred on external service."));
         }
         String chatMessage = msg.getContent();
 

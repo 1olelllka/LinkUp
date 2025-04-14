@@ -3,6 +3,7 @@ package com.olelllka.notification_service.service;
 import com.olelllka.notification_service.feign.ProfileFeign;
 import com.olelllka.notification_service.rest.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
@@ -21,8 +22,10 @@ public class WebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         UUID userId = getUserIdFromUri(session);
-        if (!profileService.getProfileById(userId).getStatusCode().is2xxSuccessful()) {
-            throw new NotFoundException("User with such id does not exist.");
+        if (profileService.getProfileById(userId).getStatusCode().is4xxClientError()) {
+            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A client error occurred on external service."));
+        } else if (profileService.getProfileById(userId).getStatusCode().is5xxServerError()) {
+            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A server error occurred on external service."));
         }
         sessions.put(userId, session);
         session.sendMessage(new TextMessage("Connection established! Your userId: " + userId));

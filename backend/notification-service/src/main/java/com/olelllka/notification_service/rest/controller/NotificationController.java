@@ -21,27 +21,31 @@ public class NotificationController {
 
     @GetMapping("/users/{user_id}")
     public ResponseEntity<Page<NotificationDto>> getListOfNotificationsForUser(@PathVariable UUID user_id,
+                                                                               @RequestHeader(name="Authorization") String header,
                                                                                Pageable pageable) {
-        Page<NotificationEntity> entities = service.getNotificationsForUser(user_id, pageable);
+        Page<NotificationEntity> entities = service.getNotificationsForUser(user_id, pageable, header.substring(7));
         Page<NotificationDto> result = entities.map(this::notificationMapper);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     @PatchMapping("/{notification_id}")
-    public ResponseEntity<NotificationDto> updateReadNotification(@PathVariable String notification_id) {
-        NotificationEntity updated = service.updateReadNotification(notification_id);
+    public ResponseEntity<NotificationDto> updateReadNotification(@PathVariable String notification_id,
+                                                                  @RequestHeader(name="Authorization") String header) {
+        NotificationEntity updated = service.updateReadNotification(notification_id, header.substring(7));
         return new ResponseEntity<>(notificationMapper(updated), HttpStatus.OK);
     }
 
     @DeleteMapping("/{notification_id}")
-    public ResponseEntity deleteSpecificNotification(@PathVariable String notification_id) {
-        service.deleteSpecificNotification(notification_id);
+    public ResponseEntity deleteSpecificNotification(@PathVariable String notification_id,
+                                                     @RequestHeader(name="Authorization") String header) {
+        service.deleteSpecificNotification(notification_id, header.substring(7));
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
     @DeleteMapping("/users/{user_id}")
-    public ResponseEntity deleteAllOfTheNotificationsForSpecificUser(@PathVariable UUID user_id) {
-        service.deleteNotificationsForSpecificUser(user_id);
+    public ResponseEntity deleteAllOfTheNotificationsForSpecificUser(@PathVariable UUID user_id,
+                                                                     @RequestHeader(name="Authorization") String header) {
+        service.deleteNotificationsForSpecificUser(user_id, header.substring(7));
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 

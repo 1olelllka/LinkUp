@@ -7,11 +7,11 @@ import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 public interface NotificationService {
-    Page<NotificationEntity> getNotificationsForUser(UUID userId, Pageable pageable);
+    Page<NotificationEntity> getNotificationsForUser(UUID userId, Pageable pageable, String jwt);
 
-    NotificationEntity updateReadNotification(String notificationId);
+    NotificationEntity updateReadNotification(String notificationId, String jwt);
 
-    void deleteSpecificNotification(String notificationId);
+    void deleteSpecificNotification(String notificationId, String jwt);
 
-    void deleteNotificationsForSpecificUser(UUID userId);
+    void deleteNotificationsForSpecificUser(UUID userId, String jwt);
 }
