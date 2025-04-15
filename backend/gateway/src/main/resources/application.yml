@@ -13,6 +13,9 @@ eureka:
     registerWithEureka: true
   instance:
     preferIpAddress: true
+    metadata-map:
+      version: v0.9
+      region: eu-central
 
 management:
   endpoint:
@@ -21,7 +24,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health, info
   health:
     circuitbreakers:
       enabled: true

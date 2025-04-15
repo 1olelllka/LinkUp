@@ -10,6 +10,7 @@ from .message_publisher import publish_message
 from datetime import datetime, timedelta, timezone
 from django.core.cache import cache
 import requests
+from django.http import JsonResponse
 
 class UserPostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-created_at')
@@ -112,3 +113,10 @@ class CommentDeleteAPIView(DestroyAPIView):
             return Response(status=204)
         except Comment.DoesNotExist:
             return Response(status=204)
+        
+
+def health(request):
+    return JsonResponse({"status":"UP"})
+
+def info(request):
+    return JsonResponse({})

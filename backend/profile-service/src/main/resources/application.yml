@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: profile-service
+  neo4j:
+    uri: bolt://localhost:7687
+    authentication:
+      username: neo4j
+      password: product_admin
+  data:
+    elasticsearch:
+      cluster-name: elasticsearch
+      cluster-nodes: localhost:9200
+      repositories:
+        enabled: true
+    redis:
+      host: localhost
+      port: 6376
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: myuser
+    password: secret
+  cloud:
+    compatibility-verifier:
+      enabled: false
+
+server:
+  port: 8001
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+  instance:
+    prefer-ip-address: true
+    metadata-map:
+      version: v0.9
+      region: eu-central
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: health, info

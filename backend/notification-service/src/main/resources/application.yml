@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: notification-service
+  cloud:
+    compatibility-verifier:
+      enabled: false
+  data:
+    mongodb:
+      uri: mongodb://admin:admin@localhost:27016/notificationDB?authSource=admin
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: myuser
+    password: secret
+
+server:
+  port: 8003
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+  instance:
+    prefer-ip-address: true
+    metadata-map:
+      version: v0.9
+      region: eu-central
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: health, info
