@@ -7,14 +7,18 @@ from django.shortcuts import get_object_or_404
 from django.http import Http404
 import hashlib
 from .message_publisher import publish_message
+from .auth.authentication import JWTAuthentication
+from .auth.permissions import IsOwner
 from datetime import datetime, timedelta, timezone
 from django.core.cache import cache
 import requests
 from django.http import JsonResponse
+from rest_framework.permissions import IsAuthenticated
 
 class UserPostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-created_at')
     serializer_class = PostSerializer
+    authentication_classes = [JWTAuthentication]
 
     def create(self, request, user_id):
         profile_response = requests.get(f"http://localhost:8001/profiles/{user_id}")
@@ -36,10 +40,16 @@ class UserPostViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return self.queryset.filter(user_id=self.kwargs['user_id'])
     
+    def get_permissions(self):
+        if (self.request.method == 'POST'):
+            return [IsAuthenticated(), IsOwner()]
+        return []
+    
 
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-created_at')
     serializer_class = PostSerializer
+    authentication_classes=[JWTAuthentication]
 
     def retrieve(self, request, *args, **kwargs):
         cache_key = hashlib.sha256((f"Post# {kwargs['post_id']}").encode('utf-8')).hexdigest()
@@ -73,11 +83,17 @@ class PostViewSet(viewsets.ModelViewSet):
             return Response(status=204)
         except Post.DoesNotExist:
             return Response(status=204)
+    
+    def get_permissions(self):
+        if (self.request.method in ['PATCH', 'DELETE']):
+            return [IsAuthenticated(), IsOwner()]
+        return []
         
 
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.filter(parent=None).order_by('-created_at')
     serializer_class = CommentSerializer
+    authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
         queryset =  self.queryset.filter(post_id=self.kwargs['post_id'])
@@ -100,11 +116,18 @@ class CommentViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(data=serializer.data, status=201)
         return Response(data=serializer.errors, status=400)
+
+    def get_permissions(self):
+        if (self.request.method == 'POST'):
+            return [IsAuthenticated(), IsOwner()]
+        return []
     
 
 class CommentDeleteAPIView(DestroyAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsOwner]
     
     def destroy(self, request, *args, **kwargs):
         try:

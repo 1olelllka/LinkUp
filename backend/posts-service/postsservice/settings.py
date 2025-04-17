@@ -119,3 +119,5 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ALLOWED_HOSTS = ['*']
+
+JWT_SECRET='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'

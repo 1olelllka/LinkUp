@@ -11,10 +11,10 @@ class TestCommentAPI(TestCase):
 
     def setUp(self):
         self.client = APIClient()
-        self.post = Post.objects.create(user_id=1, desc="desc 1", image="url")
-        self.comment_post_1 = Comment.objects.create(user_id=1, post_id=self.post.pk, text="text 1")
-        self.comment_post_2 = Comment.objects.create(user_id=2, post_id=self.post.pk, text="text 2")
-        self.comment_post_3 = Comment.objects.create(user_id=2, post_id=self.post.pk, text="reply to text 1", parent_id=self.comment_post_1.pk)
+        self.post = Post.objects.create(user_id='1', desc="desc 1", image="url")
+        self.comment_post_1 = Comment.objects.create(user_id="1", post_id=self.post.pk, text="text 1")
+        self.comment_post_2 = Comment.objects.create(user_id="2", post_id=self.post.pk, text="text 2")
+        self.comment_post_3 = Comment.objects.create(user_id="2", post_id=self.post.pk, text="reply to text 1", parent_id=self.comment_post_1.pk)
         
     def test_get_comments_to_specific_post_returns_Http404(self, *args):
         response = self.client.get("/posts/123/comments")
@@ -25,42 +25,81 @@ class TestCommentAPI(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()['results']), 2)
     
-    def test_create_comments_for_specific_post_returns_Http404(self, *args):
-        response = self.client.post("/posts/123/comments")
+    @patch("jwt.decode")
+    def test_create_comments_for_specific_post_returns_Http403(self, mock_jwt, *args):
+        mock_jwt.return_value = {'sub':"5134"}
+        response = self.client.post("/posts/123/comments", headers={"Authorization":"Bearer incorrect_jwt"})
+        self.assertEqual(response.status_code, 403)
+
+    @patch("jwt.decode")
+    def test_create_comments_for_specific_post_returns_Http404(self, mock_jwt, *args):
+        mock_jwt.return_value = {'sub':"id"}
+        response = self.client.post("/posts/123/comments", headers={"Authorization": "Bearer jwt_token"})
         self.assertEqual(response.status_code, 404)
     
-    def test_create_comments_for_specific_post_returns_Http400(self, *args):
-        response = self.client.post(f"/posts/{self.post.pk}/comments", {"text":""})
+    @patch("jwt.decode")
+    def test_create_comments_for_specific_post_returns_Http403(self, mock_jwt, *args):
+        mock_jwt.return_value = {'sub':"12345"}
+        response = self.client.post(f"/posts/{self.post.pk}/comments", {"text":""}, headers={"Authorization":"Bearer incorrect_jwt"})
+        self.assertEqual(response.status_code, 403)
+    
+    @patch("jwt.decode")
+    def test_create_comments_for_specific_post_returns_Http400(self, mock_jwt, *args):
+        mock_jwt.return_value = {'sub':self.post.user_id}
+        response = self.client.post(f"/posts/{self.post.pk}/comments", {"text":""}, headers={"Authorization":"Bearer jwt_token"})
         self.assertEqual(response.status_code, 400)
 
     @patch("posts.views.requests.get")
-    def test_create_comments_for_specific_post_returns_Http201(self, mock_get,*args):
+    @patch("jwt.decode")
+    def test_create_comments_for_specific_post_returns_Http201(self, mock_jwt, mock_get, *args):
         mock_get.return_value.status_code = 200
-        response = self.client.post(f"/posts/{self.post.pk}/comments", {"text":"text", "user_id":12})
+        mock_jwt.return_value = {'sub':self.post.user_id}
+        response = self.client.post(f"/posts/{self.post.pk}/comments", {"text":"text", "user_id":12}, headers={"Authorization":"Bearer jwt_token"})
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()['user_id'], '12')
         self.assertEqual(response.json()['text'], 'text')
     
+    @patch("jwt.decode")
+    def test_create_reply_for_specific_comment_returns_Http403(self, mock_jwt, *args):
+        mock_jwt.return_value = {"sub":"12345"}
+        response = self.client.post(f"/posts/{self.post.pk}/comments", {"text":"text", "user_id":12, "parent":1235}, headers={"Authorization":"Bearer incorrect_jwt"})
+        self.assertEqual(response.status_code, 403)
+
+            
     @patch("posts.views.requests.get")
-    def test_create_reply_for_specific_comment_returns_Http400(self, mock_get, *args):
+    @patch("jwt.decode")
+    def test_create_reply_for_specific_comment_returns_Http400(self, mock_jwt, mock_get, *args):
+        mock_jwt.return_value = {'sub':self.post.user_id}
         mock_get.return_value.status_code = 200
-        response = self.client.post(f"/posts/{self.post.pk}/comments", {"text":"text", "user_id":12, "parent":1235})
+        response = self.client.post(f"/posts/{self.post.pk}/comments", {"text":"text", "user_id":12, "parent":1235}, headers={"Authorization": "Bearer jwt_token"})
         self.assertEqual(response.status_code, 400)
     
     @patch("posts.views.requests.get")
-    def test_create_reply_for_specific_comment_returns_Http201(self, mock_get, *args):
+    @patch("jwt.decode")
+    def test_create_reply_for_specific_comment_returns_Http201(self, mock_jwt, mock_get, *args):
         mock_get.return_value.status_code = 200
-        response = self.client.post(f"/posts/{self.post.pk}/comments", {"text":"reply", "user_id":13, "parent":self.comment_post_1.pk})
+        mock_jwt.return_value = {'sub':self.post.user_id}
+        response = self.client.post(f"/posts/{self.post.pk}/comments", {"text":"reply", "user_id":13, "parent":self.comment_post_1.pk}, headers={"Authorization":"Bearer jwt_token"})
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()['parent'], self.comment_post_1.pk)
     
     @patch("posts.views.requests.get")
-    def test_create_comment_or_reply_returns_Http404(self, mock_get, *args):
+    @patch("jwt.decode")
+    def test_create_comment_or_reply_returns_Http404(self, mock_jwt, mock_get, *args):
         mock_get.return_value.status_code = 404
+        mock_jwt.return_value = {'sub':self.post.user_id}
         profile_id = uuid.uuid4()
-        response = self.client.post(f"/posts/{self.post.pk}/comments", {"text":"reply", "user_id":profile_id, "parent":self.comment_post_1.pk})
+        response = self.client.post(f"/posts/{self.post.pk}/comments", {"text":"reply", "user_id":profile_id, "parent":self.comment_post_1.pk}, headers={"Authorization":"Bearer jwt_token"})
         self.assertEqual(response.status_code, 404)
 
-    def test_delete_comment_returns_Http204(self, *args):
-        response = self.client.delete(f"/posts/comments/{self.comment_post_1.pk}")
+    @patch("jwt.decode")
+    def test_delete_comment_returns_Http403(self, mock_jwt, *args):
+        mock_jwt.return_value = {'sub':123}
+        response = self.client.delete(f"/posts/comments/{self.comment_post_1.pk}", headers={"Authorization":"Bearer incorrect_jwt"})
+        self.assertEqual(response.status_code, 403)
+
+    @patch("jwt.decode")
+    def test_delete_comment_returns_Http204(self, mock_jwt, *args):
+        mock_jwt.return_value = {'sub':self.comment_post_1.user_id}
+        response = self.client.delete(f"/posts/comments/{self.comment_post_1.pk}", headers={"Authorization":"Bearer jwt_token"})
         self.assertEqual(response.status_code, 204)

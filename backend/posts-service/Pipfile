@@ -16,6 +16,7 @@ requests = "*"
 wiremock = "*"
 testcontainers = "*"
 pytest-django = "*"
+pyjwt = "*"
 
 [dev-packages]
 
