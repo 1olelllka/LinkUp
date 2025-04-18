@@ -1,15 +1,10 @@
 from django.test import TestCase
 from rest_framework.test import APIClient
-from ..models import Post
-from unittest.mock import patch
-import uuid
-from django.test import TestCase
-from rest_framework.test import APIClient
-from unittest.mock import patch
-import uuid
-from ..models import Post
+from unittest.mock import patch, MagicMock
 from testcontainers.rabbitmq import RabbitMqContainer
+import uuid
 import time
+from ..models import Post
 
 @patch("py_eureka_client.eureka_client.init", return_value=(None, None))
 class TestPostsAPI(TestCase):
@@ -80,10 +75,14 @@ class TestPostsAPI(TestCase):
         response = self.client.get('/posts/123')
         self.assertEqual(response.status_code, 404)
 
-    def test_get_specific_post_returns_Http200(self, *args):
+    @patch("posts.views.cache.set")
+    @patch("posts.views.cache.get")
+    def test_get_specific_post_returns_Http200(self, mocK_cache_get, mock_cache_set, *args):
+        mocK_cache_get.return_value = None
         response = self.client.get(f"/posts/{self.user1_post.pk}")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['id'], self.user1_post.pk)
+        mock_cache_set.assert_called()
 
     @patch("jwt.decode")
     def test_patch_specific_post_returns_Http404(self, mock_jwt, *args):
@@ -102,18 +101,24 @@ class TestPostsAPI(TestCase):
         self.assertEqual(response.status_code, 400)
 
     @patch("jwt.decode")
-    def test_patch_specific_post_returns_Http200(self, mocK_jwt, *args):
-        mocK_jwt.return_value = {'sub':self.user1_post.user_id}
+    @patch("posts.views.cache.set")
+    def test_patch_specific_post_returns_Http200(self, mock_cache_set, mock_jwt, *args):
+        mock_jwt.return_value = {'sub':self.user1_post.user_id}
         response = self.client.patch(f"/posts/{self.user1_post.pk}", {"user_id": self.user1_post.user_id, "desc": "UPDATED", "image": "UPDATED"}, headers={"Authorization":"Bearer jwt_token"})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['desc'], "UPDATED")
         self.assertEqual(response.json()['image'], "UPDATED")
+        mock_cache_set.assert_called()
     
     @patch("jwt.decode")
-    def test_delete_specific_post_returns_Http204(self, mock_jwt, *args):
+    @patch("posts.views.cache")
+    def test_delete_specific_post_returns_Http204(self, mock_cache, mock_jwt, *args):
+        mock_cache.__contains__.return_value = True
+        mock_cache.delete = MagicMock()
         mock_jwt.return_value = {'sub':self.user2_post.user_id}
         response = self.client.delete(f"/posts/{self.user2_post.pk}", headers={"Authorization":"Bearer jwt_token"})
         self.assertEqual(response.status_code, 204)
+        mock_cache.delete.assert_called()
     
     @patch("jwt.decode")
     def test_delete_specific_post_returns_Http403(self, mock_jwt, *args):

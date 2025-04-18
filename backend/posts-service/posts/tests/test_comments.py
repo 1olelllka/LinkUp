@@ -1,8 +1,8 @@
 from django.test import TestCase
 from rest_framework.test import APIClient
-from ..models import Post, Comment
 from unittest.mock import patch
 import uuid
+from ..models import Post, Comment
 
 
 @patch("py_eureka_client.eureka_client.init", return_value=(None, None))

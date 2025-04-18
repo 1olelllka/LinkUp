@@ -52,13 +52,15 @@ class PostViewSet(viewsets.ModelViewSet):
     authentication_classes=[JWTAuthentication]
 
     def retrieve(self, request, *args, **kwargs):
-        cache_key = hashlib.sha256((f"Post# {kwargs['post_id']}").encode('utf-8')).hexdigest()
-        if cache_key in cache:
-            queryset = cache.get(cache_key)
-            return Response(queryset)
-        post = get_object_or_404(self.queryset, pk=kwargs['post_id'])
+        post_id = kwargs['post_id']
+        cache_key = "post:" + hashlib.sha256((f"Post# {kwargs['post_id']}").encode('utf-8')).hexdigest()
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return Response(cached_data)
+
+        post = get_object_or_404(self.queryset, pk=post_id)
         serializer = self.get_serializer(post)
-        if post.created_at >= datetime.now(timezone.utc) - timedelta(days=1):
+        if post.updated_at >= datetime.now(timezone.utc) - timedelta(days=1):
             cache.set(key=cache_key, value=serializer.data, timeout=60*60*24)
         return Response(serializer.data)
 
@@ -69,7 +71,7 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(post, data=mutable_data)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        cache_key = hashlib.sha256((f"Post# {kwargs['post_id']}").encode('utf-8')).hexdigest()
+        cache_key = "post:" + hashlib.sha256((f"Post# {kwargs['post_id']}").encode('utf-8')).hexdigest()
         cache.set(key=cache_key, value=serializer.data, timeout=60*60*24)
         return Response(serializer.data)
 
@@ -77,7 +79,7 @@ class PostViewSet(viewsets.ModelViewSet):
         try:
             post = Post.objects.get(pk=kwargs['post_id'])
             self.perform_destroy(post)
-            cache_key = hashlib.sha256((f"Post# {kwargs['post_id']}").encode('utf-8')).hexdigest()
+            cache_key = "post:" + hashlib.sha256((f"Post# {kwargs['post_id']}").encode('utf-8')).hexdigest()
             if cache_key in cache:
                 cache.delete(cache_key)
             return Response(status=204)

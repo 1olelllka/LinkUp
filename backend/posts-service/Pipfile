@@ -17,6 +17,7 @@ wiremock = "*"
 testcontainers = "*"
 pytest-django = "*"
 pyjwt = "*"
+redis = "*"
 
 [dev-packages]
 

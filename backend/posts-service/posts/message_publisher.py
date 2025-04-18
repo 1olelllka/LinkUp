@@ -1,11 +1,12 @@
 from pika import BlockingConnection, ConnectionParameters, PlainCredentials
+from django.conf import settings
 import json;
 
 def publish_message(message):
     connection = None
     try:
         credentials = PlainCredentials('myuser', 'secret')
-        connection = BlockingConnection(ConnectionParameters('localhost', 5672, '/', credentials))
+        connection = BlockingConnection(ConnectionParameters('localhost', settings.RABBIT_PORT, '/', credentials))
         channel = connection.channel()
         channel.exchange_declare(exchange='posts_exchange',
                                exchange_type='topic',
