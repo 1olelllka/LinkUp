@@ -1,7 +1,8 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 from unittest.mock import patch, MagicMock
 from testcontainers.rabbitmq import RabbitMqContainer
+from testcontainers.redis import RedisContainer
 import uuid
 import time
 from ..models import Post
@@ -12,6 +13,27 @@ class TestPostsAPI(TestCase):
 
     @classmethod
     def setUpClass(cls):
+
+        cls.redis = RedisContainer("redis:7.2.6")
+        cls.redis.start()
+
+        # Get connection info
+        redis_host = cls.redis.get_container_host_ip()
+        redis_port = cls.redis.get_exposed_port(6379)
+
+        cls.redis_url = f'redis://{redis_host}:{redis_port}/0'
+
+        cls.override_cache = override_settings(CACHES={
+            'default': {
+                'BACKEND': 'django_redis.cache.RedisCache',
+                'LOCATION': cls.redis_url,
+                'OPTIONS': {
+                    'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                }
+            }
+        })
+        cls.override_cache.enable()
+
         cls.rabbitmq = RabbitMqContainer("rabbitmq:3.13-management")
         cls.rabbitmq.start()
         
@@ -20,11 +42,10 @@ class TestPostsAPI(TestCase):
         cls.rabbitmq_user = "myuser"
         cls.rabbitmq_password = "secret"
         
-        time.sleep(3)  # Adjust based on your setup
+        time.sleep(3)
 
     @classmethod
     def tearDownClass(cls):
-        # Stop the RabbitMQ container after tests
         cls.rabbitmq.stop()
 
     def setUp(self):
