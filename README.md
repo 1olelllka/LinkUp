@@ -47,7 +47,7 @@
 ![ProfileService](https://github.com/user-attachments/assets/548e812b-d985-4dfa-8fdd-5bb9f9152b52)
 
 #### Posts Service
-![PostsService](https://github.com/user-attachments/assets/366e1074-eb2b-45a4-b768-d0dfe4f85c19)
+![PostsService](https://github.com/user-attachments/assets/7535f4ff-28a5-40ab-a8cd-d1849a4ee389)
 
 #### Feed Service
 *⚠️ Dependent on Profile and Posts service*
