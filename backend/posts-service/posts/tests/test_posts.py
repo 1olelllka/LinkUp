@@ -17,7 +17,6 @@ class TestPostsAPI(TestCase):
         cls.redis = RedisContainer("redis:7.2.6")
         cls.redis.start()
 
-        # Get connection info
         redis_host = cls.redis.get_container_host_ip()
         redis_port = cls.redis.get_exposed_port(6379)
 
@@ -47,6 +46,7 @@ class TestPostsAPI(TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.rabbitmq.stop()
+        cls.redis.stop()
 
     def setUp(self):
         self.client = APIClient()

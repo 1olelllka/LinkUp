@@ -24,8 +24,10 @@ class UserPostViewSet(viewsets.ModelViewSet):
         profile_response = requests.get(f"http://localhost:8001/profiles/{user_id}")
         if profile_response.status_code == 404:
             return Response(data={"error": "User with such id does not exist"}, status=404)
-        elif profile_response.status_code != 200:
+        elif profile_response.status_code >= 500:
             return Response(data={"error": "An error occurred while processing your request"}, status=500)
+        elif 400 <= profile_response.status_code < 404 and 404 < profile_response.status_code < 500:
+            return Response(data={"error":"Unexpected client error occurred. Please try again later"}, status=profile_response.status_code)
         mutable_data = request.data.copy()
         mutable_data['user_id'] = user_id
         serializer = self.get_serializer(data=mutable_data)
@@ -109,8 +111,12 @@ class CommentViewSet(viewsets.ModelViewSet):
             profile_response = requests.get(f"http://localhost:8001/profiles/{request.data['user_id']}")
         else:
             return Response(data={"error": "Profile id is required"}, status=400)
-        if (profile_response.status_code != 200):
+        if profile_response.status_code == 404:
             return Response(data={"error": "User with such id does not exist"}, status=404)
+        elif profile_response.status_code >= 500:
+            return Response(data={"error": "An error occurred while processing your request"}, status=500)
+        elif 400 <= profile_response.status_code < 404 and 404 < profile_response.status_code < 500:
+            return Response(data={"error":"Unexpected client error occurred. Please try again later"}, status=profile_response.status_code)        
         data = request.data.copy()
         data['post'] = post.pk
         serializer = self.get_serializer(data=data)
