@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: image-storage
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+server:
+  port: 8888
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+  instance:
+    preferIpAddress: true
+    metadata-map:
+      version: v0.9
+      region: eu-central
+
+spring.cloud:
+  compatibility-verifier:
+    enabled: false
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: health, info

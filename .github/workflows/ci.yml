@@ -23,6 +23,7 @@ jobs:
             stories-service,
             chat-service,
             notification-service,
+            image-storage
           ]
         include:
           - service: profile-service
@@ -36,6 +37,8 @@ jobs:
           - service: chat-service
             language: java
           - service: notification-service
+            language: java
+          - service: image-storage
             language: java
 
     services:
