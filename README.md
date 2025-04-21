@@ -40,7 +40,7 @@
   - [Notification Service](#notification-service)
 
 #### Simplified Project Structure
-![CompleteProjectArchitecture](https://github.com/user-attachments/assets/a0d2aa90-674c-4058-ae2c-4806b542f84e)
+![CompleteProjectArchitecture](https://github.com/user-attachments/assets/6d989cff-ed82-4639-8d30-0f297b9f49ac)
 
 #### Profile Service 
 *🛑 Critical Service*
