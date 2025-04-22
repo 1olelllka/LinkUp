@@ -14,7 +14,7 @@
 
 - **Communication**: REST, WebSocket, RabbitMQ
 
-- **Database**: MongoDB, PostgreSQL, Neo4J, Redis, Amazon S3 (in plans)
+- **Database**: MongoDB, PostgreSQL, Neo4J, Redis
 
 - **Cache**: Redis
 
@@ -22,7 +22,7 @@
 
 - **Web Server**: nginx (in plans)
 
-- **CDN**: Cloudflare (in plans)
+- **CDN**: Cloudflare (if public domain available)
 
 - **Logs**: ELK Stack (in plans)
 
@@ -38,9 +38,10 @@
   - [Chat Service](#chat-service)
   - [Stories Service](#stories-service)
   - [Notification Service](#notification-service)
+  - [Image storage Service](#image-storage-service)
 
 #### Simplified Project Structure
-![CompleteProjectArchitecture](https://github.com/user-attachments/assets/6d989cff-ed82-4639-8d30-0f297b9f49ac)
+![CompleteProjectArchitecture](https://github.com/user-attachments/assets/f519adf5-c574-4a17-8437-3823303b79f1)
 
 #### Profile Service 
 *🛑 Critical Service*
@@ -64,6 +65,9 @@
 
 #### Notification Service
 ![NotificationService](https://github.com/user-attachments/assets/f060a00f-21da-4f4f-8369-8c0878e85b23)
+
+#### Image storage Service
+![ImageStorageService](https://github.com/user-attachments/assets/08e6f7bb-bc8f-4cb8-86aa-bc4d902a8a09)
 
 *[Excalidraw](https://excalidraw.com/) was used for illustrations*
 
