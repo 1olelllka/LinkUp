@@ -41,7 +41,7 @@
   - [Image storage Service](#image-storage-service)
 
 #### Simplified Project Structure
-![CompleteProjectArchitecture](https://github.com/user-attachments/assets/f519adf5-c574-4a17-8437-3823303b79f1)
+![CompleteProjectArchitecture](https://github.com/user-attachments/assets/348d2da5-7a2b-493d-b5e9-c098ba759d31)
 
 #### Profile Service 
 *🛑 Critical Service*
