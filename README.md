@@ -58,13 +58,13 @@
 ![AuthService](https://github.com/user-attachments/assets/1c40e8da-2ded-4710-9859-3b056e392ca2)
 
 #### Chat Service
-![ChatService](https://github.com/user-attachments/assets/ae6abfff-a324-4305-bbb8-d238800fde5c)
+![ChatService](https://github.com/user-attachments/assets/23e2ff4e-6e05-4f15-a2fa-ae9da251a9dc)
 
 #### Stories Service
 ![StoriesService](https://github.com/user-attachments/assets/4830ad49-696f-49f0-b7da-cb593740538a)
 
 #### Notification Service
-![NotificationService](https://github.com/user-attachments/assets/f060a00f-21da-4f4f-8369-8c0878e85b23)
+![NotificationService](https://github.com/user-attachments/assets/6c7b4054-cc8a-4f88-8491-7599be8dad79)
 
 #### Image storage Service
 ![ImageStorageService](https://github.com/user-attachments/assets/08e6f7bb-bc8f-4cb8-86aa-bc4d902a8a09)
