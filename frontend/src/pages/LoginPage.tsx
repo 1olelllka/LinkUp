@@ -12,6 +12,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import axios from "axios";
 
 
 const formSchema = z.object({
@@ -19,7 +20,7 @@ const formSchema = z.object({
   password: z.string().min(1, "Password must contain at least 1 character")
 })
 
-export const AuthPage = () => {
+export const LoginPage = () => {
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -30,7 +31,11 @@ export const AuthPage = () => {
     })
 
     function onSubmit(values: z.infer<typeof formSchema>) {
-        console.log(values);
+        axios.post("http://localhost:8080/api/auth/login", values).then((response) => {
+            console.log(response.data);
+        }).catch((error) => {
+            console.log(error);
+        })
     }
 
     return (
@@ -69,6 +74,7 @@ export const AuthPage = () => {
                             )}
                         />
                         <Button type="submit" className="w-full">Submit</Button>
+                        <span className="text-sm text-gray-600">Don't have an account? Sign Up</span>
                         </form>
                     </Form>
                     </div>
@@ -81,7 +87,11 @@ export const AuthPage = () => {
 
                     <div className="w-1/2 bg-green-100 flex flex-col items-center justify-center p-6">
                     <h1 className="mb-4 text-lg font-semibold">Log in with Google</h1>
-                    <Button type="button" variant="outline">Continue with Google</Button>
+                    <Button type="button" variant="outline" asChild>
+                        <a href="http://localhost:8080/api/auth/oauth2/authorization/google">
+                            Continue with Google
+                        </a>
+                    </Button>
                     </div>
 
                 </div>
