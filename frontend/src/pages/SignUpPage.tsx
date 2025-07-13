@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { NavLink } from "react-router";
 
 
 const formSchema = z.object({
@@ -194,9 +195,11 @@ export const SignUpPage = () => {
 
         <div className="text-center mt-4 text-sm text-gray-600">
           Already have an account?{" "}
-          <span className="text-blue-600 hover:underline cursor-pointer">
-            Log in
-          </span>
+          <NavLink to="/login" end>
+            <span className="text-blue-600 hover:underline cursor-pointer">
+              Log in
+            </span>
+          </NavLink>
         </div>
       </div>
     </div>

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import axios from "axios";
+import { NavLink } from "react-router";
 
 
 const formSchema = z.object({
@@ -74,7 +75,14 @@ export const LoginPage = () => {
                             )}
                         />
                         <Button type="submit" className="w-full">Submit</Button>
-                        <span className="text-sm text-gray-600">Don't have an account? Sign Up</span>
+                        <div className="text-center mt-1 text-sm text-gray-600">
+                            Don't have an account?{" "}
+                            <NavLink to="/signup" end>
+                                <span className="text-blue-600 hover:underline cursor-pointer">
+                                Sign Up
+                                </span>
+                            </NavLink>
+                        </div>
                         </form>
                     </Form>
                     </div>
