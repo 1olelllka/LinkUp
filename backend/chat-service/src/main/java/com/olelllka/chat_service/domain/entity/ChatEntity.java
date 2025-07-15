@@ -13,5 +13,5 @@ import java.util.UUID;
 public class ChatEntity {
     @Id
     private String id;
-    private UUID[] participants;
+    private User[] participants;
 }

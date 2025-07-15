@@ -4,11 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.olelllka.chat_service.domain.dto.NotificationDto;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
+import com.olelllka.chat_service.domain.entity.User;
 import com.olelllka.chat_service.feign.ProfileFeign;
 import com.olelllka.chat_service.repository.ChatRepository;
 import com.olelllka.chat_service.repository.MessageRepository;
 import com.olelllka.chat_service.rest.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -28,6 +30,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private MessagePublisher messagePublisher;
     private ProfileFeign profileService;
     private static final ConcurrentHashMap<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
+    private ResponseEntity<User> req1;
+    private ResponseEntity<User> req2;
 
     @Autowired
     public ChatWebSocketHandler(ChatRepository chatRepository,
@@ -43,9 +47,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         String userId = session.getUri().getQuery().split("=")[1];
-        if (profileService.getProfileById(UUID.fromString(userId)).getStatusCode().is4xxClientError()) {
+        this.req1 = profileService.getProfileById(UUID.fromString(userId));
+        if (this.req1.getStatusCode().is4xxClientError()) {
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A client error occurred on external service."));
-        } else if (profileService.getProfileById(UUID.fromString(userId)).getStatusCode().is5xxServerError()) {
+        } else if (this.req1.getStatusCode().is5xxServerError()) {
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A server error occurred on external service."));
         }
         sessions.put(userId, session);
@@ -59,9 +64,11 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         MessageEntity msg = objectMapper.readValue(payload, MessageEntity.class);
         UUID senderId = UUID.fromString(session.getUri().getQuery().split("=")[1]);
         UUID targetUserId = msg.getTo();
-        if (profileService.getProfileById(targetUserId).getStatusCode().is4xxClientError()) {
+
+        this.req2 = profileService.getProfileById(targetUserId);
+        if (req2.getStatusCode().is4xxClientError()) {
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A client error occurred on external service."));
-        } else if (profileService.getProfileById(targetUserId).getStatusCode().is5xxServerError()) {
+        } else if (req2.getStatusCode().is5xxServerError()) {
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A server error occurred on external service."));
         }
         String chatMessage = msg.getContent();
@@ -70,7 +77,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         Optional<ChatEntity> chat = chatRepository.findChatByTwoMembers(UUID.fromString(session.getUri().getQuery().split("=")[1]), targetUserId);
         String chatId;
         if (chat.isEmpty()) {
-            UUID users[] = {senderId, targetUserId};
+            User users[] = {this.req1.getBody(), this.req2.getBody()};
             ChatEntity newChat = chatRepository.save(ChatEntity.builder().participants(users).build());
             chatId = newChat.getId();
         } else {

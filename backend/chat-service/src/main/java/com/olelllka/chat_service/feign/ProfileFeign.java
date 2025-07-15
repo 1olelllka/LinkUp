@@ -1,5 +1,6 @@
 package com.olelllka.chat_service.feign;
 
+import com.olelllka.chat_service.domain.entity.User;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,5 +11,5 @@ import java.util.UUID;
 @FeignClient(value = "PROFILE-SERVICE", url = "http://localhost:8001", dismiss404 = true)
 public interface ProfileFeign {
     @GetMapping("/profiles/{profile_id}")
-    ResponseEntity<?> getProfileById(@PathVariable UUID profile_id);
+    ResponseEntity<User> getProfileById(@PathVariable UUID profile_id);
 }

@@ -4,6 +4,7 @@ import com.olelllka.chat_service.domain.dto.ChatDto;
 import com.olelllka.chat_service.domain.dto.MessageDto;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
+import com.olelllka.chat_service.domain.entity.User;
 
 import java.util.Date;
 import java.util.List;
@@ -29,17 +30,25 @@ public class TestDataUtil {
                 .build();
     }
 
+    public static User createUser(UUID id) {
+        return User.builder().id(id).name("Random1").username("random1").build();
+    }
+
     public static ChatEntity createChatEntity() {
         UUID[] participants = {UUID.randomUUID(), UUID.randomUUID()};
         return ChatEntity.builder()
-                .participants(participants)
+                .participants(new User[]
+                        {createUser(participants[0]),
+                        createUser(participants[1])})
                 .build();
     }
 
     public static ChatDto createChatDto() {
         UUID[] participants = {UUID.randomUUID(), UUID.randomUUID()};
         return ChatDto.builder()
-                .participants(participants)
+                .participants(new User[]
+                        {createUser(participants[0]),
+                        createUser(participants[1])})
                 .build();
     }
 

@@ -2,6 +2,7 @@ package com.olelllka.chat_service.controller;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.http.Body;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.olelllka.chat_service.TestDataUtil;
 import com.olelllka.chat_service.domain.dto.MessageDto;
@@ -76,10 +77,14 @@ public class ChatControllerIntegrationTest {
     public void testThatGetChatsByUserReturnsHttp200Ok() throws Exception {
         UUID user1 = UUID.randomUUID();
         UUID user2 = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok()));
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok()));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok().withResponseBody(
+                new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user1))))
+                .withHeader("Content-Type", "application/json")));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok().withResponseBody(
+                new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user2))))
+                .withHeader("Content-Type", "application/json")));
         ChatEntity saved = chatService.createNewChat(user1, user2);
-        mockMvc.perform(MockMvcRequestBuilders.get("/chats/users/" + saved.getParticipants()[0])
+        mockMvc.perform(MockMvcRequestBuilders.get("/chats/users/" + saved.getParticipants()[0].getId())
                         .header("Authorization", "Bearer " + generateJwt(user1)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content[0]").exists());
@@ -89,10 +94,14 @@ public class ChatControllerIntegrationTest {
     public void testThatGetChatsByUserReturnsHttp401Unauthorized() throws Exception {
         UUID user1 = UUID.randomUUID();
         UUID user2 = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok()));
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok()));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok().withResponseBody(
+                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user1))))
+                .withHeader("Content-Type", "application/json")));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok().withResponseBody(
+                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user2))))
+                .withHeader("Content-Type", "application/json")));
         ChatEntity saved = chatService.createNewChat(user1, user2);
-        mockMvc.perform(MockMvcRequestBuilders.get("/chats/users/" + saved.getParticipants()[0])
+        mockMvc.perform(MockMvcRequestBuilders.get("/chats/users/" + saved.getParticipants()[0].getId())
                         .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
                 .andExpect(MockMvcResultMatchers.status().isUnauthorized());
     }
@@ -108,8 +117,12 @@ public class ChatControllerIntegrationTest {
     public void testThatDeleteChatReturnsHttp401Unauthorized() throws Exception {
         UUID user1 = UUID.randomUUID();
         UUID user2 = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok()));
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok()));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok().withResponseBody(
+                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user1))))
+                .withHeader("Content-Type", "application/json")));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok().withResponseBody(
+                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user2))))
+                .withHeader("Content-Type", "application/json")));
         ChatEntity saved = chatService.createNewChat(user1, user2);
         mockMvc.perform(MockMvcRequestBuilders.delete("/chats/" + saved.getId())
                         .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
@@ -117,11 +130,15 @@ public class ChatControllerIntegrationTest {
     }
 
     @Test
-    public void testThatDeleteChatReturnsHttp200Ok() throws Exception {
+    public void testThatDeleteChatReturnsHttp204NoContent() throws Exception {
         UUID user1 = UUID.randomUUID();
         UUID user2 = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok()));
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok()));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok().withResponseBody(
+                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user1))))
+                .withHeader("Content-Type", "application/json")));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok().withResponseBody(
+                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user2))))
+                .withHeader("Content-Type", "application/json")));
         ChatEntity saved = chatService.createNewChat(user1, user2);
         mockMvc.perform(MockMvcRequestBuilders.delete("/chats/" + saved.getId())
                         .header("Authorization", "Bearer " + generateJwt(user1)))
@@ -132,8 +149,12 @@ public class ChatControllerIntegrationTest {
     public void testThatGetMessagesByChatIdReturnsHttp401Unauthorized() throws Exception {
         UUID user1 = UUID.randomUUID();
         UUID user2 = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok()));
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok()));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok().withResponseBody(
+                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user1))))
+                .withHeader("Content-Type", "application/json")));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok().withResponseBody(
+                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user2))))
+                .withHeader("Content-Type", "application/json")));
         ChatEntity chat = chatService.createNewChat(user1, user2);
         MessageEntity msg = TestDataUtil.createMessageEntity(chat.getId());
         repository.save(msg);
@@ -146,8 +167,12 @@ public class ChatControllerIntegrationTest {
     public void testThatGetMessagesByChatIdReturnsPageOfMessages() throws Exception {
         UUID user1 = UUID.randomUUID();
         UUID user2 = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok()));
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok()));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok().withResponseBody(
+                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user1))))
+                .withHeader("Content-Type", "application/json")));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok().withResponseBody(
+                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user2))))
+                .withHeader("Content-Type", "application/json")));
         ChatEntity chat = chatService.createNewChat(user1, user2);
         mockMvc.perform(MockMvcRequestBuilders.get("/chats/" + chat.getId() + "/messages")
                         .header("Authorization", "Bearer " + generateJwt(user1)))

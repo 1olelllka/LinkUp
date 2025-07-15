@@ -16,7 +16,7 @@ export const Feed = () => {
     useEffect(() => {
         axios.get("http://localhost:8080/api/feeds/436c5a79-ee35-4995-86d1-475e3a14d584", {
             headers: {
-                "Authorization": "Bearer eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJMaW5rVXAiLCJzdWIiOiI0MzZjNWE3OS1lZTM1LTQ5OTUtODZkMS00NzVlM2ExNGQ1ODQiLCJpYXQiOjE3NTI0MDY4MDcsImV4cCI6MTc1MjQxMDQwN30.9QOXgTrzLTIzuwvgTmEvkMBipmVkWLSaiqry1u5_xIskGxhkwyAK03h_TYMtctwC"
+                "Authorization": "Bearer eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJMaW5rVXAiLCJzdWIiOiI0MzZjNWE3OS1lZTM1LTQ5OTUtODZkMS00NzVlM2ExNGQ1ODQiLCJpYXQiOjE3NTI2MDE1OTEsImV4cCI6MTc1MjYwNTE5MX0.uCOPnpLhuLqE2-Jo1IcxI5XeRTwZ0CtM9PxDpRbHRUrDMPWZxHodNlovl2CKTGsJ"
             }
         })
         .then((response) => {

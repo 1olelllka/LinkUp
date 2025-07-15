@@ -46,7 +46,7 @@ public class ChatRepositoryMongoDataTest {
         Pageable pageable = PageRequest.of(0, 1);
         Page<ChatEntity> expected = new PageImpl<>(List.of(chat));
         // when
-        Page<ChatEntity> result = repository.findChatsByUserId(saved.getParticipants()[0], pageable);
+        Page<ChatEntity> result = repository.findChatsByUserId(saved.getParticipants()[0].getId(), pageable);
         // then
         assertAll(
                 () -> assertNotNull(result),
@@ -75,7 +75,7 @@ public class ChatRepositoryMongoDataTest {
         ChatEntity chat = TestDataUtil.createChatEntity();
         ChatEntity expected = repository.save(chat);
         // when
-        Optional<ChatEntity> result = repository.findChatByTwoMembers(chat.getParticipants()[0], chat.getParticipants()[1]);
+        Optional<ChatEntity> result = repository.findChatByTwoMembers(chat.getParticipants()[0].getId(), chat.getParticipants()[1].getId());
         // then
         assertAll(
                 () -> assertTrue(result.isPresent()),

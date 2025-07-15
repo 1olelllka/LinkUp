@@ -6,6 +6,7 @@ import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router";
+import { ChatsPage } from './pages/ChatsPage';
 
 const router = createBrowserRouter([
   {
@@ -23,6 +24,10 @@ const router = createBrowserRouter([
   {
     path: "/feeds",
     element: <FeedPage />
+  },
+  {
+    path: "/chats",
+    element: <ChatsPage />
   }
 ]);
 

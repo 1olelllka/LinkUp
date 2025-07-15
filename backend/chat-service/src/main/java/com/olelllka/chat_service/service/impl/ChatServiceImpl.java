@@ -2,6 +2,7 @@ package com.olelllka.chat_service.service.impl;
 
 import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
+import com.olelllka.chat_service.domain.entity.User;
 import com.olelllka.chat_service.feign.ProfileFeign;
 import com.olelllka.chat_service.repository.ChatRepository;
 import com.olelllka.chat_service.rest.exception.AuthException;
@@ -10,17 +11,20 @@ import com.olelllka.chat_service.service.ChatService;
 import com.olelllka.chat_service.service.JWTUtil;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Log
 public class ChatServiceImpl implements ChatService {
 
     private final ChatRepository repository;
@@ -41,12 +45,17 @@ public class ChatServiceImpl implements ChatService {
 //        if (!jwtUtil.extractId(jwt).equals(userId1.toString()) && !jwtUtil.extractId(jwt).equals(userId2.toString())) {
 //            throw new AuthException("You're unauthorized to perform such operation");
 //        }
-        if (!profileService.getProfileById(userId1).getStatusCode().is2xxSuccessful() ||
-        !profileService.getProfileById(userId2).getStatusCode().is2xxSuccessful()) {
+        ResponseEntity<User> req1 = profileService.getProfileById(userId1);
+        ResponseEntity<User> req2 = profileService.getProfileById(userId2);
+        if (!req1.getStatusCode().is2xxSuccessful() ||
+        !req2.getStatusCode().is2xxSuccessful()) {
             throw new NotFoundException("One of the users with such id does not exist.");
         }
+
+        log.info("Req1 --> " + req1.getBody());
+        log.info("Req2 --> " + req2.getBody());
         ChatEntity newChat = ChatEntity.builder()
-                .participants(new UUID[]{userId1, userId2})
+                .participants(new User[]{req1.getBody(), req2.getBody()})
                 .build();
         return repository.save(newChat);
     }
@@ -56,7 +65,7 @@ public class ChatServiceImpl implements ChatService {
     public void deleteChat(String chatId, String jwt) {
         if (repository.existsById(chatId)) {
             ChatEntity entity = repository.findById(chatId).get();
-            if (!jwtUtil.extractId(jwt).equals(entity.getParticipants()[0].toString()) && !jwtUtil.extractId(jwt).equals(entity.getParticipants()[1].toString())) {
+            if (!jwtUtil.extractId(jwt).equals(entity.getParticipants()[0].getId().toString()) && !jwtUtil.extractId(jwt).equals(entity.getParticipants()[1].getId().toString())) {
                 throw new AuthException("You're unauthorized to perform such operation.");
             }
         }

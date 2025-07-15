@@ -3,6 +3,7 @@ package com.olelllka.chat_service.service;
 import com.olelllka.chat_service.TestDataUtil;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
+import com.olelllka.chat_service.domain.entity.User;
 import com.olelllka.chat_service.feign.ProfileFeign;
 import com.olelllka.chat_service.repository.ChatRepository;
 import com.olelllka.chat_service.rest.exception.AuthException;
@@ -81,19 +82,23 @@ public class ChatServiceUnitTest {
         // given
         UUID userId1 = UUID.randomUUID();
         UUID userId2 = UUID.randomUUID();
+        User user1 = User.builder().id(userId1).name("RandomUser1").username("randommmm1").build();
+        User user2 = User.builder().id(userId2).name("RandomUser2").username("randommmm2").build();
         ChatEntity expected = TestDataUtil.createChatEntity();
-        UUID[] ids = {userId1, userId2};
-        expected.setParticipants(ids);
+        User users[] = new User[2];
+        users[0] = user1;
+        users[1] = user2;
+        expected.setParticipants(users);
         // when
-        when(profileFeign.getProfileById(userId1)).thenReturn(ResponseEntity.ok().build());
-        when(profileFeign.getProfileById(userId2)).thenReturn(ResponseEntity.ok().build());
+        when(profileFeign.getProfileById(userId1)).thenReturn(ResponseEntity.ok().body(user1));
+        when(profileFeign.getProfileById(userId2)).thenReturn(ResponseEntity.ok().body(user2));
         when(chatRepository.save(expected)).thenReturn(expected);
         ChatEntity result = chatService.createNewChat(userId1, userId2);
         // then
         assertAll(
                 () -> assertNotNull(result),
-                () -> assertEquals(result.getParticipants()[0], expected.getParticipants()[0]),
-                () -> assertEquals(result.getParticipants()[1], expected.getParticipants()[1])
+                () -> assertEquals(result.getParticipants()[0].getId(), expected.getParticipants()[0].getId()),
+                () -> assertEquals(result.getParticipants()[1].getId(), expected.getParticipants()[1].getId())
         );
     }
 
@@ -136,7 +141,7 @@ public class ChatServiceUnitTest {
         // when
         when(chatRepository.existsById(chatId)).thenReturn(true);
         when(chatRepository.findById(chatId)).thenReturn(Optional.of(chat));
-        when(jwtUtil.extractId(jwt)).thenReturn(chat.getParticipants()[1].toString());
+        when(jwtUtil.extractId(jwt)).thenReturn(chat.getParticipants()[1].getId().toString());
         chatService.deleteChat(chatId, jwt);
         // then
         verify(chatRepository, times(1)).deleteById(chatId);
