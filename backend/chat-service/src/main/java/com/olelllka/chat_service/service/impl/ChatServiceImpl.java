@@ -11,7 +11,6 @@ import com.olelllka.chat_service.service.ChatService;
 import com.olelllka.chat_service.service.JWTUtil;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -24,7 +23,6 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Log
 public class ChatServiceImpl implements ChatService {
 
     private final ChatRepository repository;
@@ -51,9 +49,6 @@ public class ChatServiceImpl implements ChatService {
         !req2.getStatusCode().is2xxSuccessful()) {
             throw new NotFoundException("One of the users with such id does not exist.");
         }
-
-        log.info("Req1 --> " + req1.getBody());
-        log.info("Req2 --> " + req2.getBody());
         ChatEntity newChat = ChatEntity.builder()
                 .participants(new User[]{req1.getBody(), req2.getBody()})
                 .build();

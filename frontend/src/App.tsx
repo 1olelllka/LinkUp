@@ -7,6 +7,7 @@ import {
   RouterProvider,
 } from "react-router";
 import { ChatsPage } from './pages/ChatsPage';
+import { ProfileSearchPage } from './pages/ProfileSearchPage';
 
 const router = createBrowserRouter([
   {
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
   {
     path: "/chats",
     element: <ChatsPage />
+  },
+  {
+    path: "/search",
+    element: <ProfileSearchPage />
   }
 ]);
 
