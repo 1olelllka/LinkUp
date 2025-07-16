@@ -1,4 +1,4 @@
-import { ChatList } from "@/components/ChatList";
+import { ChatList } from "@/components/chat/ChatList";
 import { SidebarLeft } from "@/components/SidebarLeft";
 
 

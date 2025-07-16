@@ -70,8 +70,10 @@ public class ProfileServiceImpl implements ProfileService {
         );
         ProfileDocumentDto documentDto = ProfileDocumentDto.builder()
                 .id(updated.getId())
+                .username(updated.getUsername())
                 .name(updated.getName())
                 .photo(updated.getPhoto())
+                .email(updated.getEmail())
                 .build();
         messagePublisher.updateProfile(documentDto);
         return updated;

@@ -83,8 +83,8 @@ public class MessageListenerUnitTest {
         ProfileDocumentDto dto = TestDataUtil.createNewProfileDocumentDto();
         ProfileDocument expected = TestDataUtil.createNewProfileDocument();
         expected.setId(dto.getId());
-        expected.setUsername(null);
-        expected.setEmail(null);
+        expected.setUsername(dto.getUsername());
+        expected.setEmail(dto.getEmail());
         // when
         messageListener.updateProfileOnElasticsearch(dto);
         // then

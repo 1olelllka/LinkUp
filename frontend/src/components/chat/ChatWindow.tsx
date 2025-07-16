@@ -1,9 +1,3 @@
-// const messages = [
-//   { fromMe: false, text: "Hey! Are you coming today?", time: "14:21" },
-//   { fromMe: true, text: "Yes! Just grabbing coffee ☕", time: "14:22" },
-//   { fromMe: false, text: "Nice, see you soon!", time: "14:23" },
-// ];
-
 import axios from "axios";
 import { useEffect, useState } from "react";
 

@@ -140,6 +140,8 @@ public class ProfileServiceUnitTest {
                 .id(result.getId())
                 .name(result.getName())
                 .photo(result.getPhoto())
+                .username(result.getUsername())
+                .email(result.getEmail())
                 .build();
         verify(messagePublisher, times(1)).updateProfile(documentDto);
     }

@@ -1,4 +1,4 @@
-import { PostCard } from "@/components/PostCard";
+import { PostCard } from "@/components/posts/PostCard";
 import axios from "axios";
 import { useEffect, useState } from "react";
 

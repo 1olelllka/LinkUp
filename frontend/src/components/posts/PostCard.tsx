@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Post } from "./Feed";
+import type { Post } from "../feed/Feed";
 import axios from "axios";
 
 type PostProfile = {

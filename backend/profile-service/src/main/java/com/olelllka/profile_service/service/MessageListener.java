@@ -71,6 +71,8 @@ public class MessageListener {
                 .id(dto.getId())
                 .name(dto.getName())
                 .photo(dto.getPhoto())
+                .email(dto.getEmail())
+                .username(dto.getUsername())
                 .build();
         documentRepository.save(document);
     }
