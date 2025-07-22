@@ -1,18 +1,7 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ChatWindow } from "./ChatWindow";
+import { useChatList } from "@/hooks/useChatList";
 
-
-type ChatListResponse = {
-  id: string;
-  participants: ChatUser[];
-};
-
-type ChatUser = {
-  id: string,
-  name: string,
-  username: string
-};
 
 type selectedChat = {
   id: string,
@@ -20,23 +9,14 @@ type selectedChat = {
 }
 
 export const ChatList = () => {
-  const [chatUsers, setChatUsers] = useState<ChatListResponse[]>();
   const [selectedChat, setSelectedChat] = useState<selectedChat | null>(null);
 
   const currentUserId = "436c5a79-ee35-4995-86d1-475e3a14d584"; // your ID
 
-  useEffect(() => {
-    axios.get(`http://localhost:8080/api/chats/users/${currentUserId}`, {
-      headers: {
-        Authorization: "Bearer eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJMaW5rVXAiLCJzdWIiOiI0MzZjNWE3OS1lZTM1LTQ5OTUtODZkMS00NzVlM2ExNGQ1ODQiLCJpYXQiOjE3NTI2MDgwMTAsImV4cCI6MTc1MjYxMTYxMH0.1Rz9zp0tkUmFyYscYAM-olWdhhkRZboqUaxPkxAnkiuyY18FHnIyG2qbQ-EP_8qV"
-      }
-    }).then(async (response) => {
-      setChatUsers(response.data.content);
-    }).catch(err => console.log(err));
-  }, []);
+  const chatUsers = useChatList(currentUserId);
 
   return (
-<div className="flex h-full">
+    <div className="flex h-full">
       {/* Chat List (left column) */}
       <div className="w-1/3 border-r pr-4 overflow-y-auto">
         <h2 className="text-xl font-bold mb-4">Messages</h2>

@@ -1,31 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
-import axios from "axios";
-import { useEffect, useState } from "react";
+import { useUserPosts } from "@/hooks/useUserPosts";
 
-type PostList = {
-  id: number,
-  title: string,
-  desc: string,
-  createdAt: string,
-  image: string
-}
-
-type UserPostsProps = {
-  userId : string
-}
-
-export const UserPosts = ({ userId } : UserPostsProps) => {
-  const [posts, setPosts] = useState<PostList[]>();
-
-  useEffect(() => {
-    axios.get(`http://localhost:8080/api/posts/users/${userId}`)
-    .then(response => {
-      setPosts(response.data.results);
-    })
-    .catch(err => {
-      console.log(err);
-    })
-  }, [userId])
+export const UserPosts = ({ userId } : {userId : string}) => {
+  const posts = useUserPosts(userId);
 
   return (
     <div>

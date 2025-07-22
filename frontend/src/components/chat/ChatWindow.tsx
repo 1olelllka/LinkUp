@@ -1,5 +1,4 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
+import { useMessageList } from "@/hooks/useMessageList";
 
 type ChatWindowProps = {
   chatId: string;
@@ -7,28 +6,9 @@ type ChatWindowProps = {
   senderName: string;
 };
 
-type Message = {
-  id: string,
-  chatId: string,
-  to: string,
-  from: string,
-  content: string,
-  createdAt: string
-}
-
 export const ChatWindow = ({ chatId, senderId, senderName }: ChatWindowProps) => {
-  const [messages, setMessages] = useState<Message[]>();
-
-  useEffect(() => {
-    axios.get(`http://localhost:8080/api/chats/${chatId}/messages`, {
-      headers: {
-        Authorization: "Bearer eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJMaW5rVXAiLCJzdWIiOiI0MzZjNWE3OS1lZTM1LTQ5OTUtODZkMS00NzVlM2ExNGQ1ODQiLCJpYXQiOjE3NTI2MDgwMTAsImV4cCI6MTc1MjYxMTYxMH0.1Rz9zp0tkUmFyYscYAM-olWdhhkRZboqUaxPkxAnkiuyY18FHnIyG2qbQ-EP_8qV"
-      }
-    }).then(response => {
-      setMessages(response.data.content);
-    }).catch(err => console.log(err));
-  }, [chatId])
-
+  const messages = useMessageList(chatId);
+  console.log(messages)
   return (
     <div className="flex flex-col h-full max-h-[90vh]">
       {/* Chat header */}

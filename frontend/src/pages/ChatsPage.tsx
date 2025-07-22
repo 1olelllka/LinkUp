@@ -1,19 +1,11 @@
 import { ChatList } from "@/components/chat/ChatList";
-import { SidebarLeft } from "@/components/SidebarLeft";
+import { ChatsLayout } from "@/layouts/ChatsLayout";
 
 
 export const ChatsPage = () => {
   return (
-    <div className="min-h-screen flex bg-[#f5f8ff] text-gray-800">
-      {/* Sidebar */}
-      <aside className="w-1/5 bg-white p-6 border-r border-gray-200">
-        <SidebarLeft />
-      </aside>
-
-      {/* Full chat area now */}
-      <main className="flex-1 bg-white p-6 overflow-hidden">
+      <ChatsLayout>
         <ChatList />
-      </main>
-    </div>
+      </ChatsLayout>
   );
 };

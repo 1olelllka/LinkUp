@@ -22,7 +22,7 @@ import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { useEffect } from "react";
-import axios from "axios";
+import { patchMe } from "@/services/authServices";
 
 const formSchema = z.object({
     email: z.email("Invalid Email."),
@@ -54,16 +54,12 @@ export const AuthDataForm = (data : AuthDataFormProps) => {
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
-            await axios.patch("http://localhost:8080/api/auth/me", values, {
-                headers: {
-                    Authorization: "Bearer eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJMaW5rVXAiLCJzdWIiOiIyZTRmMDI4ZS1mZTlhLTQxM2ItOGY3MS01YzFmZjY0OTdhYzgiLCJpYXQiOjE3NTI2NjI1OTEsImV4cCI6MTc1MjY2NjE5MX0.fYIZbN5avZV6CIywCNp5y2CLgZVZDZT9VpHZZVoJsamZ9-FPoGz8mAez1zaWB-B3"
-                }
-            }).then((response) => {
+            patchMe(values).then((response) => {
+
                 form.reset({
-                    email: response.data.email,
-                    alias: response.data.alias
+                    email: response.email,
+                    alias: response.alias
                 })
-                console.log("UPDATED profile" + response);
             })
         } catch (err) {
             console.log(err);

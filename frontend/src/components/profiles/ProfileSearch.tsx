@@ -1,42 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import axios from "axios";
-import { useDebounce } from "@/lib/useDebounce";
+import { useSearch } from "@/hooks/useSearch";
 
-type User = {
-    id: string,
-    name: string,
-    username: string
-}
-
-type SearchResult = {
-    content: User[];
-    last: boolean;
-    first: boolean;
-    totalPages: number;
-}
 
 export const ProfileSearch = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const debouncedTerm = useDebounce(searchTerm, 500);
-  const [searchResult, setSearchResult] = useState<SearchResult>({
-    content: [],
-    first: true,
-    last: true,
-    totalPages: 1,
-  });
-
-  useEffect(() => {
-    if (debouncedTerm.trim() == "") {
-        setSearchResult({ content: [], first: true, last: true, totalPages: 1 });
-        return;
-    }
-    axios.get(`http://localhost:8080/api/profiles?search=${debouncedTerm}`).then((response) => {
-        setSearchResult(response.data);
-    }).catch(err => console.log(err));
-  }, [debouncedTerm])
-
+  const searchResult = useSearch(searchTerm);
   return (
     <div className="max-w-4xl mx-auto">
       <h1 className="text-3xl font-semibold mb-6">Search Profiles</h1>
