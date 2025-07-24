@@ -55,7 +55,7 @@
 ![FeedService](https://github.com/user-attachments/assets/6c921ac1-5368-415b-8372-e3bdb0418067)
 
 #### Auth Service
-![AuthService](https://github.com/user-attachments/assets/1c40e8da-2ded-4710-9859-3b056e392ca2)
+<img width="2935" height="1739" alt="AuthService" src="https://github.com/user-attachments/assets/6f426fde-9361-4512-9d8e-6d6a79d48a3f" />
 
 #### Chat Service
 ![ChatService](https://github.com/user-attachments/assets/23e2ff4e-6e05-4f15-a2fa-ae9da251a9dc)
