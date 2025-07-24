@@ -14,9 +14,12 @@ import com.olelllka.auth_service.service.MessagePublisher;
 import com.olelllka.auth_service.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Service
@@ -29,6 +32,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final ProfileCacheHandlers profileCacheHandlers;
     private final JWTUtil jwtUtil;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Override
     public UserEntity registerUser(RegisterUserDto userDto) {
@@ -73,9 +77,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public JWTTokenResponse generateJWTViaEmail(String email) {
         UserEntity user = userRepository.findByEmail(email).get(); // it'll be checked before this function, so it's redundant to create multiple exceptions to "notfounduser"
+        String refreshToken = jwtUtil.generateRefreshJWT(user.getUserId());
+        redisTemplate.opsForValue().set("refresh_token:" + refreshToken, "", Duration.of(1, ChronoUnit.DAYS));
         return JWTTokenResponse.builder()
                 .accessToken(jwtUtil.generateAccessJWT(user.getUserId()))
-                .refreshToken(jwtUtil.generateRefreshJWT(user.getUserId()))
+                .refreshToken(refreshToken)
                 .build();
     }
 }

@@ -12,12 +12,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -37,6 +41,8 @@ public class OAuthSuccessHandlerUnitTest {
     private Authentication authentication;
     @Mock
     private OAuth2User oAuth2User;
+    @Mock
+    private RedisTemplate<String, String> redisTemplate;
     @InjectMocks
     private OAuthSuccessHandler oAuthSuccessHandler;
 
@@ -56,12 +62,14 @@ public class OAuthSuccessHandlerUnitTest {
         when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
         when(jwtUtil.generateAccessJWT(id)).thenReturn("ACCESS_TOKEN");
         when(jwtUtil.generateRefreshJWT(id)).thenReturn("REFRESH_TOKEN");
+        when(redisTemplate.opsForValue()).thenReturn(mock(ValueOperations.class));
         oAuthSuccessHandler.onAuthenticationSuccess(request, response, authentication);
         // then
         assertEquals(HttpServletResponse.SC_OK, response.getStatus());
         assertEquals("REFRESH_TOKEN", response.getCookie("refresh_token").getValue());
         verify(userRepository, never()).save(any(UserEntity.class));
         verify(messagePublisher, never()).sendCreateUserMessage(any(UserMessageDto.class));
+        verify(redisTemplate.opsForValue(), times(1)).set("refresh_token:REFRESH_TOKEN", "", Duration.of(1, ChronoUnit.DAYS));
     }
 
     @Test
@@ -81,12 +89,14 @@ public class OAuthSuccessHandlerUnitTest {
         when(userRepository.save(any(UserEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(jwtUtil.generateAccessJWT(any(UUID.class))).thenReturn("ACCESS_TOKEN");
         when(jwtUtil.generateRefreshJWT(any(UUID.class))).thenReturn("REFRESH_TOKEN");
+        when(redisTemplate.opsForValue()).thenReturn(mock(ValueOperations.class));
         oAuthSuccessHandler.onAuthenticationSuccess(request, response, authentication);
         // then
         assertEquals(HttpServletResponse.SC_OK, response.getStatus());
         assertEquals("REFRESH_TOKEN", response.getCookie("refresh_token").getValue());
         verify(userRepository, times(1)).save(any(UserEntity.class));
         verify(messagePublisher, times(1)).sendCreateUserMessage(any(UserMessageDto.class));
+        verify(redisTemplate.opsForValue()).set("refresh_token:REFRESH_TOKEN", "", Duration.of(1, ChronoUnit.DAYS));
     }
 
 }

@@ -1,7 +1,9 @@
 package com.olelllka.auth_service.service;
 
+import com.olelllka.auth_service.domain.dto.JWTTokenResponse;
+
 import java.util.Optional;
 
 public interface AuthService {
-    Optional<String> refreshToken(String token);
+    Optional<JWTTokenResponse> refreshToken(String token);
 }

@@ -176,13 +176,14 @@ public class UserControllerIntegrationTest {
         RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
         userService.registerUser(dto);
         String json = objectMapper.writeValueAsString(loginUser);
-        mockMvc.perform(MockMvcRequestBuilders.post("/auth/login")
+        Cookie response = mockMvc.perform(MockMvcRequestBuilders.post("/auth/login")
                         .contentType("application/json")
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.accessToken").exists())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.refreshToken").exists())
-                .andExpect(MockMvcResultMatchers.cookie().exists("refresh_token"));
+                .andExpect(MockMvcResultMatchers.cookie().exists("refresh_token")).andReturn().getResponse().getCookie("refresh_token");
+        assertTrue(redisTemplate.hasKey("refresh_token:" + response.getValue()));
     }
 
     @Test
@@ -197,10 +198,15 @@ public class UserControllerIntegrationTest {
     public void testThatRefreshTokenReturnsHttp200OkIfValid() throws Exception {
         userService.registerUser(TestDataUtil.createRegisterUserDto());
         Cookie cookie = new Cookie("refresh_token", getJwtToken(TestDataUtil.createLoginUser()).getRefreshToken());
-        mockMvc.perform(MockMvcRequestBuilders.post("/auth/refresh")
+        String prevToken = redisTemplate.opsForValue().get("refresh_token:" + cookie.getValue());
+        Cookie response = mockMvc.perform(MockMvcRequestBuilders.post("/auth/refresh")
                 .cookie(cookie))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.accessToken").exists());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.accessToken").exists())
+                .andExpect(MockMvcResultMatchers.cookie().exists("refresh_token"))
+                .andReturn().getResponse().getCookie("refresh_token");
+        assertTrue(redisTemplate.hasKey("refresh_token:" + response.getValue()));
+        assertFalse(redisTemplate.hasKey("refresh_token:" + prevToken));
     }
 
     @Test
@@ -229,7 +235,7 @@ public class UserControllerIntegrationTest {
                 .content(patchJson))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.email").value("newemail@email.com"));
-        assertEquals(admin.getQueueInfo(RabbitMQConfig.update_user_queue).getMessageCount(), 1);
+        assertEquals(1, admin.getQueueInfo(RabbitMQConfig.update_user_queue).getMessageCount());
         assertTrue(redisTemplate.hasKey("auth::" + SHA256.hash(user.getUserId().toString())));
     }
 
@@ -240,9 +246,11 @@ public class UserControllerIntegrationTest {
         userService.registerUser(dto);
         JWTTokenResponse token = getJwtToken(loginUser);
         mockMvc.perform(MockMvcRequestBuilders.post("/auth/logout")
-                .header("Authorization", "Bearer " + token.getAccessToken()))
+                .header("Authorization", "Bearer " + token.getAccessToken())
+                        .cookie(new Cookie("refresh_token", token.getRefreshToken())))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         assertNull(SecurityContextHolder.getContext().getAuthentication());
+        assertFalse(redisTemplate.hasKey("refresh_token:" + token.getRefreshToken()));
     }
 
     private JWTTokenResponse getJwtToken(LoginUser loginUser) throws Exception {
@@ -250,8 +258,7 @@ public class UserControllerIntegrationTest {
         String response = mockMvc.perform(MockMvcRequestBuilders.post("/auth/login")
                         .contentType("application/json")
                         .content(json)).andReturn().getResponse().getContentAsString();
-        JWTTokenResponse token = objectMapper.readValue(response, JWTTokenResponse.class);
-        return token;
+        return objectMapper.readValue(response, JWTTokenResponse.class);
     }
 
 }

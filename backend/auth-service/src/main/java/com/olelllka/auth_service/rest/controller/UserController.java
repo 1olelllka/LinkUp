@@ -69,10 +69,20 @@ public class UserController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<JWTTokenResponse> refreshToken(@CookieValue(name = "refresh_token") String refreshToken) {
-        Optional<String> token = authService.refreshToken(refreshToken);
-        return token.map(s -> new ResponseEntity<>(JWTTokenResponse.builder().accessToken(s).build(), HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+    public ResponseEntity<JWTTokenResponse> refreshToken(@CookieValue(name = "refresh_token") String refreshToken,
+                                                         HttpServletResponse response) {
+        Optional<JWTTokenResponse> tokens = authService.refreshToken(refreshToken);
+        if (tokens.isPresent()) {
+            ResponseCookie cookie = ResponseCookie.from("refresh_token", tokens.get().getRefreshToken())
+                    .sameSite("Strict")
+                    .maxAge(3600 * 24)
+                    .httpOnly(true)
+                    .path("/")
+                    .build();
+            response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+            return new ResponseEntity<>(tokens.get(), HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
 
     @GetMapping("/me")
