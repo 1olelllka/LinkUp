@@ -33,7 +33,7 @@ export const UserPosts = ({ userId } : {userId : string}) => {
                 <p className="text-md text-gray-800">{post.desc}</p>
               </div>
               <p className="text-xs text-gray-400 text-right mt-auto">
-                {post.createdAt}
+                {post.created_at}
               </p>
             </CardContent>
           </Card>

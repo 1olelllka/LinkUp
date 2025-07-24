@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChatWindow } from "./ChatWindow";
 import { useChatList } from "@/hooks/useChatList";
+import { useProfileStore } from "@/store/useProfileStore";
 
 
 type selectedChat = {
@@ -11,7 +12,7 @@ type selectedChat = {
 export const ChatList = () => {
   const [selectedChat, setSelectedChat] = useState<selectedChat | null>(null);
 
-  const currentUserId = "436c5a79-ee35-4995-86d1-475e3a14d584"; // your ID
+  const currentUserId = useProfileStore.getState().profile?.userId;
 
   const chatUsers = useChatList(currentUserId);
 

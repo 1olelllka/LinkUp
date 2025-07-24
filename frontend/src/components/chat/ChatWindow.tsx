@@ -2,7 +2,7 @@ import { useMessageList } from "@/hooks/useMessageList";
 
 type ChatWindowProps = {
   chatId: string;
-  senderId: string;
+  senderId: string | undefined;
   senderName: string;
 };
 

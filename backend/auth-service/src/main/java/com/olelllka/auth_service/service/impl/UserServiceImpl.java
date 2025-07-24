@@ -1,5 +1,6 @@
 package com.olelllka.auth_service.service.impl;
 
+import com.olelllka.auth_service.domain.dto.JWTTokenResponse;
 import com.olelllka.auth_service.domain.dto.PatchUserDto;
 import com.olelllka.auth_service.domain.dto.RegisterUserDto;
 import com.olelllka.auth_service.domain.dto.UserMessageDto;
@@ -70,8 +71,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String generateJWTViaEmail(String email) {
+    public JWTTokenResponse generateJWTViaEmail(String email) {
         UserEntity user = userRepository.findByEmail(email).get(); // it'll be checked before this function, so it's redundant to create multiple exceptions to "notfounduser"
-        return jwtUtil.generateJWT(user.getUserId());
+        return JWTTokenResponse.builder()
+                .accessToken(jwtUtil.generateAccessJWT(user.getUserId()))
+                .refreshToken(jwtUtil.generateRefreshJWT(user.getUserId()))
+                .build();
     }
 }

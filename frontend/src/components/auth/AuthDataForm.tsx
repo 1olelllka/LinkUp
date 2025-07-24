@@ -55,7 +55,6 @@ export const AuthDataForm = (data : AuthDataFormProps) => {
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
             patchMe(values).then((response) => {
-
                 form.reset({
                     email: response.email,
                     alias: response.alias

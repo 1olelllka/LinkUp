@@ -1,3 +1,4 @@
+import { useProfileStore } from "@/store/useProfileStore";
 import { NavLink, useLocation } from "react-router";
 
 
@@ -21,7 +22,7 @@ export const SidebarLeft = () => {
           className="w-12 h-12 rounded-full"
         />
         <div>
-          <h4 className="font-bold text-lg">My Username</h4>
+          <h4 className="font-bold text-lg">{useProfileStore.getState().profile?.alias || "Anonymous"}</h4>
         </div>
       </div>
 

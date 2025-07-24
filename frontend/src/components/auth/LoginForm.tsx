@@ -1,7 +1,6 @@
 import {z} from "zod";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -13,8 +12,10 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { NavLink } from "react-router";
-import { login } from "@/services/authServices";
+import { getMe, login } from "@/services/authServices";
 import { API_BASE } from "@/constants/routes";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useProfileStore } from "@/store/useProfileStore";
 
 
 const formSchema = z.object({
@@ -35,7 +36,9 @@ export const LoginForm = () => {
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
             const res = await login(values);
-            console.log(res);
+            useAuthStore.getState().setToken(res.accessToken);
+            const authData = await getMe();
+            useProfileStore.getState().setProfile(authData);
         } catch (err) {
             console.log(err);
         }

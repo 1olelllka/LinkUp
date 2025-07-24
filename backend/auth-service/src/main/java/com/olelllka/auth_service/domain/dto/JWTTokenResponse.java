@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class JWTToken {
-    private String token;
+public class JWTTokenResponse {
+    private String accessToken;
+    private String refreshToken;
 }

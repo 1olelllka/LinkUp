@@ -16,7 +16,7 @@ public class JWTUtil {
 
     private String key = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
-    public String generateJWT(UUID userId) {
+    public String generateAccessJWT(UUID userId) {
         return Jwts.builder()
                 .issuer("LinkUp")
                 .subject(userId.toString())
@@ -26,7 +26,17 @@ public class JWTUtil {
                 .compact();
     }
 
-    private Claims getClaims(String jwt) {
+    public String generateRefreshJWT(UUID userId) {
+        return Jwts.builder()
+                .issuer("LinkUp")
+                .subject(userId.toString())
+                .issuedAt(new Date())
+                .signWith(securityKey())
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
+                .compact();
+    }
+
+    public Claims getClaims(String jwt) {
         return Jwts.parser()
                 .verifyWith(securityKey())
                 .build()

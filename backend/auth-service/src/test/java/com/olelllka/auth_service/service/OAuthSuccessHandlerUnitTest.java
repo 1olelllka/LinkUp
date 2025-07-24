@@ -2,7 +2,6 @@ package com.olelllka.auth_service.service;
 
 import com.olelllka.auth_service.TestDataUtil;
 import com.olelllka.auth_service.domain.dto.UserMessageDto;
-import com.olelllka.auth_service.domain.entity.AuthProvider;
 import com.olelllka.auth_service.domain.entity.UserEntity;
 import com.olelllka.auth_service.repository.UserRepository;
 import com.olelllka.auth_service.service.impl.OAuthSuccessHandler;
@@ -55,10 +54,12 @@ public class OAuthSuccessHandlerUnitTest {
         when(oAuth2User.getAttribute("name")).thenReturn("name");
         when(oAuth2User.getAttribute("sub")).thenReturn("2345");
         when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-        when(jwtUtil.generateJWT(id)).thenReturn("TOKEN");
+        when(jwtUtil.generateAccessJWT(id)).thenReturn("ACCESS_TOKEN");
+        when(jwtUtil.generateRefreshJWT(id)).thenReturn("REFRESH_TOKEN");
         oAuthSuccessHandler.onAuthenticationSuccess(request, response, authentication);
         // then
-        assertEquals(response.getStatus(), HttpServletResponse.SC_OK);
+        assertEquals(HttpServletResponse.SC_OK, response.getStatus());
+        assertEquals("REFRESH_TOKEN", response.getCookie("refresh_token").getValue());
         verify(userRepository, never()).save(any(UserEntity.class));
         verify(messagePublisher, never()).sendCreateUserMessage(any(UserMessageDto.class));
     }
@@ -78,10 +79,12 @@ public class OAuthSuccessHandlerUnitTest {
         when(oAuth2User.getAttribute("sub")).thenReturn(sub);
         when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
         when(userRepository.save(any(UserEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(jwtUtil.generateJWT(any(UUID.class))).thenReturn("TOKEN");
+        when(jwtUtil.generateAccessJWT(any(UUID.class))).thenReturn("ACCESS_TOKEN");
+        when(jwtUtil.generateRefreshJWT(any(UUID.class))).thenReturn("REFRESH_TOKEN");
         oAuthSuccessHandler.onAuthenticationSuccess(request, response, authentication);
         // then
-        assertEquals(response.getStatus(), HttpServletResponse.SC_OK);
+        assertEquals(HttpServletResponse.SC_OK, response.getStatus());
+        assertEquals("REFRESH_TOKEN", response.getCookie("refresh_token").getValue());
         verify(userRepository, times(1)).save(any(UserEntity.class));
         verify(messagePublisher, times(1)).sendCreateUserMessage(any(UserMessageDto.class));
     }

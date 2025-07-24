@@ -3,7 +3,9 @@ import { API_ROUTES } from "@/constants/routes"
 import axiosInterceptor from "@/lib/api/axios";
 
 export async function login(data: {email: string, password: string}) {
-    const res = await axios.post(API_ROUTES.auth.login, data);
+    const res = await axios.post(API_ROUTES.auth.login, data, {
+        withCredentials: true
+    });
     return res.data;
 }
 

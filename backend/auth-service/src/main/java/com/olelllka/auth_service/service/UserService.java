@@ -1,5 +1,6 @@
 package com.olelllka.auth_service.service;
 
+import com.olelllka.auth_service.domain.dto.JWTTokenResponse;
 import com.olelllka.auth_service.domain.dto.PatchUserDto;
 import com.olelllka.auth_service.domain.dto.RegisterUserDto;
 import com.olelllka.auth_service.domain.entity.UserEntity;
@@ -13,5 +14,5 @@ public interface UserService {
 
     UserEntity getUserByJwt(String jwt);
 
-    String generateJWTViaEmail(@Email(message = "Invalid Email.") @NotEmpty(message = "Email must not be empty.") String email);
+    JWTTokenResponse generateJWTViaEmail(@Email(message = "Invalid Email.") @NotEmpty(message = "Email must not be empty.") String email);
 }

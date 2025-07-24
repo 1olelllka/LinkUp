@@ -1,9 +1,7 @@
 import { PostCard } from "@/components/posts/PostCard";
 import { useFeed } from "@/hooks/useFeed";
 
-export const Feed = () => {
-  // const userId = localStorage.getItem("userId") || "fallback-id"; // or get from auth store
-  const userId = "436c5a79-ee35-4995-86d1-475e3a14d584";
+export const Feed = ({userId}: {userId: string}) => {
   const { posts } = useFeed(userId);
 
   return (

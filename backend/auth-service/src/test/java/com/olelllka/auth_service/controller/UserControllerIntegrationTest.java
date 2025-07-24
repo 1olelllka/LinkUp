@@ -5,7 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.olelllka.auth_service.RabbitMQTestConfig;
 import com.olelllka.auth_service.TestDataUtil;
 import com.olelllka.auth_service.config.RabbitMQConfig;
-import com.olelllka.auth_service.domain.dto.JWTToken;
+import com.olelllka.auth_service.domain.dto.JWTTokenResponse;
 import com.olelllka.auth_service.domain.dto.LoginUser;
 import com.olelllka.auth_service.domain.dto.PatchUserDto;
 import com.olelllka.auth_service.domain.dto.RegisterUserDto;
@@ -14,6 +14,7 @@ import com.olelllka.auth_service.repository.UserRepository;
 import com.olelllka.auth_service.service.SHA256;
 import com.olelllka.auth_service.service.impl.UserServiceImpl;
 import com.redis.testcontainers.RedisContainer;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -179,7 +180,27 @@ public class UserControllerIntegrationTest {
                         .contentType("application/json")
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.token").exists());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.accessToken").exists())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.refreshToken").exists())
+                .andExpect(MockMvcResultMatchers.cookie().exists("refresh_token"));
+    }
+
+    @Test
+    public void testThatRefreshTokenReturnsHttp403ForbiddenIfInvalid() throws Exception {
+        Cookie cookie = new Cookie("refresh_token", "invalid_token");
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/refresh")
+                .cookie(cookie))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+    }
+
+    @Test
+    public void testThatRefreshTokenReturnsHttp200OkIfValid() throws Exception {
+        userService.registerUser(TestDataUtil.createRegisterUserDto());
+        Cookie cookie = new Cookie("refresh_token", getJwtToken(TestDataUtil.createLoginUser()).getRefreshToken());
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/refresh")
+                .cookie(cookie))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.accessToken").exists());
     }
 
     @Test
@@ -187,9 +208,9 @@ public class UserControllerIntegrationTest {
         LoginUser loginUser = TestDataUtil.createLoginUser();
         RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
         UserEntity user = userService.registerUser(dto);
-        JWTToken jwtToken = getJwtToken(loginUser);
+        JWTTokenResponse jwtTokenResponse = getJwtToken(loginUser);
         mockMvc.perform(MockMvcRequestBuilders.get("/auth/me")
-                .header("Authorization", "Bearer " + jwtToken.getToken()))
+                .header("Authorization", "Bearer " + jwtTokenResponse.getAccessToken()))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         assertTrue(redisTemplate.hasKey("auth::" + SHA256.hash(user.getUserId().toString())));
     }
@@ -199,11 +220,11 @@ public class UserControllerIntegrationTest {
         LoginUser loginUser = TestDataUtil.createLoginUser();
         RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
         UserEntity user = userService.registerUser(dto);
-        JWTToken jwtToken = getJwtToken(loginUser);
+        JWTTokenResponse jwtTokenResponse = getJwtToken(loginUser);
         PatchUserDto patchUserDto = PatchUserDto.builder().email("newemail@email.com").build();
         String patchJson = objectMapper.writeValueAsString(patchUserDto);
         mockMvc.perform(MockMvcRequestBuilders.patch("/auth/me")
-                .header("Authorization", "Bearer " + jwtToken.getToken())
+                .header("Authorization", "Bearer " + jwtTokenResponse.getAccessToken())
                 .contentType("application/json")
                 .content(patchJson))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -217,19 +238,19 @@ public class UserControllerIntegrationTest {
         LoginUser loginUser = TestDataUtil.createLoginUser();
         RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
         userService.registerUser(dto);
-        JWTToken token = getJwtToken(loginUser);
+        JWTTokenResponse token = getJwtToken(loginUser);
         mockMvc.perform(MockMvcRequestBuilders.post("/auth/logout")
-                .header("Authorization", "Bearer " + token.getToken()))
+                .header("Authorization", "Bearer " + token.getAccessToken()))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         assertNull(SecurityContextHolder.getContext().getAuthentication());
     }
 
-    private JWTToken getJwtToken(LoginUser loginUser) throws Exception {
+    private JWTTokenResponse getJwtToken(LoginUser loginUser) throws Exception {
         String json = objectMapper.writeValueAsString(loginUser);
         String response = mockMvc.perform(MockMvcRequestBuilders.post("/auth/login")
                         .contentType("application/json")
                         .content(json)).andReturn().getResponse().getContentAsString();
-        JWTToken token = objectMapper.readValue(response, JWTToken.class);
+        JWTTokenResponse token = objectMapper.readValue(response, JWTTokenResponse.class);
         return token;
     }
 

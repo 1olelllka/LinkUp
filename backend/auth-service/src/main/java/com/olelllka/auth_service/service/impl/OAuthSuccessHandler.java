@@ -4,7 +4,7 @@ package com.olelllka.auth_service.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
 import com.olelllka.auth_service.domain.dto.Gender;
-import com.olelllka.auth_service.domain.dto.JWTToken;
+import com.olelllka.auth_service.domain.dto.JWTTokenResponse;
 import com.olelllka.auth_service.domain.dto.UserMessageDto;
 import com.olelllka.auth_service.domain.entity.AuthProvider;
 import com.olelllka.auth_service.domain.entity.Role;
@@ -17,6 +17,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -65,9 +67,17 @@ public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
             messagePublisher.sendCreateUserMessage(toSend);
             return savedUser;
         });
-        String jwtToken = jwtUtil.generateJWT(user.getUserId());
-        JWTToken jwt = JWTToken.builder().token(jwtToken).build();
+        String accessJWT = jwtUtil.generateAccessJWT(user.getUserId());
+        String refreshJWT = jwtUtil.generateRefreshJWT(user.getUserId());
+        JWTTokenResponse jwt = JWTTokenResponse.builder().accessToken(accessJWT).refreshToken(refreshJWT).build();
         ObjectMapper objectMapper = new ObjectMapper();
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", refreshJWT)
+                        .httpOnly(true)
+                        .maxAge(3600 * 24)
+                        .sameSite("Strict")
+                        .path("/")
+                        .build();
+        response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         response.setStatus(HttpServletResponse.SC_OK);
         response.getWriter().write(objectMapper.writeValueAsString(jwt));
         response.setContentType("application/json");

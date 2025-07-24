@@ -1,0 +1,30 @@
+import { useAuthStore } from "@/store/useAuthStore";
+import axios from "axios";
+
+export async function ensureAccessToken(): Promise<string | null> {
+  const token = useAuthStore.getState().token;
+  const setToken = useAuthStore.getState().setToken;
+  const clearToken = useAuthStore.getState().clearToken;
+
+  if (token) return token;
+
+  try {
+    const res = await axios.post(
+      "/auth/refresh",
+      {},
+      {
+        withCredentials: true,
+      }
+    );
+
+    const newToken = res.data?.accessToken;
+    if (newToken) {
+      setToken(newToken);
+      return newToken;
+    }
+  } catch (err) {
+    console.error("Token refresh failed", err);
+    clearToken();
+  }
+  return null;
+}

@@ -3,11 +3,14 @@ package com.olelllka.auth_service.rest.controller;
 import com.olelllka.auth_service.domain.dto.*;
 import com.olelllka.auth_service.domain.entity.UserEntity;
 import com.olelllka.auth_service.rest.exception.ValidationException;
-import com.olelllka.auth_service.service.JWTUtil;
+import com.olelllka.auth_service.service.AuthService;
 import com.olelllka.auth_service.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -23,8 +27,8 @@ import java.util.stream.Collectors;
 public class UserController {
 
     private final UserService userService;
+    private final AuthService authService;
     private final AuthenticationManager authenticationManager;
-    private final JWTUtil jwtUtil;
 
     @PostMapping("/register")
     public ResponseEntity<UserDto> registerNewUser(@Valid @RequestBody RegisterUserDto userDto,
@@ -38,8 +42,9 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<JWTToken> loginUser(@Valid @RequestBody LoginUser loginUser,
-                                              BindingResult bindingResult) {
+    public ResponseEntity<JWTTokenResponse> loginUser(@Valid @RequestBody LoginUser loginUser,
+                                                      HttpServletResponse servletResponse,
+                                                      BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             String msg = bindingResult.getAllErrors().stream().map(err -> err.getDefaultMessage()).collect(Collectors.joining(" "));
             throw new ValidationException(msg);
@@ -49,10 +54,25 @@ public class UserController {
                 loginUser.getPassword()
         ));
         if (authentication.isAuthenticated()) {
-            String jwt = userService.generateJWTViaEmail(loginUser.getEmail());
-            return new ResponseEntity<>(JWTToken.builder().token(jwt).build(), HttpStatus.OK);
+            JWTTokenResponse response = userService.generateJWTViaEmail(loginUser.getEmail());
+            ResponseCookie cookie = ResponseCookie.from("refresh_token", response.getRefreshToken())
+                    .maxAge(3600 * 24)
+                    .sameSite("Strict")
+                    .httpOnly(true)
+                    .path("/")
+//                    .secure(true)
+                    .build();
+            servletResponse.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<JWTTokenResponse> refreshToken(@CookieValue(name = "refresh_token") String refreshToken) {
+        Optional<String> token = authService.refreshToken(refreshToken);
+        return token.map(s -> new ResponseEntity<>(JWTTokenResponse.builder().accessToken(s).build(), HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
     }
 
     @GetMapping("/me")
