@@ -23,6 +23,9 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { useEffect } from "react";
 import { patchMe } from "@/services/authServices";
+import { deleteProfile } from "@/services/profileServices";
+import { useProfileStore } from "@/store/useProfileStore";
+import { useNavigate } from "react-router";
 
 const formSchema = z.object({
     email: z.email("Invalid Email."),
@@ -44,6 +47,8 @@ export const AuthDataForm = (data : AuthDataFormProps) => {
             alias: data.alias,
         },
     })
+
+    const navigate = useNavigate();
 
     useEffect(() => {
         form.reset({
@@ -112,11 +117,19 @@ export const AuthDataForm = (data : AuthDataFormProps) => {
                             />
                         </div>
                         <DialogFooter>
+                        <DialogClose asChild>
+                            <Button variant="destructive" onClick={() => {
+                                deleteProfile(useProfileStore.getState().profile?.userId)
+                                navigate("/");
+                            }}>Delete</Button>
+                        </DialogClose>
+                        <div className="flex gap-2 ml-auto">
                             <DialogClose asChild>
-                            <Button variant="outline">Close</Button>
+                                <Button variant="outline">Close</Button>
                             </DialogClose>
                             <Button type="submit">Save changes</Button>
-                        </DialogFooter>
+                        </div>
+                    </DialogFooter>
                         </form>
                     </Form>
                     </DialogContent>
