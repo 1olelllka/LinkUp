@@ -9,7 +9,9 @@ export const API_ROUTES = {
     },
     profile: {
         search: `${API_BASE}/profiles?search=`,
-        profileDetail: `/profiles/`
+        profileDetail: `/profiles/`,
+        profileFollowers: (userId: string, page: number = 0) => `/profiles/${userId}/followers?page=${page}`,
+        profileFollowees: (userId: string, page: number = 0) => `/profiles/${userId}/followees?page=${page}`
     },
     chats: {
         list: "/chats/users/"

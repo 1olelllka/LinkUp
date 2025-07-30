@@ -3,35 +3,52 @@ import { Label } from "@/components/ui/label";
 import { AuthDataForm } from "../auth/AuthDataForm";
 import { useMyProfileDetail } from "@/hooks/useMyProfileDetail";
 import { PersonalDataForm } from "./PersonalDataForm";
+import { useProfileStore } from "@/store/useProfileStore";
+import { useFollowList } from "@/hooks/useFollowList";
+import { NavLink } from "react-router";
+import { CustomAvatar } from "./CustomAvatar";
 
 export const UserProfile = () => {
 
   const {profile, setProfile} = useMyProfileDetail();
+  const followersPage= useFollowList(
+    {userId: useProfileStore.getState().profile?.userId, pageNumber: 0, type:"follower"}
+  );
+  const followeesPage = useFollowList({
+    userId: useProfileStore.getState().profile?.userId,
+    pageNumber: 0,
+    type: "followee"
+  });
+
+  console.log(followersPage)
 
   return (
     <div className="bg-white p-6 rounded-xl shadow border border-gray-200">
-      <div className="flex items-center space-x-6 mb-6">
-         <div className="w-24 h-24 rounded-full border flex items-center justify-center bg-gray-200">
-          {profile?.photo ? (
-            <img
-              src={profile.photo}
-              alt="Profile"
-              className="w-full h-full rounded-full object-cover"
-            />
-          ) : (
-            <span className="text-3xl font-bold text-gray-600">
-              {profile?.name?.charAt(0).toUpperCase() || profile?.alias?.charAt(0).toUpperCase() || '?'}
-            </span>
-          )}
+      <div className="flex items-center justify-between flex-wrap gap-6 mb-6">
+        <div className="flex items-center gap-6">
+          <CustomAvatar name={profile?.name} photo={profile?.photo} size={84} />
+          <div>
+            <h2 className="text-2xl font-bold">{profile?.alias}</h2>
+            <p className="text-sm text-gray-500">Joined on {profile?.createdAt}</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-2xl font-bold">{profile?.alias}</h2>
-          <p className="text-sm text-gray-500">Joined on {profile?.createdAt}</p>
+
+        <div className="flex gap-8 text-center">
+          <div>
+            <NavLink to={`/profile/${useProfileStore.getState().profile?.userId}/followers`}>
+              <p className="text-xl font-semibold cursor-pointer">{followersPage?.totalElements ?? 0}</p>
+            </NavLink>
+            <p className="text-sm text-muted-foreground">Followers</p>
+          </div>
+          <div>
+            <NavLink to={`/profile/${useProfileStore.getState().profile?.userId}/followees`}>
+              <p className="text-xl font-semibold cursor-pointer">{followeesPage?.totalElements ?? 0}</p>
+            </NavLink>
+            <p className="text-sm text-muted-foreground">Following</p>
+          </div>
         </div>
       </div>
 
-      {/* TODO: create followers/followees functionality */}
-      
       <div className="space-y-4">
         <div>
           <Label>Email</Label>

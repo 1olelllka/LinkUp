@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSearch } from "@/hooks/useSearch";
+import { CustomAvatar } from "./CustomAvatar";
 
 
 export const ProfileSearch = () => {
@@ -26,10 +27,7 @@ export const ProfileSearch = () => {
               className="bg-white p-4 rounded-xl shadow hover:shadow-md transition border border-gray-200"
             >
               <div className="flex items-center space-x-4 mb-4">
-                {/* TODO: elither this or profile pic */}
-                <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold">
-                  {profile.name.charAt(0).toUpperCase()}
-                </div>
+                <CustomAvatar name={profile.name} photo={profile.photo} size={50} />
                 <div>
                   <h3 className="font-semibold text-lg">{profile.name}</h3>
                   <p className="text-sm text-gray-500">@{profile.username}</p>

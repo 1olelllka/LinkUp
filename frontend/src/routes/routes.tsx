@@ -5,6 +5,7 @@ import { SignUpPage } from "@/pages/SignUpPage";
 import { ChatsPage } from "@/pages/ChatsPage";
 import { ProfileSearchPage } from "@/pages/ProfileSearchPage";
 import { ProfilePage } from "@/pages/ProfilePage";
+import { FollowersPage } from "@/pages/FollowersPage";
 
 export const router = createBrowserRouter([
   {
@@ -35,4 +36,12 @@ export const router = createBrowserRouter([
     path: "/profile",
     element: <ProfilePage />,
   },
+  {
+    path: "/profile/:userId/followers",
+    element: <FollowersPage type="follower"/>
+  },
+  {
+    path: "/profile/:userId/followees",
+    element: <FollowersPage type="followee"/>
+  }
 ]);

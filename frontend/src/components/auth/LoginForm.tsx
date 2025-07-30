@@ -75,7 +75,9 @@ export const LoginForm = () => {
                     </FormItem>
                     )}
                 />
-                <Button type="submit" className="w-full">Submit</Button>
+                <NavLink to="/profile">
+                    <Button type="submit" className="w-full">Submit</Button>
+                </NavLink>
                 <div className="text-center mt-1 text-sm text-gray-600">
                     Don't have an account?{" "}
                     <NavLink to="/signup" end>

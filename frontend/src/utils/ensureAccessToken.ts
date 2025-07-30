@@ -1,3 +1,4 @@
+import { API_BASE } from "@/constants/routes";
 import { useAuthStore } from "@/store/useAuthStore";
 import axios from "axios";
 
@@ -10,13 +11,13 @@ export async function ensureAccessToken(): Promise<string | null> {
 
   try {
     const res = await axios.post(
-      "/auth/refresh",
+      `${API_BASE}/auth/refresh`,
       {},
       {
         withCredentials: true,
       }
     );
-
+    console.log(res);
     const newToken = res.data?.accessToken;
     if (newToken) {
       setToken(newToken);

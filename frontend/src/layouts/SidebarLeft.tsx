@@ -9,7 +9,7 @@ export const SidebarLeft = () => {
     { label: "Messages", path: "/chats" },
     { label: "Search", path: "/search"},
     { label: "My Profile", path: "/profile" },
-    { label: "Settings", path: "/settings" },
+    // { label: "Settings", path: "/settings" },
   ];
   const location = useLocation();
 
