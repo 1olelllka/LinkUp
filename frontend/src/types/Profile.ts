@@ -1,7 +1,7 @@
 
 export type Profile = {
   id: string,
-  alias: string,
+  username: string,
   email: string,
   name: string,
   authProvider: string,

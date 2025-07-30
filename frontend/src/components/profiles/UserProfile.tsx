@@ -28,7 +28,7 @@ export const UserProfile = () => {
         <div className="flex items-center gap-6">
           <CustomAvatar name={profile?.name} photo={profile?.photo} size={84} />
           <div>
-            <h2 className="text-2xl font-bold">{profile?.alias}</h2>
+            <h2 className="text-2xl font-bold">{profile?.username}</h2>
             <p className="text-sm text-gray-500">Joined on {profile?.createdAt}</p>
           </div>
         </div>
@@ -60,7 +60,7 @@ export const UserProfile = () => {
           <Input value={profile?.authProvider || ""} disabled className="mt-1" />
         </div>
         
-        <AuthDataForm email={profile?.email} alias={profile?.alias} authProvier={profile?.authProvider}/>
+        <AuthDataForm email={profile?.email} alias={profile?.username} authProvier={profile?.authProvider}/>
         
         <PersonalDataForm profile={profile} setProfile={setProfile}/>
       </div>

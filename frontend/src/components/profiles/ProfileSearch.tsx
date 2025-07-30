@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSearch } from "@/hooks/useSearch";
 import { CustomAvatar } from "./CustomAvatar";
+import { NavLink } from "react-router";
 
 
 export const ProfileSearch = () => {
@@ -33,9 +34,11 @@ export const ProfileSearch = () => {
                   <p className="text-sm text-gray-500">@{profile.username}</p>
                 </div>
               </div>
-              <Button className="w-full mt-2" variant="outline">
-                View Profile
-              </Button>
+              <NavLink to={`/profile/${profile.id}`}>
+                <Button className="w-full mt-2" variant="outline">
+                  View Profile
+                </Button>
+              </NavLink>
             </div>
           ))
         ) : (

@@ -1,4 +1,4 @@
-import { API_BASE, API_ROUTES } from "@/constants/routes"
+import { API_ROUTES } from "@/constants/routes"
 import axiosInterceptor from "@/lib/api/axios";
 import axios from "axios"
 
@@ -19,11 +19,11 @@ export const patchPersonalProfileInfo = async (userId: string | undefined, data:
 }
 
 export const getFollowersForSpecificProfile = async (userId: string, pageNumber: number) => {
-    const res = await axios.get(`${API_BASE}${API_ROUTES.profile.profileFollowers(userId, pageNumber)}`);
+    const res = await axios.get(`${API_ROUTES.profile.profileFollowers(userId, pageNumber)}`);
     return res.data;
 }
 
 export const getFolloweesForSpecificProfile = async (userId: string, pageNumber: number) => {
-    const res = await axios.get(`${API_BASE}${API_ROUTES.profile.profileFollowees(userId, pageNumber)}`);
+    const res = await axios.get(`${API_ROUTES.profile.profileFollowees(userId, pageNumber)}`);
     return res.data;
 }

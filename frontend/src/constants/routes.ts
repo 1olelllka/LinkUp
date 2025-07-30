@@ -10,8 +10,8 @@ export const API_ROUTES = {
     profile: {
         search: `${API_BASE}/profiles?search=`,
         profileDetail: `/profiles/`,
-        profileFollowers: (userId: string, page: number = 0) => `/profiles/${userId}/followers?page=${page}`,
-        profileFollowees: (userId: string, page: number = 0) => `/profiles/${userId}/followees?page=${page}`
+        profileFollowers: (userId: string, page: number = 0) => `${API_BASE}/profiles/${userId}/followers?page=${page}`,
+        profileFollowees: (userId: string, page: number = 0) => `${API_BASE}/profiles/${userId}/followees?page=${page}`
     },
     chats: {
         list: "/chats/users/"
@@ -23,6 +23,7 @@ export const API_ROUTES = {
         list: "/feeds"
     },
     posts: {
-        list: `${API_BASE}/posts/users/`
+        list: `${API_BASE}/posts/users/`,
+        detail: (id: number) => `${API_BASE}/posts/${id}`
     }
 }

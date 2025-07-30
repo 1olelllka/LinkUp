@@ -12,7 +12,7 @@ export const PostCard = ({ id, user_id, desc, image, created_at }: Post) => {
         <img src="/default_profile_photo.webp" alt="User" className="w-12 h-12 rounded-full" />
         <div>
           <h4 className="text-md font-semibold">{profile?.name}</h4>
-          <h4 className="text-sm text-gray-400 font-bold hover:underline hover:cursor-pointer">@{profile?.alias}</h4>
+          <h4 className="text-sm text-gray-400 font-bold hover:underline hover:cursor-pointer">@{profile?.username}</h4>
           <p className="text-xs text-gray-500">{new Date(created_at).toDateString()}</p>
         </div>
       </div>
