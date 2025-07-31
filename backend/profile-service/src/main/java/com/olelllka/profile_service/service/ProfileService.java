@@ -23,4 +23,6 @@ public interface ProfileService {
     Page<ProfileEntity> getFolloweesById(UUID profileId, Pageable pageable);
 
     Page<ProfileEntity> searchForProfile(String search, Pageable pageable);
+
+    boolean checkFollowStatus(UUID from, UUID to);
 }

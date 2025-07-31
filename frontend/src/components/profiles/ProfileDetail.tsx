@@ -6,10 +6,14 @@ import { useProfileDetail } from "@/hooks/useProfileDetail";
 import { useFollowList } from "@/hooks/useFollowList";
 import { UserPosts } from "./UserPosts";
 import { useProfileStore } from "@/store/useProfileStore";
+import { checkFollowStatus, followProfile, unfollowProfile } from "@/services/profileServices";
+import { useEffect, useState } from "react";
 
 export function ProfileDetail() {
   const { userId } = useParams();
+  const currentUserId = useProfileStore.getState().profile?.userId;
   const profile = useProfileDetail(userId);
+  const [isFollowing, setIsFollowing] = useState<boolean>(false);
   const followers = useFollowList({
     userId,
     pageNumber: 0,
@@ -20,6 +24,19 @@ export function ProfileDetail() {
     pageNumber: 0,
     type: "followee",
   });
+  
+
+  useEffect(() => {
+    const checkFollow = async () => {
+      const followStatus = await checkFollowStatus(currentUserId, userId);
+      if (followStatus == 200) {
+        setIsFollowing(true);
+      } else {
+        setIsFollowing(false);
+      }
+    }
+    checkFollow();
+  }, [userId, currentUserId])
 
 
   return (
@@ -54,16 +71,30 @@ export function ProfileDetail() {
           {/* Follow/unfollow button and status */}
           {useProfileStore.getState().profile?.userId != userId && (
             <div className="pt-4 space-y-2">
-              {/* {profile?.isFollowedByCurrentUser ? (
+              {isFollowing ? (
                 <>
-                  <Button variant="outline">Unfollow</Button>
+                  <Button variant="outline" onClick={() => {
+                    unfollowProfile(useProfileStore.getState().profile?.userId, userId)
+                    .then(response => {
+                      if (response == 200) {
+                        setIsFollowing(false);
+                      }
+                    });
+                  }}>Unfollow</Button>
                   <p className="text-xs text-muted-foreground">
                     You follow this user
                   </p>
                 </>
-              ) : ( */}
-                <Button>Follow</Button>
-              {/* // )} */}
+              ) : (
+                <Button onClick={() => {
+                    followProfile(useProfileStore.getState().profile?.userId, userId)
+                    .then(response => {
+                      if (response == 200) {
+                        setIsFollowing(true);
+                      }
+                    });
+                }}>Follow</Button>
+              )}
             </div>
           )}
         </div>

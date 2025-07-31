@@ -11,7 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -82,6 +81,17 @@ public class ProfileController {
         }
         profileService.unfollowProfile(followDto.getFollowerId(), followDto.getFolloweeId(), header.substring(7));
         return new ResponseEntity<>(SuccessErrorMessage.builder().message("User " + followDto.getFollowerId() + " successfully unfollowed user " + followDto.getFolloweeId()).build(), HttpStatus.OK);
+    }
+
+    @GetMapping("/follow-status")
+    public ResponseEntity<?> checkFollowStatus(@RequestParam(name = "from") UUID from,
+                                                                 @RequestParam(name = "to") UUID to) {
+        boolean status = profileService.checkFollowStatus(from, to);
+        if (status) {
+            return new ResponseEntity<>(HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     @GetMapping("/{profile_id}/followers")

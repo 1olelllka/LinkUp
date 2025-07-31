@@ -408,6 +408,34 @@ public class ProfileControllerIntegrationTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].username").value(messageDto.getUsername()));
     }
 
+    @Test
+    public void testThatCheckFollowStatusReturnsHttp200OKIfSuccessful() throws Exception {
+        rabbitAdmin.purgeQueue(RabbitMQConfig.notification_queue);
+        UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
+        messageDto1.setProfileId(UUID.randomUUID());
+        createNewUser(messageDto1);
+        UserMessageDto messageDto2 = TestDataUtil.createUserMessageDto();
+        messageDto2.setProfileId(UUID.randomUUID());
+        createNewUser(messageDto2);
+        FollowDto followDto = TestDataUtil.createFollowDto(messageDto1.getProfileId(), messageDto2.getProfileId());
+        String json = objectMapper.writeValueAsString(followDto);
+        mockMvc.perform(MockMvcRequestBuilders.post("/profiles/follow")
+                        .header("Authorization", "Bearer " + generateJwt(messageDto1.getProfileId()))
+                        .contentType("application/json")
+                        .content(json))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        assertEquals(1, rabbitAdmin.getQueueInfo(RabbitMQConfig.notification_queue).getMessageCount());
+        mockMvc.perform(MockMvcRequestBuilders.get("/profiles/follow-status?from=" + messageDto1.getProfileId()
+                                                                + "&to=" + messageDto2.getProfileId()))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    public void testThatCheckFollowStatusReturnsHttp404NotFoundIfRelationshipDoesNotExist() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/profiles/follow-status?from=" + UUID.randomUUID() + "&to=" + UUID.randomUUID()))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
     private void createNewUser(UserMessageDto messageDto) throws InterruptedException {
         rabbitTemplate.convertAndSend(RabbitMQTestConfig.create_user_exchange, "create.user", messageDto);
         Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQTestConfig.create_user_queue).getMessageCount() == 0);

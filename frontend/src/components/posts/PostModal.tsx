@@ -1,23 +1,52 @@
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { CustomAvatar } from "../profiles/CustomAvatar";
-import { usePostDetails } from "@/hooks/usePostDetails";
-import { useProfileDetail } from "@/hooks/useProfileDetail";
+import { useEffect, useState } from "react";
+import type { Post } from "@/types/Post";
+import type { Profile } from "@/types/Profile";
+import { getPostDetailsById } from "@/services/postServices";
+import { getSpecificProfileInfo } from "@/services/profileServices";
 // import { useComments } from "@/hooks/useComments";
 
 export function PostModal({ postId, trigger }: { postId: number, trigger: React.ReactNode }) {
-  const post = usePostDetails(postId);
-  const profile = useProfileDetail(post?.user_id);
-//   const comments = useComments(postId);
+const [open, setOpen] = useState(false);
 
-  if (!post) return null;
+  // Fetch only when modal is open
+  const [shouldFetch, setShouldFetch] = useState(false);
+  const [post, setPost] = useState<Post>();
+  const [profile, setProfile] = useState<Profile>();
+
+  useEffect(() => {
+    if (open) {
+      setShouldFetch(true);
+    }
+  }, [open]);
+
+    useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const postData = await getPostDetailsById(postId);
+          setPost(postData);
+
+          const profileData = await getSpecificProfileInfo(postData?.user_id);
+          setProfile(profileData);
+        } catch (err) {
+          console.error("Failed to fetch post/profile", err);
+        }
+      };
+
+      if (shouldFetch && !post) {
+        fetchData();
+      }
+    }, [shouldFetch, postId, post]);
+
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 rounded-2xl">
         <div className="space-y-4">
           {/* Image */}
-          {post.image && (
+          {post?.image && (
             <div className="w-[450px] h-[400px] rounded-xl overflow-hidden">
               <img
                 src={post.image}
@@ -37,8 +66,8 @@ export function PostModal({ postId, trigger }: { postId: number, trigger: React.
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold">{post.title}</h2>
-            <p className="text-gray-700">{post.desc}</p>
+            <h2 className="text-xl font-semibold">{post?.title}</h2>
+            <p className="text-gray-700">{post?.desc}</p>
           </div>
 
           {/* Comments */}

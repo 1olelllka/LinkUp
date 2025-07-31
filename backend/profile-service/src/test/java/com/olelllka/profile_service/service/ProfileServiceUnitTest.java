@@ -288,4 +288,16 @@ public class ProfileServiceUnitTest {
         );
         verify(repository, never()).findProfileByParam(query, pageable);
     }
+
+    @Test
+    public void testThatFollowStatusWorks() {
+        // given
+        UUID id1 = UUID.randomUUID();
+        UUID id2 = UUID.randomUUID();
+        // when
+        when(repository.isFollowing(id1, id2)).thenReturn(true);
+        boolean res = service.checkFollowStatus(id1, id2);
+        // then
+        assertTrue(res);
+    }
 }

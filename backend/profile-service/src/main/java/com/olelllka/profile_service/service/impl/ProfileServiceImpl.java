@@ -173,6 +173,11 @@ public class ProfileServiceImpl implements ProfileService {
         }
     }
 
+    @Override
+    public boolean checkFollowStatus(UUID from, UUID to) {
+        return repository.isFollowing(from, to);
+    }
+
     private ProfileEntity documentToEntity(ProfileDocument document) {
         return ProfileEntity.builder()
                 .id(document.getId())

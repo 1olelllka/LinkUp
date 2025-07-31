@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { useParams } from "react-router";
+import { NavLink, useParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { CustomAvatar } from "./CustomAvatar";
 import { useFollowList } from "@/hooks/useFollowList";
@@ -31,9 +31,11 @@ export function FollowList({type} : FollowListProp) {
               <p className="font-semibold text-lg">{f.username}</p>
               <p className="text-sm text-muted-foreground">{f.name}</p>
             </div>
-            <Button variant="secondary" size="sm">
-              View
-            </Button>
+            <NavLink to={`/profile/${f.id}`}>
+              <Button variant="secondary" size="sm">
+                View
+              </Button>
+            </NavLink>
           </Card>
         ))}
       </div>
