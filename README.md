@@ -45,7 +45,7 @@
 
 #### Profile Service 
 *🛑 Critical Service*
-![ProfileService](https://github.com/user-attachments/assets/548e812b-d985-4dfa-8fdd-5bb9f9152b52)
+<img width="4555" height="2807" alt="ProfileService" src="https://github.com/user-attachments/assets/c8540289-cacb-4edd-9cae-ac0a34221b40" />
 
 #### Posts Service
 ![PostsService](https://github.com/user-attachments/assets/7535f4ff-28a5-40ab-a8cd-d1849a4ee389)
