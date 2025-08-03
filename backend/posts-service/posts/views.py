@@ -143,6 +143,7 @@ class CommentDeleteAPIView(DestroyAPIView):
     permission_classes = [IsAuthenticated, IsOwner]
     
     def destroy(self, request, *args, **kwargs):
+        print("lox")
         try:
             comment = Comment.objects.get(pk=kwargs['comment_id'])
             self.perform_destroy(comment)

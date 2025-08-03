@@ -3,15 +3,13 @@ import { CustomAvatar } from "../profiles/CustomAvatar";
 import { useEffect, useState } from "react";
 import type { Comment, Post } from "@/types/Post";
 import type { Profile } from "@/types/Profile";
-import { createNewCommentForSpecificPost, getAllCommentsForSpecificPost, getPostDetailsById } from "@/services/postServices";
+import { createNewCommentForSpecificPost, deleteSpecificComment, getAllCommentsForSpecificPost, getPostDetailsById } from "@/services/postServices";
 import { getSpecificProfileInfo } from "@/services/profileServices";
 import { Comments } from "./Comments";
 import { CommentForm } from "./CommentForm";
 
 export function PostModal({ postId, trigger }: { postId: number, trigger: React.ReactNode }) {
-const [open, setOpen] = useState(false);
-
-  // Fetch only when modal is open
+  const [open, setOpen] = useState(false);
   const [shouldFetch, setShouldFetch] = useState(false);
   const [post, setPost] = useState<Post>();
   const [profile, setProfile] = useState<Profile>();
@@ -85,6 +83,28 @@ const [open, setOpen] = useState(false);
     }
   };
 
+const handleDeleteComment = async (id: number) => {
+  try {
+    const status = await deleteSpecificComment(id);
+    if (status === 204) {
+      setComments((prev = []) => {
+        const removeCommentRecursively = (comments: Comment[]): Comment[] => {
+          return comments
+            .filter(c => c.id !== id)
+            .map(c => ({
+              ...c,
+              replies: c.replies ? removeCommentRecursively(c.replies) : undefined
+            }));
+        };
+        
+        return removeCommentRecursively(prev);
+      });
+    }
+  } catch (err) {
+    console.log(err);
+  }
+}
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -134,6 +154,7 @@ const [open, setOpen] = useState(false);
                     key={comment.id}
                     comment={comment}
                     addReply={handleAddReply}
+                    deleteComment={handleDeleteComment}
                   />
                 ))
               )}

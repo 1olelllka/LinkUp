@@ -22,3 +22,8 @@ export const getAllCommentsForSpecificPost = async (id: number) => {
     const res = await axios.get(`${API_ROUTES.comments.list(id)}`);
     return res.data;
 }
+
+export const deleteSpecificComment = async (id: number) => {
+    const res = await axiosInterceptor.delete(`${API_ROUTES.comments.delete(id)}`);
+    return res.status
+}

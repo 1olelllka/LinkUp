@@ -31,6 +31,7 @@ export const API_ROUTES = {
     },
     comments: {
         create: (post: number) => `/posts/${post}/comments`,
-        list: (post: number) => `${API_BASE}/posts/${post}/comments`
+        list: (post: number) => `${API_BASE}/posts/${post}/comments`,
+        delete: (id: number) => `${API_BASE}/posts/comments/${id}`
     }
 }

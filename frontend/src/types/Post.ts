@@ -12,8 +12,9 @@ export type Post = {
 export type Comment = {
   id: number,
   text: string,
+  user_id: string,
   photo: string | undefined,
   username: string,
   name: string
-  replies: Comment[]
+  replies?: Comment[]
 }
