@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CustomAvatar } from "./CustomAvatar";
 import { useProfileDetail } from "@/hooks/useProfileDetail";
 import { useFollowList } from "@/hooks/useFollowList";
-import { UserPosts } from "./UserPosts";
+import { UserPosts } from "../posts/UserPosts";
 import { useProfileStore } from "@/store/useProfileStore";
 import { checkFollowStatus, followProfile, unfollowProfile } from "@/services/profileServices";
 import { useEffect, useState } from "react";

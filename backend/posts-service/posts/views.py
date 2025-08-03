@@ -14,6 +14,7 @@ from django.core.cache import cache
 import requests
 from django.http import JsonResponse
 from rest_framework.permissions import IsAuthenticated
+import json
 
 class UserPostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-created_at')
@@ -107,8 +108,8 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def create(self, request, post_id):
         post = get_object_or_404(Post, pk=post_id)
-        if request.data.get('user_id') is not None:
-            profile_response = requests.get(f"http://localhost:8001/profiles/{request.data['user_id']}")
+        if request.user.id is not None:
+            profile_response = requests.get(f"http://localhost:8001/profiles/{request.user.id}")
         else:
             return Response(data={"error": "Profile id is required"}, status=400)
         if profile_response.status_code == 404:
@@ -116,9 +117,13 @@ class CommentViewSet(viewsets.ModelViewSet):
         elif profile_response.status_code >= 500:
             return Response(data={"error": "An error occurred while processing your request"}, status=500)
         elif 400 <= profile_response.status_code < 404 and 404 < profile_response.status_code < 500:
-            return Response(data={"error":"Unexpected client error occurred. Please try again later"}, status=profile_response.status_code)        
+            return Response(data={"error":"Unexpected client error occurred. Please try again later"}, status=profile_response.status_code)
         data = request.data.copy()
         data['post'] = post.pk
+        data['user_id'] = request.user.id
+        data['username'] = profile_response.json()['username']
+        data['name'] = profile_response.json()['name']
+        data['photo'] = profile_response.json()['photo']
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
             serializer.save()
@@ -127,7 +132,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if (self.request.method == 'POST'):
-            return [IsAuthenticated(), IsOwner()]
+            return [IsAuthenticated()]
         return []
     
 

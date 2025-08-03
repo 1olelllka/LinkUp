@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useUserPosts } from "@/hooks/useUserPosts";
-import { PostModal } from "../posts/PostModal";
+import { PostModal } from "./PostModal";
 
 export const UserPosts = ({ userId } : {userId : string | undefined}) => {
   const posts = useUserPosts(userId);

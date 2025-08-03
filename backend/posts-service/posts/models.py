@@ -16,7 +16,10 @@ class Post(models.Model):
         verbose_name_plural = 'Posts'
 
 class Comment(models.Model):
-    user_id = models.CharField()
+    user_id = models.CharField(blank=True)
+    photo = models.CharField(blank=True, null=True)
+    username = models.CharField(blank=True)
+    name = models.CharField(blank=True)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     text = models.TextField()
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')

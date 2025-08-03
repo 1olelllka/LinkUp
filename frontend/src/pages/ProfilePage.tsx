@@ -1,5 +1,5 @@
 import { UserProfile } from "@/components/profiles/UserProfile";
-import { UserPosts } from "@/components/profiles/UserPosts";
+import { UserPosts } from "@/components/posts/UserPosts";
 import { ProfileLayout } from "@/layouts/ProfileLayout";
 import { useProfileStore } from "@/store/useProfileStore";
 

@@ -1,4 +1,5 @@
 import { API_ROUTES } from "@/constants/routes"
+import axiosInterceptor from "@/lib/api/axios";
 import axios from "axios"
 
 
@@ -9,5 +10,15 @@ export const getPostsForSpecificUser = async (userId: string) => {
 
 export const getPostDetailsById = async (id: number) => {
     const res = await axios.get(`${API_ROUTES.posts.detail(id)}`);
+    return res.data;
+}
+
+export const createNewCommentForSpecificPost = async (data: {post: number, text: string, parent?: number}) => {
+    const res = await axiosInterceptor.post(`${API_ROUTES.comments.create(data.post)}`, data);
+    return res.data;
+}
+
+export const getAllCommentsForSpecificPost = async (id: number) => {
+    const res = await axios.get(`${API_ROUTES.comments.list(id)}`);
     return res.data;
 }

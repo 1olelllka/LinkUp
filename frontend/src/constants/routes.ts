@@ -28,5 +28,9 @@ export const API_ROUTES = {
     posts: {
         list: `${API_BASE}/posts/users/`,
         detail: (id: number) => `${API_BASE}/posts/${id}`
+    },
+    comments: {
+        create: (post: number) => `/posts/${post}/comments`,
+        list: (post: number) => `${API_BASE}/posts/${post}/comments`
     }
 }

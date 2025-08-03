@@ -1,11 +1,12 @@
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { CustomAvatar } from "../profiles/CustomAvatar";
 import { useEffect, useState } from "react";
-import type { Post } from "@/types/Post";
+import type { Comment, Post } from "@/types/Post";
 import type { Profile } from "@/types/Profile";
-import { getPostDetailsById } from "@/services/postServices";
+import { createNewCommentForSpecificPost, getAllCommentsForSpecificPost, getPostDetailsById } from "@/services/postServices";
 import { getSpecificProfileInfo } from "@/services/profileServices";
-// import { useComments } from "@/hooks/useComments";
+import { Comments } from "./Comments";
+import { CommentForm } from "./CommentForm";
 
 export function PostModal({ postId, trigger }: { postId: number, trigger: React.ReactNode }) {
 const [open, setOpen] = useState(false);
@@ -14,6 +15,7 @@ const [open, setOpen] = useState(false);
   const [shouldFetch, setShouldFetch] = useState(false);
   const [post, setPost] = useState<Post>();
   const [profile, setProfile] = useState<Profile>();
+  const [comments, setComments] = useState<Comment[]>();
 
   useEffect(() => {
     if (open) {
@@ -29,6 +31,9 @@ const [open, setOpen] = useState(false);
 
           const profileData = await getSpecificProfileInfo(postData?.user_id);
           setProfile(profileData);
+
+          const commentData = await getAllCommentsForSpecificPost(postId);
+          setComments(commentData.results);
         } catch (err) {
           console.error("Failed to fetch post/profile", err);
         }
@@ -40,14 +45,56 @@ const [open, setOpen] = useState(false);
     }, [shouldFetch, postId, post]);
 
 
+  const handleAddReply = async (postId: number, parentId: number, text: string) => {
+    try {
+      const newReply = await createNewCommentForSpecificPost({post: postId, parent: parentId, text: text});
+
+      setComments((prev = []) =>
+        prev.map((comment) =>
+          comment.id === parentId
+            ? {
+                ...comment,
+                replies: [...(comment.replies || []), newReply],
+              }
+            : {
+                ...comment,
+                replies: comment.replies?.map((reply) =>
+                  reply.id === parentId
+                    ? {
+                        ...reply,
+                        replies: [...(reply.replies || []), newReply],
+                      }
+                    : reply
+                ),
+              }
+        )
+      );
+    } catch (err) {
+      console.error("Failed to post reply", err);
+      // optionally show toast
+    }
+  };
+
+  const handleAddTopLevelComment = async (postId : number, text: string) => {
+    try {
+      const newComment = await createNewCommentForSpecificPost({post: postId, text: text});
+
+      setComments((prev = []) => [...prev, newComment]);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 rounded-2xl">
-        <div className="space-y-4">
-          {/* Image */}
+      <DialogContent className="w-full max-w-7xl max-h-[90vh] overflow-hidden p-0 rounded-2xl">
+        <div className="flex flex-col md:flex-row w-full h-full">
+
+          {/* Left: Image section */}
           {post?.image && (
-            <div className="w-[450px] h-[400px] rounded-xl overflow-hidden">
+            <div className="md:w-1/2 w-full h-[300px] md:h-auto bg-black">
               <img
                 src={post.image}
                 alt={post.title}
@@ -56,53 +103,42 @@ const [open, setOpen] = useState(false);
             </div>
           )}
 
-          {/* Post info */}
-          <div className="flex items-center gap-4">
-            <CustomAvatar name={profile?.name} photo={profile?.photo} size={48} />
+          {/* Right: Content section */}
+          <div className="md:w-1/2 w-full p-6 overflow-y-auto space-y-4">
+            {/* Profile */}
+            <div className="flex items-center gap-4">
+              <CustomAvatar name={profile?.name} photo={profile?.photo} size={48} />
+              <div>
+                <p className="font-bold">{profile?.name}</p>
+                <p className="text-muted-foreground text-sm">@{profile?.username}</p>
+              </div>
+            </div>
+
+            {/* Post */}
             <div>
-              <p className="font-bold">{profile?.name}</p>
-              <p className="text-muted-foreground text-sm">@{profile?.username}</p>
+              <h2 className="text-xl font-semibold">{post?.title}</h2>
+              <p className="text-gray-700">{post?.desc}</p>
+            </div>
+
+            {/* Comments */}
+            <div className="space-y-2">
+              <h3 className="font-semibold text-lg">Comments</h3>
+              <CommentForm postId={post?.id || 0} onSubmit={handleAddTopLevelComment} />
+
+              {comments?.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No comments yet.</p>
+              ) : (
+                comments?.map((comment) => (
+                  <Comments
+                    postId={post?.id || 0}
+                    key={comment.id}
+                    comment={comment}
+                    addReply={handleAddReply}
+                  />
+                ))
+              )}
             </div>
           </div>
-
-          <div>
-            <h2 className="text-xl font-semibold">{post?.title}</h2>
-            <p className="text-gray-700">{post?.desc}</p>
-          </div>
-
-          {/* Comments */}
-          {/* <div className="space-y-2">
-            <h3 className="font-semibold text-lg">Comments</h3>
-            {comments.length === 0 && (
-              <p className="text-sm text-muted-foreground">No comments yet.</p>
-            )}
-            {comments.map((comment) => (
-              <div key={comment.id} className="border p-3 rounded-lg">
-                <div className="flex items-center gap-2 mb-1">
-                  <CustomAvatar name={comment.user.name} photo={comment.user.photo} size={32} />
-                  <div>
-                    <p className="font-medium text-sm">{comment.user.name}</p>
-                    <p className="text-xs text-muted-foreground">@{comment.user.username}</p>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-800">{comment.text}</p>
-
-                {comment.replies?.length > 0 && (
-                  <div className="pl-4 mt-2 space-y-1 border-l border-gray-200">
-                    {comment.replies.map((reply: any) => (
-                      <div key={reply.id} className="flex items-start gap-2">
-                        <CustomAvatar name={reply.user.name} photo={reply.user.photo} size={28} />
-                        <div>
-                          <p className="text-sm font-medium">{reply.user.name}</p>
-                          <p className="text-sm text-gray-700">{reply.text}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div> */}
         </div>
       </DialogContent>
     </Dialog>
