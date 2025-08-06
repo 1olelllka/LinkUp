@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 import { getMe, login } from "@/services/authServices";
 import { API_BASE } from "@/constants/routes";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -33,12 +33,15 @@ export const LoginForm = () => {
         }
     })
 
+    const navigate = useNavigate();
+
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
             const res = await login(values);
             useAuthStore.getState().setToken(res.accessToken);
             const authData = await getMe();
             useProfileStore.getState().setProfile(authData);
+            navigate("/profile")
         } catch (err) {
             console.log(err);
         }
@@ -75,9 +78,7 @@ export const LoginForm = () => {
                     </FormItem>
                     )}
                 />
-                <NavLink to="/profile">
-                    <Button type="submit" className="w-full">Submit</Button>
-                </NavLink>
+                <Button type="submit" className="w-full">Submit</Button>
                 <div className="text-center mt-1 text-sm text-gray-600">
                     Don't have an account?{" "}
                     <NavLink to="/signup" end>

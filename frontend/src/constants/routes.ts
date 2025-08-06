@@ -5,7 +5,8 @@ export const API_ROUTES = {
     auth: {
         login: `${API_BASE}/auth/login`,
         signup: `${API_BASE}/auth/register`,
-        me: `/auth/me`
+        me: `/auth/me`,
+        logout: '/auth/logout'
     },
     profile: {
         search: `${API_BASE}/profiles?search=`,

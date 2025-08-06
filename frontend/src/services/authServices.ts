@@ -30,3 +30,8 @@ export async function patchMe(data: {email : string, alias: string}) {
     const res = await axiosInterceptor.patch(`${API_ROUTES.auth.me}`, data);
     return res.data;
 }
+
+export async function logout() {
+    const res = await axiosInterceptor.post(`${API_ROUTES.auth.logout}`);
+    return res;
+}
