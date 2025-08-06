@@ -1,11 +1,11 @@
 import { ChatList } from "@/components/chat/ChatList";
-import { ChatsLayout } from "@/layouts/ChatsLayout";
+import { MainLayout } from "@/layouts/MainLayout";
 
 
 export const ChatsPage = () => {
   return (
-      <ChatsLayout>
+      <MainLayout>
         <ChatList />
-      </ChatsLayout>
+      </MainLayout>
   );
 };

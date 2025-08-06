@@ -1,10 +1,10 @@
 import { ProfileSearch } from "@/components/profiles/ProfileSearch";
-import { ProfileSearchLayout } from "@/layouts/ProfileSearchLayout";
+import { MainLayout } from "@/layouts/MainLayout";
 
 export const ProfileSearchPage = () => {
   return (
-    <ProfileSearchLayout>
-        <ProfileSearch />
-    </ProfileSearchLayout>
+    <MainLayout>
+      <ProfileSearch />
+    </MainLayout>
   );
 };

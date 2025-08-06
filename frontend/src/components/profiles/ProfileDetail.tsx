@@ -40,9 +40,8 @@ export function ProfileDetail() {
 
 
   return (
-    <div className="p-6 max-w-5xl w-full mx-auto space-y-6">
-      <Card className="p-6 flex flex-col md:flex-row justify-between items-center md:items-start gap-6 md:gap-10">
-        {/* Left side: profile info */}
+    <div>
+      <Card className="p-6 flex flex-row justify-between items-center md:items-start gap-10 w-[99%] border-0 shadow-lg bg-slate-50 transition-all">
         <div className="flex-1 space-y-3 text-center md:text-left">
           <div>
             <h1 className="text-2xl font-bold">{profile?.name}</h1>

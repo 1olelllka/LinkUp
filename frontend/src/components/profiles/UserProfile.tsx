@@ -23,7 +23,7 @@ export const UserProfile = () => {
   console.log(followersPage)
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow border border-gray-200">
+    <div className="bg-slate-50 p-6 rounded-xl shadow-lg transition-all w-[99%]">
       <div className="flex items-center justify-between flex-wrap gap-6 mb-6">
         <div className="flex items-center gap-6">
           <CustomAvatar name={profile?.name} photo={profile?.photo} size={84} />

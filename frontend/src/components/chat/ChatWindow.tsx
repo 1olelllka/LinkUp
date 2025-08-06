@@ -8,20 +8,17 @@ type ChatWindowProps = {
 
 export const ChatWindow = ({ chatId, senderId, senderName }: ChatWindowProps) => {
   const messages = useMessageList(chatId);
-  console.log(messages)
   return (
     <div className="flex flex-col h-full max-h-[90vh]">
-      {/* Chat header */}
       <div className="mb-4">
         <h2 className="text-2xl font-bold">Chat with {senderName}</h2>
       </div>
 
-      {/* Messages */}
       <div className="flex-1 space-y-4 overflow-y-auto p-2 mb-4">
         {messages?.map((msg, idx) => (
           <div
             key={idx}
-            className={`max-w-[75%] px-4 py-2 rounded-xl shadow-sm ${
+            className={`max-w-[50%] px-4 py-2 rounded-xl shadow-sm ${
               msg.from == senderId
                 ? "bg-blue-100 ml-auto text-right"
                 : "bg-gray-100 text-left"

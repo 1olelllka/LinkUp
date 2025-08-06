@@ -6,6 +6,7 @@ export const Feed = ({userId}: {userId: string}) => {
 
   return (
     <div className="space-y-4">
+      <h2 className="text-2xl font-bold mx-2 my-4">Feeds</h2>
       {posts?.map((item) => (
         <PostCard key={item.id} {...item} />
       ))}

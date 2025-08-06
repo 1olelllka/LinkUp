@@ -1,12 +1,12 @@
 import { ProfileDetail } from "@/components/profiles/ProfileDetail";
-import { ProfileLayout } from "@/layouts/ProfileLayout";
+import { MainLayout } from "@/layouts/MainLayout";
 
 
 export const ProfileDetailPage = () => {
 
     return (
-        <ProfileLayout>
+        <MainLayout>
             <ProfileDetail />
-        </ProfileLayout>
+        </MainLayout>
     );
 }

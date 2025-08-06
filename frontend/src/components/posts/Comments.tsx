@@ -84,7 +84,7 @@ export function Comments({
 
       {/* Reply button */}
       <div className="mt-2 space-x-4">
-        {comment.replies?.length > 0 && (
+        {comment.replies && comment.replies?.length > 0 && (
           <button
             onClick={() => setShowReplies(!showReplies)}
             className="text-sm text-blue-600"

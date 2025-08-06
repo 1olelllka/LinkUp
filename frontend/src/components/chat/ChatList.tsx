@@ -17,8 +17,7 @@ export const ChatList = () => {
   const chatUsers = useChatList(currentUserId);
 
   return (
-    <div className="flex h-full">
-      {/* Chat List (left column) */}
+    <div className="flex bg-slate-50 p-6 rounded-xl shadow-lg transition-all w-[99%] h-[93.6%]">
       <div className="w-1/3 border-r pr-4 overflow-y-auto">
         <h2 className="text-xl font-bold mb-4">Messages</h2>
         <div className="space-y-3">

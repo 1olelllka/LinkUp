@@ -1,12 +1,11 @@
 import { FollowList } from "@/components/profiles/FollowList";
-import { FollowersLayout } from "@/layouts/FollowersLayout";
-
+import { MainLayout } from "@/layouts/MainLayout";
 
 export const FollowersPage = ({type} : {type: "follower" | "followee"}) => {
 
     return (
-        <FollowersLayout>
-            <FollowList type={type}/>
-        </FollowersLayout>
+        <MainLayout>
+            <FollowList type={type} />
+        </MainLayout>
     );
 }

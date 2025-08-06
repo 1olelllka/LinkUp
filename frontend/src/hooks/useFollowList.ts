@@ -1,10 +1,10 @@
 import { getFolloweesForSpecificProfile, getFollowersForSpecificProfile } from "@/services/profileServices";
-import { type FollowerPage } from "@/types/FollowerPage"
+import type { ProfilePage } from "@/types/Profile";
 import { useEffect, useState } from "react"
 
 
 export const useFollowList = (data: {userId: string | undefined, pageNumber: number | 0, type: "followee" | "follower"}) => {
-    const [followListPage, setFollowListPage] = useState<FollowerPage>();
+    const [followListPage, setFollowListPage] = useState<ProfilePage>();
 
     useEffect(() => {
         if (data.userId) {

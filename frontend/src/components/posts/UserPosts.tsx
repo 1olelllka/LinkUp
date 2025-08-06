@@ -15,10 +15,11 @@ export const UserPosts = ({ userId } : {userId : string | undefined}) => {
   const {posts, setPosts} = useUserPosts(userId);
 
   return (
-    <div>
-      <h2 className="text-xl font-bold mb-4">Posts</h2>
+    <div className="mt-5 bg-slate-50 p-6 rounded-xl shadow-lg transition-all w-[99%]">
+      <h2 className="text-2xl font-bold mb-4">Posts</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {posts?.map((post) => (
+        {posts && posts.length > 0 
+        ? posts.map((post) => (
           <PostModal postId={post.id} trigger={
             <Card
               key={post.id}
@@ -72,12 +73,15 @@ export const UserPosts = ({ userId } : {userId : string | undefined}) => {
                 ) : (
                   <div />
                 )}
-                <p className="text-xs text-gray-400">{post.created_at}</p>
+                <p className="text-xs text-gray-400">{new Date(post.created_at).toDateString()}</p>
                 </div>
               </CardContent>
             </Card>
           } />
-        ))}
+        ))
+        : <div>
+            <p className="font-semibold text-slate-400">📭 Nothing to see here</p>
+          </div>}
       </div>
     </div>
   );
