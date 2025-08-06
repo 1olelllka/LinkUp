@@ -1,9 +1,18 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useUserPosts } from "@/hooks/useUserPosts";
 import { PostModal } from "./PostModal";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
+import { useProfileStore } from "@/store/useProfileStore";
+import { deletePostById } from "@/services/postServices";
 
 export const UserPosts = ({ userId } : {userId : string | undefined}) => {
-  const posts = useUserPosts(userId);
+  const {posts, setPosts} = useUserPosts(userId);
 
   return (
     <div>
@@ -34,9 +43,37 @@ export const UserPosts = ({ userId } : {userId : string | undefined}) => {
                 <div>
                   <p className="text-md text-gray-800">{post.desc}</p>
                 </div>
-                <p className="text-xs text-gray-400 text-right mt-auto">
-                  {post.created_at}
-                </p>
+
+                <div className="flex items-center justify-between mt-auto pt-4">
+                {post.user_id?.toString() === useProfileStore.getState().profile?.userId ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="text-gray-500 hover:text-red-600 transition">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      <DropdownMenuItem
+                        onClick={async () => {
+                          deletePostById(post.id).then(response => {
+                            if (response.status == 204) {
+                              setPosts((prev) => prev?.filter(p => p.id != post.id));
+                            } else {
+                              console.log("Unexpected status code --> " + response);
+                            }
+                          }).catch(err => console.log(err));
+                        }}
+                        className="text-red-600 focus:bg-red-50 focus:text-red-700"
+                      >
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <div />
+                )}
+                <p className="text-xs text-gray-400">{post.created_at}</p>
+                </div>
               </CardContent>
             </Card>
           } />

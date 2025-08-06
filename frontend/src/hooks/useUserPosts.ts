@@ -13,5 +13,5 @@ export const useUserPosts = (userId: string | undefined) => {
         }
     }, [userId])
 
-    return posts;
+    return {posts, setPosts};
 }

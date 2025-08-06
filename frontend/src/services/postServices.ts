@@ -13,6 +13,11 @@ export const getPostDetailsById = async (id: number) => {
     return res.data;
 }
 
+export const deletePostById = async (id: number) => {
+    const res = await axiosInterceptor.delete(`${API_ROUTES.posts.detail(id)}`);
+    return res;
+}
+
 export const createNewCommentForSpecificPost = async (data: {post: number, text: string, parent?: number}) => {
     const res = await axiosInterceptor.post(`${API_ROUTES.comments.create(data.post)}`, data);
     return res.data;
