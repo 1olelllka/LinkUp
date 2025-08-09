@@ -2,12 +2,27 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { useSearch } from "@/hooks/useSearch";
 import { ProfileList } from "./ProfileList";
-
+import { useSearchParams } from "react-router";
 
 export const ProfileSearch = () => {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialSearch = searchParams.get("query") || "";
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
+
   const searchResult = useSearch(searchTerm);
-  
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    if (value) {
+      setSearchParams({ query: value });
+    } else {
+      searchParams.delete("query");
+      setSearchParams(searchParams);
+    }
+  };
+
   return (
     <div className="bg-slate-50 rounded-2xl shadow-lg p-6 min-h-[calc(100vh-48px)] transition-all w-[99%]">
       <div className="max-w-4xl">
@@ -16,7 +31,7 @@ export const ProfileSearch = () => {
         <Input
           placeholder="Search by name or username..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleChange}
           className="mb-6 bg-white border border-gray-300 w-[75%]"
         />
 

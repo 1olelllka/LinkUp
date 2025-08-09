@@ -18,6 +18,7 @@ import {
 import { DialogClose } from "@radix-ui/react-dialog";
 import { Button } from "../ui/button";
 import { deleteChatById } from "@/services/chatServices";
+import { SearchNewChat } from "./SearchNewChat";
 
 
 type selectedChat = {
@@ -31,6 +32,7 @@ export const ChatList = () => {
   const currentUserId = useProfileStore.getState().profile?.userId;
   const { allChats, setAllChats, chatUsersPage, loadNextPage, loading } = useChatList(currentUserId, 0);
   const [deleteDialogChatId, setDeleteDialogChatId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   const chatListRef = useRef<HTMLDivElement>(null);
 
@@ -53,91 +55,94 @@ export const ChatList = () => {
         ref={chatListRef}
       >
         <h2 className="text-xl font-bold mb-4">Messages</h2>
-        <div className="space-y-3">
-          {allChats.map((chat) => {
-            const other = chat.participants.find((p) => p.id !== currentUserId);
-            return (
-              <div
-                key={chat.id}
-                onClick={() =>
-                  setSelectedChat({
-                    id: chat.id,
-                    selectedReceiverName: other ? other.name : "",
-                    receiverId: other?.id
-                  })
-                }
-                className={`p-4 rounded-xl cursor-pointer transition flex justify-between items-center ${
-                  selectedChat?.id === chat.id ? "bg-gray-200" : "hover:bg-gray-100"
-                }`}
-              >
-                <div>
-                  <h4 className="font-semibold">{other?.name}</h4>
-                  <p className="text-sm text-gray-500 truncate w-40">Dummy message</p>
+        <SearchNewChat selectedChat={selectedChat} setSelectedChat={setSelectedChat} searchTerm={searchTerm} setSearchTerm={setSearchTerm}/>
+        {searchTerm.length == 0 &&         
+          <div className="space-y-3">
+            {allChats.map((chat) => {
+              const other = chat.participants.find((p) => p.id !== currentUserId);
+              return (
+                <div
+                  key={chat.id}
+                  onClick={() =>
+                    setSelectedChat({
+                      id: chat.id,
+                      selectedReceiverName: other ? other.name : "",
+                      receiverId: other?.id
+                    })
+                  }
+                  className={`p-4 rounded-xl cursor-pointer transition flex justify-between items-center ${
+                    selectedChat?.id === chat.id ? "bg-gray-200" : "hover:bg-gray-100"
+                  }`}
+                >
+                  <div>
+                    <h4 className="font-semibold">{other?.name} (@{other?.username})</h4>
+                    <p className="text-sm text-gray-500 truncate w-40">Dummy message</p>
+                  </div>
+                  <div>
+                    <Dialog 
+                      open={deleteDialogChatId === chat.id} 
+                      onOpenChange={(open) => setDeleteDialogChatId(open ? chat.id : null)}
+                    >
+                      <DialogTrigger asChild>
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <HoverCard>
+                            <HoverCardTrigger asChild>
+                              <Eraser size={15} className="cursor-pointer justify-self-end" />
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-20 p-1">
+                              <p className="text-xs text-slate-500">Delete Chat</p>
+                            </HoverCardContent>
+                          </HoverCard>
+                        </div>
+                      </DialogTrigger>
+                      <DialogContent className="w-100">
+                        <DialogTitle>Warning</DialogTitle>
+                        <p className="text-md">Are you sure you want to delete this chat? 
+                        <p className="text-red-500 text-xs">*This chat will also be deleted for other participant!</p></p>
+                        <DialogFooter className="sm:justify-end">
+                            <DialogClose asChild>
+                              <Button type="button" variant="secondary">
+                                Close
+                              </Button>
+                            </DialogClose>
+                            <DialogClose asChild>
+                              <Button 
+                                type="button" 
+                                variant="destructive"
+                                onClick={() => {
+                                  deleteChatById(chat.id).then(response => {
+                                    if (response.status == 204) {
+                                      setSelectedChat(null);
+                                      setAllChats((prev) => prev.filter((c) => c.id != chat.id))
+                                    } else {
+                                      console.log("Unexpected response status -> " + response);
+                                    }
+                                  }).catch(err => console.log(err));
+                                }}>
+                                Delete
+                              </Button>
+                            </DialogClose>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                    <span className="text-xs text-gray-400">11:53</span>
+                  </div>
                 </div>
-                <div>
-                  <Dialog 
-                    open={deleteDialogChatId === chat.id} 
-                    onOpenChange={(open) => setDeleteDialogChatId(open ? chat.id : null)}
-                  >
-                    <DialogTrigger asChild>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <HoverCard>
-                          <HoverCardTrigger asChild>
-                            <Eraser size={15} className="cursor-pointer justify-self-end" />
-                          </HoverCardTrigger>
-                          <HoverCardContent className="w-20 p-1">
-                            <p className="text-xs text-slate-500">Delete Chat</p>
-                          </HoverCardContent>
-                        </HoverCard>
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="w-100">
-                      <DialogTitle>Warning</DialogTitle>
-                      <p className="text-md">Are you sure you want to delete this chat? 
-                      <p className="text-red-500 text-xs">*This chat will also be deleted for other participant!</p></p>
-                      <DialogFooter className="sm:justify-end">
-                          <DialogClose asChild>
-                            <Button type="button" variant="secondary">
-                              Close
-                            </Button>
-                          </DialogClose>
-                          <DialogClose asChild>
-                            <Button 
-                              type="button" 
-                              variant="destructive"
-                              onClick={() => {
-                                deleteChatById(chat.id).then(response => {
-                                  if (response.status == 204) {
-                                    setSelectedChat(null);
-                                    setAllChats((prev) => prev.filter((c) => c.id != chat.id))
-                                  } else {
-                                    console.log("Unexpected response status -> " + response);
-                                  }
-                                }).catch(err => console.log(err));
-                              }}>
-                              Delete
-                            </Button>
-                          </DialogClose>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                  <span className="text-xs text-gray-400">11:53</span>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
 
-          {loading && (
-            <p className="font-semibold text-center text-slate-400">🔄 Loading...</p>
-          )}
+            {loading && (
+              <p className="font-semibold text-center text-slate-400">🔄 Loading...</p>
+            )}
 
-          {chatUsersPage?.last && !loading && allChats.length > 0 && (
-            <p className="font-semibold text-center text-slate-400">🚀 You're all caught up!</p>
-          )}
-          {allChats.length == 0 && (
-            <p className="font-semibold text-center text-slate-400 mt-10">💬 Start chatting with your friends!</p>
-          )}
-        </div>
+            {chatUsersPage?.last && !loading && allChats.length > 0 && (
+              <p className="font-semibold text-center text-slate-400">🚀 You're all caught up!</p>
+            )}
+            {allChats.length == 0 && (
+              <p className="font-semibold text-center text-slate-400 mt-10">💬 Start chatting with your friends!</p>
+            )}
+          </div>
+        }
       </div>
 
       {/* ChatWindow (right column) */}
