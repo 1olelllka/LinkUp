@@ -22,7 +22,8 @@ export const API_ROUTES = {
         detail: (id: string) => `/chats/${id}`
     },
     messages: {
-        list: "/chats/"
+        list: "/chats/",
+        details: (id: string) => `/chats/messages/${id}`
     },
     feed: {
         list: "/feeds"

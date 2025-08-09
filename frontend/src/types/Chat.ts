@@ -9,6 +9,17 @@ export type ChatUser = {
   username: string
 };
 
+
+export type ChatPage = {
+  content: ChatListResponse[],
+  pageable: {
+    pageNumber: number
+  },
+  totalPages: number,
+  totalElements: number,
+  last: boolean
+}
+
 export type Message = {
   id: string,
   chatId: string,
@@ -18,8 +29,8 @@ export type Message = {
   createdAt: string
 }
 
-export type ChatPage = {
-  content: ChatListResponse[],
+export type MessagePage = {
+  content: Message[],
   pageable: {
     pageNumber: number
   },

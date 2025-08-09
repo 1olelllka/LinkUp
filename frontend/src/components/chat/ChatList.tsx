@@ -23,13 +23,14 @@ import { deleteChatById } from "@/services/chatServices";
 type selectedChat = {
   id: string,
   selectedReceiverName: string,
+  receiverId: string | undefined,
 }
 
 export const ChatList = () => {
   const [selectedChat, setSelectedChat] = useState<selectedChat | null>(null);
   const currentUserId = useProfileStore.getState().profile?.userId;
   const { allChats, setAllChats, chatUsersPage, loadNextPage, loading } = useChatList(currentUserId, 0);
-  const [deleteDialogChatId, setDeleteDialogChatId] = useState<string | null>(null); // Change this line
+  const [deleteDialogChatId, setDeleteDialogChatId] = useState<string | null>(null);
 
   const chatListRef = useRef<HTMLDivElement>(null);
 
@@ -44,7 +45,7 @@ export const ChatList = () => {
 
   return (
     <div 
-      className="flex bg-slate-50 p-6 rounded-xl shadow-lg transition-all w-[99%] h-[93.6%] overflow-hidden"    
+      className="flex bg-slate-50 p-6 rounded-xl shadow-lg transition-all w-[99%] h-[94.5vh] overflow-hidden"    
       >
       <div
         className="w-1/3 border-r pr-4 overflow-y-auto h-full"
@@ -62,6 +63,7 @@ export const ChatList = () => {
                   setSelectedChat({
                     id: chat.id,
                     selectedReceiverName: other ? other.name : "",
+                    receiverId: other?.id
                   })
                 }
                 className={`p-4 rounded-xl cursor-pointer transition flex justify-between items-center ${
@@ -132,6 +134,9 @@ export const ChatList = () => {
           {chatUsersPage?.last && !loading && allChats.length > 0 && (
             <p className="font-semibold text-center text-slate-400">🚀 You're all caught up!</p>
           )}
+          {allChats.length == 0 && (
+            <p className="font-semibold text-center text-slate-400 mt-10">💬 Start chatting with your friends!</p>
+          )}
         </div>
       </div>
 
@@ -142,6 +147,7 @@ export const ChatList = () => {
             chatId={selectedChat.id}
             senderId={currentUserId}
             senderName={selectedChat.selectedReceiverName}
+            receiverId={selectedChat.receiverId}
           />
         ) : (
           <div className="flex items-center justify-self-center h-[90%] fixed">

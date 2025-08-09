@@ -18,10 +18,8 @@ export const useChatList = (userId: string | undefined, initialPage: number = 0)
     fetchChatList(userId, pageNumber)
       .then((response) => {
         if (pageNumber === 0) {
-          // Replace list on first page
           setAllChats(response.content);
         } else {
-          // Append on subsequent pages
           setAllChats((prev) => [...prev, ...response.content]);
         }
         setChatUsersPage(response);

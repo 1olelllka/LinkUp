@@ -1,7 +1,7 @@
 import { AppSidebar } from "@/layouts/LeftSidebar"
 import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router";
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
@@ -20,8 +20,19 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 className="size-7 mt-3"
                 onClick={() => navigate(-1)}
               >
-          <ArrowLeft />
-        </Button>
+                <ArrowLeft />
+              </Button>
+              <Button
+                data-sidebar="trigger"
+                data-slot="sidebar-trigger"
+                variant="ghost"
+                size="icon"
+                className="size-7 mt-3"
+                onClick={() => navigate(1)}
+              >
+                <ArrowRight />
+              </Button>
+
         </div>
         {children}
       </main>

@@ -54,7 +54,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A server error occurred on external service."));
         }
         sessions.put(userId, session);
-        session.sendMessage(new TextMessage("Connection established! Your userId: " + userId));
+//        session.sendMessage(new TextMessage("Connection established! Your userId: " + userId));
     }
 
     @Override
@@ -84,9 +84,12 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             chatId = chat.get().getId();
         }
         if (targetSession != null && targetSession.isOpen()) {
-            targetSession.sendMessage(new TextMessage(senderId + ": " + chatMessage));
+//            targetSession.sendMessage(new TextMessage(senderId + ": " + chatMessage));
+            targetSession.sendMessage(new TextMessage(chatMessage));
+
         } else {
-            session.sendMessage(new TextMessage("User " + targetUserId + " is not available."));
+            // DEBUG
+//            session.sendMessage(new TextMessage("User " + targetUserId + " is not available."));
             NotificationDto notification = NotificationDto.builder()
                     .read(false)
                     .createdAt(new Date())
@@ -99,6 +102,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         // I've implemented sync write into db for simplicity, in future I'll try to do this async to prevent db overhead.
         messageRepository.save(MessageEntity
                 .builder()
+                .id(msg.getId())
                 .chatId(chatId)
                 .from(senderId)
                 .to(targetUserId)
