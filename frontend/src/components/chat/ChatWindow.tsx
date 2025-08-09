@@ -14,7 +14,7 @@ export const ChatWindow = ({ chatId, senderId, senderName }: ChatWindowProps) =>
         <h2 className="text-2xl font-bold">Chat with {senderName}</h2>
       </div>
 
-      <div className="flex-1 space-y-4 overflow-y-auto p-2 mb-4">
+      {/* <div className="flex-1 space-y-4 overflow-y-auto p-2 mb-4">
         {messages?.map((msg, idx) => (
           <div
             key={idx}
@@ -28,7 +28,7 @@ export const ChatWindow = ({ chatId, senderId, senderName }: ChatWindowProps) =>
             <span className="text-xs text-gray-500 block mt-1">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
           </div>
         ))}
-      </div>
+      </div> */}
 
       {/* Message input */}
       <form className="flex items-center gap-2 border-t pt-4">

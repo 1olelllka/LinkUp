@@ -18,7 +18,8 @@ export const API_ROUTES = {
         unfollow: `/profiles/unfollow`
     },
     chats: {
-        list: "/chats/users/"
+        list: "/chats/users/",
+        detail: (id: string) => `/chats/${id}`
     },
     messages: {
         list: "/chats/"

@@ -17,3 +17,13 @@ export type Message = {
   content: string,
   createdAt: string
 }
+
+export type ChatPage = {
+  content: ChatListResponse[],
+  pageable: {
+    pageNumber: number
+  },
+  totalPages: number,
+  totalElements: number,
+  last: boolean
+}

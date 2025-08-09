@@ -3,6 +3,7 @@ import { CustomAvatar } from "../profiles/CustomAvatar";
 import type { Comment } from "@/types/Post";
 import { CommentForm } from "./CommentForm";
 import { useProfileStore } from "@/store/useProfileStore";
+import { Trash } from "lucide-react";
 
 export function Comments({
   postId,
@@ -51,9 +52,7 @@ export function Comments({
               className="text-gray-400 hover:text-red-600 p-1 rounded"
               title="Delete comment"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3 6h18l-1.5 14H4.5L3 6zm5-2V2h8v2h5v2H3V4h5zm2 0h4V2h-4v2z"/>
-              </svg>
+              <Trash size={16}/>
             </button>
             
             {/* Delete confirmation dropdown */}

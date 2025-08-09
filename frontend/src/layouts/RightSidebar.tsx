@@ -14,6 +14,7 @@ export function RightSidebar() {
         <div className="flex space-x-2 overflow-x-auto">
           <img src="/story_img.jpg" className="w-25 h-40 rounded-xl hover:cursor-pointer hover:opacity-75" />
           <img src="/story_img.jpg" className="w-25 h-40 rounded-xl hover:cursor-pointer hover:opacity-75" />
+          <img src="/story_img.jpg" className="w-25 h-40 rounded-xl hover:cursor-pointer hover:opacity-75" />
         </div>
       </SidebarContent>
     </Sidebar>
