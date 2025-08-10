@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { useSearch } from "@/hooks/useSearch";
 import { ProfileList } from "./ProfileList";
 import { useSearchParams } from "react-router";
+import { ProfilePagination } from "./ProfilePagination";
 
 export const ProfileSearch = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -36,6 +37,7 @@ export const ProfileSearch = () => {
         />
 
         <ProfileList profileList={searchResult} />
+        <ProfilePagination pageOptions={searchResult}/>
       </div>
     </div>
   );

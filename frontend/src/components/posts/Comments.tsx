@@ -22,7 +22,6 @@ export function Comments({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const currentUserId = useProfileStore.getState().profile?.userId;
 
-  // Check if current user can delete this comment
   const canDelete = currentUserId && (currentUserId === comment.user_id);
 
   const handleDelete = () => {
@@ -44,7 +43,6 @@ export function Comments({
           </div>
         </div>
         
-        {/* Delete button - only show if user can delete */}
         {canDelete && (
           <div className="relative">
             <button
@@ -55,7 +53,6 @@ export function Comments({
               <Trash size={16}/>
             </button>
             
-            {/* Delete confirmation dropdown */}
             {showDeleteConfirm && (
               <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-10 min-w-48">
                 <p className="text-sm text-gray-700 mb-3">Delete this comment?</p>
@@ -99,7 +96,6 @@ export function Comments({
         </button>
       </div>
 
-      {/* Reply form */}
       {replying && (
         <div className="mt-2">
           <CommentForm

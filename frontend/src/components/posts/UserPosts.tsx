@@ -10,9 +10,14 @@ import {
 import { MoreHorizontal } from "lucide-react";
 import { useProfileStore } from "@/store/useProfileStore";
 import { deletePostById } from "@/services/postServices";
+import { useCallback } from "react";
 
 export const UserPosts = ({ userId } : {userId : string | undefined}) => {
-  const {posts, setPosts} = useUserPosts(userId);
+  const {posts, setPosts, postPage, loadMorePosts, loading, setLoading} = useUserPosts(userId);
+
+  const handleLoadPosts = useCallback(async () => {
+    await loadMorePosts();
+  }, [loadMorePosts])
 
   return (
     <div className="mt-5 bg-slate-50 p-6 rounded-xl shadow-lg transition-all w-[99%]">
@@ -55,10 +60,14 @@ export const UserPosts = ({ userId } : {userId : string | undefined}) => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
                       <DropdownMenuItem
-                        onClick={async () => {
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
                           deletePostById(post.id).then(response => {
                             if (response.status == 204) {
+                              setLoading(true);
                               setPosts((prev) => prev?.filter(p => p.id != post.id));
+                              setLoading(false);
                             } else {
                               console.log("Unexpected status code --> " + response);
                             }
@@ -83,6 +92,19 @@ export const UserPosts = ({ userId } : {userId : string | undefined}) => {
             <p className="font-semibold text-slate-400">📭 Nothing to see here</p>
           </div>}
       </div>
+        {postPage && postPage.next != null && 
+          <div className="mt-2">
+            {loading 
+            ? <p 
+            className="text-center font-semibold text-sm hover:underline cursor-pointer text-slate-400">
+              🔄 Loading...</p>
+            : <p 
+            className="text-center font-semibold text-sm hover:underline cursor-pointer text-slate-400"
+            onClick={handleLoadPosts}
+            >🚀 Load More</p>
+            }
+          </div>
+        }
     </div>
   );
 };

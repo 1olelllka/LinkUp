@@ -6,7 +6,7 @@ import type { ProfilePage } from "@/types/Profile"
 export const ProfileList = (data: { profileList: ProfilePage}) => {
     
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-5">
           {data.profileList?.content.length > 0 ? (
             data.profileList?.content.map((profile) => (
               <div

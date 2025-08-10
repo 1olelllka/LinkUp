@@ -16,5 +16,26 @@ export type Comment = {
   photo: string | undefined,
   username: string,
   name: string
+  created_at: string,
   replies?: Comment[]
+}
+
+export type PostPage = {
+  count: number,
+  next: string,
+  previous: string,
+  results: Post[]
+}
+
+export type CommentPage = {
+  count: number,
+  next: string,
+  previous: string,
+  results: Comment[]
+}
+
+export type FeedPage = {
+  content: Post[],
+  last: boolean,
+  first: boolean,
 }

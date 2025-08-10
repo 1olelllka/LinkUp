@@ -3,9 +3,9 @@ import axiosInterceptor from "@/lib/api/axios";
 import axios from "axios"
 
 
-export const getPostsForSpecificUser = async (userId: string) => {
-    const res = await axios.get(`${API_ROUTES.posts.list}${userId}`);
-    return res.data.results;
+export const getPostsForSpecificUser = async (userId: string, pageNumber : number) => {
+    const res = await axios.get(`${API_ROUTES.posts.list}${userId}?page=${pageNumber}`);
+    return res.data;
 }
 
 export const getPostDetailsById = async (id: number) => {
@@ -23,8 +23,8 @@ export const createNewCommentForSpecificPost = async (data: {post: number, text:
     return res.data;
 }
 
-export const getAllCommentsForSpecificPost = async (id: number) => {
-    const res = await axios.get(`${API_ROUTES.comments.list(id)}`);
+export const getAllCommentsForSpecificPost = async (id: number, pageNumber: number) => {
+    const res = await axios.get(`${API_ROUTES.comments.list(id)}?page=${pageNumber}`);
     return res.data;
 }
 

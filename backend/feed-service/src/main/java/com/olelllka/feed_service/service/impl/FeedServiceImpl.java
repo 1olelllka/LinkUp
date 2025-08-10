@@ -40,14 +40,16 @@ public class FeedServiceImpl implements FeedService {
         } catch (SignatureException ex) {
             throw new AuthException(ex.getMessage());
         }
-        int start = pageable.getPageNumber() * pageable.getPageSize();
-        int end = start + pageable.getPageSize() - 1;
-        List<String> postIds = redisTemplate.opsForList().range("feed:profile:"+ SHA256.hash(profileId.toString()), start, end);
-        return getPostsByIds(postIds.stream().map(Integer::parseInt).toList(), start, end);
+        int start = (int) pageable.getOffset();
+        String key = "feed:profile:" + SHA256.hash(profileId.toString());
+        Long size = redisTemplate.opsForList().size(key);
+        int end = (int)Math.min((start + pageable.getPageSize()), size);
+        List<String> postIds = redisTemplate.opsForList().range(key, start, end - 1);
+        return getPostsByIds(postIds.stream().map(Integer::parseInt).toList(), size, pageable);
     }
 
     // here can be some latency issues if list of ids is too large, but I'll fix it sometime later
-    private Page<PostDto> getPostsByIds(List<Integer> ids, int start, int end) {
+    private Page<PostDto> getPostsByIds(List<Integer> ids, Long totalElem, Pageable pageable) {
         List<PostDto> posts = new ArrayList<>();
         for (Integer id : ids) {
             ResponseEntity<PostDto> result = postsInterface.getPosts(id);
@@ -57,7 +59,7 @@ public class FeedServiceImpl implements FeedService {
                 throw new RuntimeException("Post Service encounters error.");
             }
         }
-        return new PageImpl<>(posts);
+        return new PageImpl<>(posts, pageable, totalElem);
     }
 
     private Page<PostDto> fallbackMethod(UUID profileId, Pageable pageable, String jwt, Throwable t) {

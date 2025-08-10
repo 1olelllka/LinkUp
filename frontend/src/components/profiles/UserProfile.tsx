@@ -12,15 +12,12 @@ export const UserProfile = () => {
 
   const {profile, setProfile} = useMyProfileDetail();
   const followersPage= useFollowList(
-    {userId: useProfileStore.getState().profile?.userId, pageNumber: 0, type:"follower"}
+    {userId: useProfileStore.getState().profile?.userId, type:"follower"}
   );
   const followeesPage = useFollowList({
     userId: useProfileStore.getState().profile?.userId,
-    pageNumber: 0,
     type: "followee"
   });
-
-  console.log(followersPage)
 
   return (
     <div className="bg-slate-50 p-6 rounded-xl shadow-lg transition-all w-[99%]">

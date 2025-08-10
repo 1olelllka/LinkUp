@@ -1,6 +1,7 @@
 import { useParams } from "react-router";
 import { useFollowList } from "@/hooks/useFollowList";
 import { ProfileList } from "./ProfileList";
+import { ProfilePagination } from "./ProfilePagination";
 
 interface FollowListProp {
   type: "follower" | "followee"
@@ -10,7 +11,6 @@ export function FollowList({type} : FollowListProp) {
   const { userId } = useParams();
   const followerPage = useFollowList({
     userId: userId,
-    pageNumber: 0,
     type: type
   })
 
@@ -20,7 +20,10 @@ export function FollowList({type} : FollowListProp) {
         <h1 className="text-3xl font-bold mb-6">{type === "followee" ? "Followees" : "Followers"}</h1>
 
         {followerPage && 
+        <>
           <ProfileList profileList={followerPage} />
+          <ProfilePagination pageOptions={followerPage} />
+        </>
         }
       </div>
     </div>

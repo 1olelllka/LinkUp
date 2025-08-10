@@ -4,8 +4,9 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useProfileStore } from "@/store/useProfileStore";
 import axios from "axios"
 
-export const searchProfile = async (searchTerm: string) => {
-    const res = await axios.get(`${API_ROUTES.profile.search}${searchTerm}`);
+export const searchProfile = async (searchTerm: string, pageNumber: string | null) => {
+    if (pageNumber == null) pageNumber = '1';
+    const res = await axios.get(`${API_ROUTES.profile.search}${searchTerm}&page=${parseInt(pageNumber) - 1}`);
     return res.data;
 }
 
@@ -20,13 +21,15 @@ export const patchPersonalProfileInfo = async (userId: string | undefined, data:
     return res.data;
 }
 
-export const getFollowersForSpecificProfile = async (userId: string, pageNumber: number) => {
-    const res = await axios.get(`${API_ROUTES.profile.profileFollowers(userId, pageNumber)}`);
+export const getFollowersForSpecificProfile = async (userId: string, pageNumber: string | null) => {
+    if (pageNumber == null) pageNumber = '1'
+    const res = await axios.get(`${API_ROUTES.profile.profileFollowers(userId, parseInt(pageNumber) - 1)}`);
     return res.data;
 }
 
-export const getFolloweesForSpecificProfile = async (userId: string, pageNumber: number) => {
-    const res = await axios.get(`${API_ROUTES.profile.profileFollowees(userId, pageNumber)}`);
+export const getFolloweesForSpecificProfile = async (userId: string, pageNumber: string | null) => {
+    if (pageNumber == null) pageNumber = '1';
+    const res = await axios.get(`${API_ROUTES.profile.profileFollowees(userId, parseInt(pageNumber) - 1)}`);
     return res.data;
 }
 

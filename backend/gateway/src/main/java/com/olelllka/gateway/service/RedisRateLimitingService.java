@@ -14,7 +14,7 @@ public class RedisRateLimitingService {
     private final Map<String, Integer> rateLimits = Map.of(
             "/api/auth", 60,
             "/api/posts", 60,
-            "/api/profiles", 60,
+            "/api/profiles", 80,
             "/api/feeds", 60,
             "/api/stories", 60,
             "/api/chats", 60,

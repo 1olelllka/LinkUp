@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { CustomAvatar } from "../profiles/CustomAvatar";
-import { useEffect, useState } from "react";
-import type { Comment, Post } from "@/types/Post";
+import { useCallback, useEffect, useState } from "react";
+import type { Comment, CommentPage, Post } from "@/types/Post";
 import type { Profile } from "@/types/Profile";
 import { createNewCommentForSpecificPost, deleteSpecificComment, getAllCommentsForSpecificPost, getPostDetailsById } from "@/services/postServices";
 import { getSpecificProfileInfo } from "@/services/profileServices";
@@ -13,7 +13,10 @@ export function PostModal({ postId, trigger }: { postId: number, trigger: React.
   const [shouldFetch, setShouldFetch] = useState(false);
   const [post, setPost] = useState<Post>();
   const [profile, setProfile] = useState<Profile>();
-  const [comments, setComments] = useState<Comment[]>();
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentPage, setCommentPage] = useState<CommentPage>();
+  const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     if (open) {
@@ -30,8 +33,9 @@ export function PostModal({ postId, trigger }: { postId: number, trigger: React.
           const profileData = await getSpecificProfileInfo(postData?.user_id);
           setProfile(profileData);
 
-          const commentData = await getAllCommentsForSpecificPost(postId);
-          setComments(commentData.results);
+          const commentData = await getAllCommentsForSpecificPost(postId, 1);
+          setCommentPage(commentData);
+          setComments(commentData.results.sort((a : Comment, b : Comment) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
         } catch (err) {
           console.error("Failed to fetch post/profile", err);
         }
@@ -42,6 +46,20 @@ export function PostModal({ postId, trigger }: { postId: number, trigger: React.
       }
     }, [shouldFetch, postId, post]);
 
+    const loadMoreComments = useCallback(async () => {
+      if (loading || !postId) return;
+      setLoading(true);
+      try {
+        const res = await getAllCommentsForSpecificPost(postId, currentPage + 1);
+        setCurrentPage(prevPage => prevPage + 1);
+        setCommentPage(res);
+        setComments(prev => [...prev, ...res.results]);  // Spread array here
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setLoading(false);
+      }
+    }, [loading, postId, currentPage]);
 
   const handleAddReply = async (postId: number, parentId: number, text: string) => {
     try {
@@ -109,42 +127,41 @@ const handleDeleteComment = async (id: number) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="w-full max-w-7xl max-h-[90vh] overflow-hidden p-0 rounded-2xl">
-        <div className="flex flex-col md:flex-row w-full h-full">
 
-          {/* Left: Image section */}
-          {post?.image && (
-            <div className="md:w-1/2 w-full h-[300px] md:h-auto bg-black">
-              <img
-                src={post.image}
-                alt={post.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
+      <DialogContent className="min-w-[90%] h-[90vh] p-0 rounded-2xl overflow-hidden">
+      <div className="flex flex-col md:flex-row w-full h-full min-h-0">
+        {/* Left */}
+        {post?.image && (
+          <div className="md:w-1/2 w-full h-[40vh] md:h-full bg-black flex-shrink-0">
+            <img
+              src={post.image}
+              alt={post.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
 
-          {/* Right: Content section */}
-          <div className="md:w-1/2 w-full p-6 overflow-y-auto space-y-4">
-            {/* Profile */}
-            <div className="flex items-center gap-4">
-              <CustomAvatar name={profile?.name} photo={profile?.photo} size={48} />
-              <div>
-                <p className="font-bold">{profile?.name}</p>
-                <p className="text-muted-foreground text-sm">@{profile?.username}</p>
+          <div className="md:w-1/2 w-full p-6 flex flex-col h-full min-h-0">
+
+            {/* Header - avatar + post info + comment form */}
+            <div className="flex flex-col gap-4 flex-none">
+              <div className="flex items-center gap-4">
+                <CustomAvatar name={profile?.name} photo={profile?.photo} size={48} />
+                <div>
+                  <p className="font-bold">{profile?.name}</p>
+                  <p className="text-muted-foreground text-sm">@{profile?.username}</p>
+                </div>
               </div>
-            </div>
 
-            {/* Post */}
-            <div>
-              <h2 className="text-xl font-semibold">{post?.title}</h2>
-              <p className="text-gray-700">{post?.desc}</p>
-            </div>
+              <div>
+                <h2 className="text-xl font-semibold">{post?.title}</h2>
+                <p className="text-gray-700">{post?.desc}</p>
+              </div>
 
-            {/* Comments */}
-            <div className="space-y-2">
-              <h3 className="font-semibold text-lg">Comments</h3>
               <CommentForm postId={post?.id || 0} onSubmit={handleAddTopLevelComment} />
+            </div>
 
+            <div className="mt-4 flex-1 min-h-0 overflow-y-auto pr-2">
               {comments?.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No comments yet.</p>
               ) : (
@@ -158,6 +175,20 @@ const handleDeleteComment = async (id: number) => {
                   />
                 ))
               )}
+              {commentPage && commentPage.next != null && (
+                <div className="mt-2">
+                  {loading 
+                  ? <p 
+                  className="text-center font-semibold text-sm hover:underline cursor-pointer text-slate-400">
+                    🔄 Loading...</p>
+                  : <p 
+                  className="text-center font-semibold text-sm hover:underline cursor-pointer text-slate-400"
+                  onClick={loadMoreComments}
+                  >🚀 Load More</p>
+                  }
+                </div>
+              )
+              }
             </div>
           </div>
         </div>
