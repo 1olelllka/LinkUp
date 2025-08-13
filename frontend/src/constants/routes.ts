@@ -36,5 +36,10 @@ export const API_ROUTES = {
         create: (post: number) => `/posts/${post}/comments`,
         list: (post: number) => `${API_BASE}/posts/${post}/comments`,
         delete: (id: number) => `${API_BASE}/posts/comments/${id}`
+    },
+    notifications: {
+        list: (userId: string) => `/notifications/users/${userId}`,
+        delete: (id: string) => `/notifications/${id}`,
+        update_status: (ids: string[]) => `/notifications/read?ids=${ids}`
     }
 }

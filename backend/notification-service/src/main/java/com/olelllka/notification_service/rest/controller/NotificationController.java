@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -28,11 +29,11 @@ public class NotificationController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    @PatchMapping("/{notification_id}")
-    public ResponseEntity<NotificationDto> updateReadNotification(@PathVariable String notification_id,
-                                                                  @RequestHeader(name="Authorization") String header) {
-        NotificationEntity updated = service.updateReadNotification(notification_id, header.substring(7));
-        return new ResponseEntity<>(notificationMapper(updated), HttpStatus.OK);
+    @PatchMapping("/read")
+    public ResponseEntity updateReadStatus(@RequestParam(name="ids") List<String> ids,
+                                           @RequestHeader(name="Authorization") String header) {
+        service.updateReadNotifications(ids, header.substring(7));
+        return new ResponseEntity(HttpStatus.OK);
     }
 
     @DeleteMapping("/{notification_id}")

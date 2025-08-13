@@ -2,6 +2,7 @@ package com.olelllka.notification_service.rest.controller;
 
 import com.olelllka.notification_service.domain.dto.ErrorMessage;
 import com.olelllka.notification_service.rest.exception.AuthException;
+import com.olelllka.notification_service.rest.exception.ForbiddenException;
 import com.olelllka.notification_service.rest.exception.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,11 @@ public class AdviceController {
     @ExceptionHandler(AuthException.class)
     public ResponseEntity<ErrorMessage> authException(AuthException ex) {
         return new ResponseEntity<>(ErrorMessage.builder().message(ex.getMessage()).build(), HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorMessage> forbiddenException(ForbiddenException ex) {
+        return new ResponseEntity<>(ErrorMessage.builder().message(ex.getMessage()).build(), HttpStatus.FORBIDDEN);
     }
 
 }

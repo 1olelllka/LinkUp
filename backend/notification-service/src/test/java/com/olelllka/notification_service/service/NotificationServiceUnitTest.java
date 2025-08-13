@@ -4,10 +4,11 @@ import com.olelllka.notification_service.TestDataUtil;
 import com.olelllka.notification_service.domain.entity.NotificationEntity;
 import com.olelllka.notification_service.repository.NotificationRepository;
 import com.olelllka.notification_service.rest.exception.AuthException;
-import com.olelllka.notification_service.rest.exception.NotFoundException;
+import com.olelllka.notification_service.rest.exception.ForbiddenException;
 import com.olelllka.notification_service.service.impl.NotificationServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -15,6 +16,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +35,8 @@ public class NotificationServiceUnitTest {
     private NotificationRepository repository;
     @Mock
     private JWTUtil jwtUtil;
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+    private MongoTemplate template;
     @InjectMocks
     private NotificationServiceImpl service;
 
@@ -67,49 +74,33 @@ public class NotificationServiceUnitTest {
     @Test
     public void testThatUpdateReadNotificationReturnsUpdatedNotification() {
         // given
-        String id = "id";
         String jwt = "jwt";
         NotificationEntity entity = TestDataUtil.createNotificationEntity();
         NotificationEntity expected = TestDataUtil.createNotificationEntity();
+        List<String> ids = List.of("1");
+        Query updateQuery = new Query(Criteria.where("id").in(ids));
+        Update update = new Update().set("read", true);
         expected.setRead(true);
         // when
         when(jwtUtil.extractId(jwt)).thenReturn(entity.getUserId().toString());
-        when(repository.findById(id)).thenReturn(Optional.of(entity));
-        when(repository.save(entity)).thenReturn(entity);
-        NotificationEntity result = service.updateReadNotification(id, jwt);
+        when(template.query(NotificationEntity.class).matching(any(Query.class)).all()).thenReturn(List.of(entity));
         // then
-        assertAll(
-                () -> assertNotNull(result),
-                () -> assertEquals(result.getRead(), true)
-        );
+        service.updateReadNotifications(ids, jwt);
+        verify(template.update(NotificationEntity.class).matching(updateQuery)
+                .apply(update), times(1)).all();
     }
 
     @Test
-    public void testThatUpdateReadNotificationThrowsAuthException() {
+    public void testThatUpdateReadNotificationThrowsForbiddenException() {
         // given
         String id = "id";
         String jwt = "jwt";
-        NotificationEntity entity = TestDataUtil.createNotificationEntity();
         // when
         when(jwtUtil.extractId(jwt)).thenReturn(UUID.randomUUID().toString());
-        when(repository.findById(id)).thenReturn(Optional.of(entity));
+        when(template.query(NotificationEntity.class).matching(any(Query.class)).all()).thenReturn(List.of());
         // then
-        assertThrows(AuthException.class, () -> service.updateReadNotification(id, jwt));
-        verify(repository, never()).save(any(NotificationEntity.class));
-
-    }
-
-    @Test
-    public void testThatUpdateReadNotificationThrowsNotFoundException() {
-        // given
-        String id = "id";
-        String jwt = "jwt";
-        // when
-        when(repository.findById(id)).thenReturn(Optional.empty());
-        // then
-        assertThrows(NotFoundException.class, () -> service.updateReadNotification(id, jwt));
-        verify(repository, never()).save(any(NotificationEntity.class));
-        verify(jwtUtil, never()).extractId(anyString());
+        assertThrows(ForbiddenException.class, () -> service.updateReadNotifications(List.of(id), jwt));
+        verify(template, never()).update(any());
     }
 
     @Test

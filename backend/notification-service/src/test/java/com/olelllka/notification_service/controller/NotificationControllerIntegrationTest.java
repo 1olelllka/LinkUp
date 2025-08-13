@@ -6,6 +6,7 @@ import com.olelllka.notification_service.domain.entity.NotificationEntity;
 import com.olelllka.notification_service.repository.NotificationRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.java.Log;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,7 @@ import org.testcontainers.utility.DockerImageName;
 import javax.crypto.SecretKey;
 import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -83,21 +85,14 @@ public class NotificationControllerIntegrationTest {
     }
 
     @Test
-    public void testThatUpdateReadStatusOfNotificationReturnsHttp404IfSuchNotificationDoesNotExist() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.patch("/notifications/" + ObjectId.getSmallestWithDate(new Date()))
-                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
-    }
-
-    @Test
-    public void testThatUpdateReadStatusOfNotificationReturnsHttp402Unauthorized() throws Exception {
+    public void testThatUpdateReadStatusesOfNotificationsReturnHttp403IfUserUnauthorizedToUpdateThem() throws Exception {
         UUID id = UUID.randomUUID();
         NotificationEntity notification = TestDataUtil.createNotificationEntity();
         notification.setUserId(id);
-        NotificationEntity saved = repository.save(notification);
-        mockMvc.perform(MockMvcRequestBuilders.patch("/notifications/" + notification.getId())
-                .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
-                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+        notification = repository.save(notification);
+        mockMvc.perform(MockMvcRequestBuilders.patch("/notifications/read?ids=" +notification.getId())
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
     }
 
     @Test
@@ -105,11 +100,10 @@ public class NotificationControllerIntegrationTest {
         UUID id = UUID.randomUUID();
         NotificationEntity notification = TestDataUtil.createNotificationEntity();
         notification.setUserId(id);
-        NotificationEntity saved = repository.save(notification);
-        mockMvc.perform(MockMvcRequestBuilders.patch("/notifications/" + saved.getId())
+        notification = repository.save(notification);
+        mockMvc.perform(MockMvcRequestBuilders.patch("/notifications/read?ids=" + notification.getId())
                         .header("Authorization", "Bearer " + generateJwt(id)))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.read").value(true));
+                .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     @Test
