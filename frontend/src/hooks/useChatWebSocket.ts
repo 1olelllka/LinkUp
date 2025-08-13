@@ -1,15 +1,15 @@
 import { useEffect, useState, useCallback } from 'react';
 import type { Message } from '@/types/Chat';
 
-export const useChatWebSocket = (userId: string | undefined) => {
+export const useChatWebSocket = (sender: string | undefined, receiver: string | undefined) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'Connecting' | 'Open' | 'Closing' | 'Closed'>('Closed');
   const [lastMessage, setLastMessage] = useState<Message | null>(null);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!sender || !receiver) return;
 
-    const ws = new WebSocket(`ws://localhost:8080/chat?userId=${userId}`);
+    const ws = new WebSocket(`ws://localhost:8080/chat?from=${sender}&to=${receiver}`);
     setSocket(ws);
     setConnectionStatus('Connecting');
 
@@ -28,8 +28,8 @@ export const useChatWebSocket = (userId: string | undefined) => {
         setLastMessage({
           id: Date.now().toString(),
           chatId: '',
-          to: userId,
-          from: 'unknown',
+          to: sender,
+          from: receiver,
           content: event.data,
           createdAt: new Date().toISOString()
         });
@@ -48,7 +48,7 @@ export const useChatWebSocket = (userId: string | undefined) => {
     return () => {
       ws.close();
     };
-  }, [userId]);
+  }, [sender, receiver]);
 
   const sendMessage = useCallback((message: string) => {
     if (socket && socket.readyState === WebSocket.OPEN) {

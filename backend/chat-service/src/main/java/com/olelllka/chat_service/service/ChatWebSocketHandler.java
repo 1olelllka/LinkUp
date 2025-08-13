@@ -8,7 +8,7 @@ import com.olelllka.chat_service.domain.entity.User;
 import com.olelllka.chat_service.feign.ProfileFeign;
 import com.olelllka.chat_service.repository.ChatRepository;
 import com.olelllka.chat_service.repository.MessageRepository;
-import com.olelllka.chat_service.rest.exception.NotFoundException;
+import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -17,12 +17,11 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import java.util.Date;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
+@Log
 public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     private ChatRepository chatRepository;
@@ -46,14 +45,21 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        String userId = session.getUri().getQuery().split("=")[1];
-        this.req1 = profileService.getProfileById(UUID.fromString(userId));
+        String sender = session.getUri().getQuery().split("=")[1].substring(0, 36);
+        String receiver = session.getUri().getQuery().split("=")[2];
+        this.req1 = profileService.getProfileById(UUID.fromString(sender));
+        this.req2 = profileService.getProfileById(UUID.fromString(receiver));
         if (this.req1.getStatusCode().is4xxClientError()) {
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A client error occurred on external service."));
         } else if (this.req1.getStatusCode().is5xxServerError()) {
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A server error occurred on external service."));
         }
-        sessions.put(userId, session);
+        if (this.req2.getStatusCode().is4xxClientError()) {
+            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A client error occurred on external service."));
+        } else if (this.req2.getStatusCode().is5xxServerError()) {
+            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A server error occurred on external service."));
+        }
+        sessions.put(sender + ":" + receiver, session);
 //        session.sendMessage(new TextMessage("Connection established! Your userId: " + userId));
     }
 
@@ -62,19 +68,13 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         ObjectMapper objectMapper = new ObjectMapper();
         String payload = message.getPayload();
         MessageEntity msg = objectMapper.readValue(payload, MessageEntity.class);
-        UUID senderId = UUID.fromString(session.getUri().getQuery().split("=")[1]);
-        UUID targetUserId = msg.getTo();
 
-        this.req2 = profileService.getProfileById(targetUserId);
-        if (req2.getStatusCode().is4xxClientError()) {
-            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A client error occurred on external service."));
-        } else if (req2.getStatusCode().is5xxServerError()) {
-            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A server error occurred on external service."));
-        }
+        UUID senderId = UUID.fromString(session.getUri().getQuery().split("=")[1].substring(0, 36));
+        UUID targetUserId = UUID.fromString(session.getUri().getQuery().split("=")[2]);
         String chatMessage = msg.getContent();
 
-        WebSocketSession targetSession = sessions.get(targetUserId.toString());
-        Optional<ChatEntity> chat = chatRepository.findChatByTwoMembers(UUID.fromString(session.getUri().getQuery().split("=")[1]), targetUserId);
+        WebSocketSession targetSession = sessions.get(targetUserId + ":" + senderId);
+        Optional<ChatEntity> chat = chatRepository.findChatByTwoMembers(senderId, targetUserId);
         String chatId;
         if (chat.isEmpty()) {
             User users[] = {this.req1.getBody(), this.req2.getBody()};
@@ -94,8 +94,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                     .read(false)
                     .createdAt(new Date())
                     .userId(targetUserId.toString())
-                    // TODO: When gateway implemented, put name instead of id!!!
-                    .text("User with id: " + senderId + " sent you a message: " + chatMessage)
+                    .text("User @" + req2.getBody().getUsername() + " sent you a message: " + chatMessage)
                     .build();
             messagePublisher.createChatNotification(notification);
         }

@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, Bell } from "lucide-react";
 import { useNavigate } from "react-router";
 import { NotificationSheet } from "@/components/notification/NotificationSheet";
 
+
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   return (

@@ -145,7 +145,6 @@ export const ChatList = () => {
         }
       </div>
 
-      {/* ChatWindow (right column) */}
       <div className="flex-1 pl-6 overflow-y-auto h-full">
         {selectedChat ? (
           <ChatWindow

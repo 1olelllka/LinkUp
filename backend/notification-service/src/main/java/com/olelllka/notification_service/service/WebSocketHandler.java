@@ -28,7 +28,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A server error occurred on external service."));
         }
         sessions.put(userId, session);
-        session.sendMessage(new TextMessage("Connection established! Your userId: " + userId));
+//        session.sendMessage(new TextMessage("Connection established! Your userId: " + userId));
     }
 
     @Override

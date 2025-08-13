@@ -1,8 +1,8 @@
 import { useChatWebSocket } from "@/hooks/useChatWebSocket";
 import { useMessageList } from "@/hooks/useMessageList";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -20,7 +20,7 @@ type ChatWindowProps = {
 };
 
 export const ChatWindow = ({ chatId, senderId, senderName, receiverId }: ChatWindowProps) => {
-  const { connectionStatus, lastMessage, sendMessage } = useChatWebSocket(senderId);
+  const { connectionStatus, lastMessage, sendMessage } = useChatWebSocket(senderId, receiverId);
   const { messagesPage, messages, setMessages, loadMoreMessages, loading } = useMessageList(chatId);
   const [message, setMessage] = useState('');
   const [updateId, setUpdateId] = useState<string | null>(null);
@@ -212,7 +212,6 @@ export const ChatWindow = ({ chatId, senderId, senderName, receiverId }: ChatWin
         )}
       </div>
 
-      {/* Message input */}
       <form onSubmit={(e) => {
         if (updateId != null) {
           handleUpdateMessage(e, )
