@@ -1,8 +1,10 @@
 package com.olelllka.stories_service.service;
 
 import com.olelllka.stories_service.TestDataUtil;
+import com.olelllka.stories_service.domain.dto.StoryDto;
 import com.olelllka.stories_service.domain.entity.StoryEntity;
 import com.olelllka.stories_service.feign.ProfileFeign;
+import com.olelllka.stories_service.mapper.StoryMapper;
 import com.olelllka.stories_service.repository.StoryRepository;
 import com.olelllka.stories_service.rest.exception.AuthException;
 import com.olelllka.stories_service.rest.exception.NotFoundException;
@@ -16,6 +18,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.ListOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
@@ -34,11 +38,17 @@ public class StoryServiceUnitTest {
     private ProfileFeign profileFeign;
     @Mock
     private JWTUtil jwtUtil;
+    @Mock
+    private StoryMapper<StoryEntity, StoryDto> mapper;
+    @Mock
+    private MessagePublisher messagePublisher;
+    @Mock
+    private RedisTemplate<String, String> redisTemplate;
     @InjectMocks
     private StoryServiceImpl service;
 
     @Test
-    public void testThatGetStoriesForUserReturnsPageOfResults() {
+    public void testThatGetArchiveForUserReturnsPageOfResults() {
         // given
         UUID id = UUID.randomUUID();
         String jwt = "jwt";
@@ -48,7 +58,7 @@ public class StoryServiceUnitTest {
         // when
         when(repository.findStoryByUserId(id, pageable)).thenReturn(expected);
         when(jwtUtil.extractId(jwt)).thenReturn(id.toString());
-        Page<StoryEntity> result = service.getStoriesForUser(id, jwt, pageable);
+        Page<StoryEntity> result = service.getArchiveForUser(id, jwt, pageable);
         // then
         assertAll(
                 () -> assertNotNull(result),
@@ -58,14 +68,14 @@ public class StoryServiceUnitTest {
     }
 
     @Test
-    public void testThatGetStoriesForUserThrowsAuthException() {
+    public void testThatGetArchiveForUserThrowsAuthException() {
         // given
         UUID id = UUID.randomUUID();
         String jwt = "jwt";
         Pageable pageable = PageRequest.of(0, 1);
         // when
         when(jwtUtil.extractId(jwt)).thenReturn("incorrect");
-        assertThrows(AuthException.class, () -> service.getStoriesForUser(id, jwt, pageable));
+        assertThrows(AuthException.class, () -> service.getArchiveForUser(id, jwt, pageable));
         // then
         verify(repository, never()).findStoryByUserId(id, pageable);
     }
@@ -144,10 +154,13 @@ public class StoryServiceUnitTest {
         expected.setAvailable(true);
         expected.setUserId(userId);
         StoryEntity story = TestDataUtil.createStoryEntity();
+        StoryDto mappedDto = StoryDto.builder()
+                .id("TEST_ID").build();
         String jwt = "jwt";
         // when
         when(repository.save(expected)).thenReturn(story);
         when(jwtUtil.extractId(jwt)).thenReturn(userId.toString());
+        when(mapper.toDto(story)).thenReturn(mappedDto);
         when(profileFeign.getProfileById(userId)).thenReturn(ResponseEntity.ok().build());
         StoryEntity result = service.createStory(userId, story, jwt);
         // then
@@ -158,6 +171,43 @@ public class StoryServiceUnitTest {
                 () -> assertEquals(result.getUserId(), expected.getUserId())
         );
         verify(repository, times(1)).save(expected);
+        verify(messagePublisher, times(1)).sendCreatedStory(mappedDto);
+    }
+
+    @Test
+    public void testThatGettingStoriesFeedThrowsAnException() {
+        UUID id = UUID.randomUUID();
+        Pageable pageable = PageRequest.of(0, 1);
+        when(jwtUtil.extractId("jwt")).thenReturn(UUID.randomUUID().toString());
+        assertThrows(AuthException.class, () -> service.getStoriesFeed(id, "jwt", pageable));
+        verify(redisTemplate, never()).hasKey(anyString());
+    }
+
+    @Test
+    public void testThatGettingStoriesFeedReturnEmptyPageOfStories() {
+        UUID id = UUID.randomUUID();
+        Pageable pageable = PageRequest.of(0, 1);
+        when(jwtUtil.extractId("jwt")).thenReturn(id.toString());
+        when(redisTemplate.hasKey("story-feed:" + SHA256.generate(id.toString()))).thenReturn(false);
+        Page<StoryEntity> page = service.getStoriesFeed(id, "jwt", pageable);
+        assertEquals(0, page.getContent().size());
+        verify(redisTemplate, never()).opsForList();
+    }
+
+    @Test
+    public void testThatGettingStoriesFeedReturnPageOfStories() {
+        UUID id = UUID.randomUUID();
+        Pageable pageable = PageRequest.of(0, 1);
+        String key = "story-feed:" + SHA256.generate(id.toString());
+        when(jwtUtil.extractId("jwt")).thenReturn(id.toString());
+        when(redisTemplate.hasKey(key)).thenReturn(true);
+        when(redisTemplate.opsForList()).thenReturn(mock(ListOperations.class));
+        when(redisTemplate.opsForList().size(key)).thenReturn(1L);
+        when(redisTemplate.opsForList().range(key, 0, 1)).thenReturn(List.of("1"));
+        when(repository.findByIdsAndByAvailable(List.of("1"), pageable)).thenReturn(new PageImpl<>(
+                List.of(TestDataUtil.createStoryEntity()), pageable, 1));
+        Page<StoryEntity> page = service.getStoriesFeed(id, "jwt", pageable);
+        assertEquals(1, page.getTotalElements());
     }
 
     @Test

@@ -1,11 +1,15 @@
 package com.olelllka.stories_service.service.impl;
 
+import com.olelllka.stories_service.domain.dto.StoryDto;
 import com.olelllka.stories_service.domain.entity.StoryEntity;
 import com.olelllka.stories_service.feign.ProfileFeign;
+import com.olelllka.stories_service.mapper.StoryMapper;
 import com.olelllka.stories_service.repository.StoryRepository;
 import com.olelllka.stories_service.rest.exception.AuthException;
 import com.olelllka.stories_service.rest.exception.NotFoundException;
 import com.olelllka.stories_service.service.JWTUtil;
+import com.olelllka.stories_service.service.MessagePublisher;
+import com.olelllka.stories_service.service.SHA256;
 import com.olelllka.stories_service.service.StoryService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.jsonwebtoken.security.SignatureException;
@@ -15,10 +19,13 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,10 +36,13 @@ public class StoryServiceImpl implements StoryService {
 
     private final StoryRepository repository;
     private final ProfileFeign profileService;
+    private final MessagePublisher messagePublisher;
     private final JWTUtil jwtUtil;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final StoryMapper<StoryEntity, StoryDto> mapper;
 
     @Override
-    public Page<StoryEntity> getStoriesForUser(UUID id, String jwt, Pageable pageable) {
+    public Page<StoryEntity> getArchiveForUser(UUID id, String jwt, Pageable pageable) {
         jwtCheck(jwt, id.toString());
         return repository.findStoryByUserId(id, pageable);
     }
@@ -60,7 +70,9 @@ public class StoryServiceImpl implements StoryService {
         }
         entity.setAvailable(true);
         entity.setUserId(userId);
-        return repository.save(entity);
+        StoryEntity result = repository.save(entity);
+        messagePublisher.sendCreatedStory(mapper.toDto(result));
+        return result;
     }
 
     @Override
@@ -85,6 +97,17 @@ public class StoryServiceImpl implements StoryService {
             }
         }
         repository.deleteById(storyId);
+    }
+
+    @Override
+    public Page<StoryEntity> getStoriesFeed(UUID userId, String token, Pageable pageable) {
+        jwtCheck(token, userId.toString());
+        if (redisTemplate.hasKey("story-feed:" + SHA256.generate(userId.toString()))) {
+            Long end = redisTemplate.opsForList().size("story-feed:" + SHA256.generate(userId.toString()));
+            List<String> ids = redisTemplate.opsForList().range("story-feed:" + SHA256.generate(userId.toString()), 0, end);
+            return repository.findByIdsAndByAvailable(ids, pageable);
+        }
+        return new PageImpl<>(List.of(), pageable, 0);
     }
 
     private void jwtCheck(String jwt, String id) {

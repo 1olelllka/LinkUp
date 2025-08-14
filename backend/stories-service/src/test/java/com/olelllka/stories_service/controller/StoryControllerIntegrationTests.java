@@ -3,21 +3,31 @@ package com.olelllka.stories_service.controller;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import com.olelllka.stories_service.RabbitMQConfig;
 import com.olelllka.stories_service.TestDataUtil;
 import com.olelllka.stories_service.domain.dto.CreateStoryDto;
+import com.olelllka.stories_service.domain.dto.ProfileDto;
 import com.olelllka.stories_service.domain.entity.StoryEntity;
 import com.olelllka.stories_service.service.SHA256;
 import com.olelllka.stories_service.service.StoryService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.java.Log;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
@@ -27,12 +37,17 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.containers.RabbitMQContainer;
+import org.testcontainers.shaded.com.fasterxml.jackson.core.JsonProcessingException;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+import org.testcontainers.shaded.org.awaitility.Awaitility;
 import org.testcontainers.utility.DockerImageName;
 
 import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -41,6 +56,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ExtendWith(SpringExtension.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureMockMvc
+@Import(RabbitMQConfig.class)
+@Log
 public class StoryControllerIntegrationTests {
 
     @RegisterExtension
@@ -51,24 +68,31 @@ public class StoryControllerIntegrationTests {
     static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:8.0");
     @ServiceConnection
     static GenericContainer<?> redisContainer = new GenericContainer<>(DockerImageName.parse("redis:7.2.6")).withExposedPorts(6379);
+    @ServiceConnection
+    static RabbitMQContainer rabbitContainer = new RabbitMQContainer(DockerImageName.parse("rabbitmq:3.13-management"));
 
     private MockMvc mockMvc;
     private StoryService service;
     private ObjectMapper objectMapper;
     private RedisTemplate<String, String> redisTemplate;
+    private RabbitAdmin rabbitAdmin;
     private String key = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
     @Autowired
-    public StoryControllerIntegrationTests(MockMvc mockMvc, StoryService service, RedisTemplate<String, String> redisTemplate) {
+    public StoryControllerIntegrationTests(MockMvc mockMvc, StoryService service,
+                                           RedisTemplate<String, String> redisTemplate,
+                                           RabbitAdmin rabbitAdmin) {
         this.mockMvc = mockMvc;
         this.service = service;
         this.redisTemplate = redisTemplate;
         this.objectMapper = new ObjectMapper();
+        this.rabbitAdmin = rabbitAdmin;
     }
 
     static {
         mongoDBContainer.start();
         redisContainer.start();
+        rabbitContainer.start();
     }
 
     @AfterAll
@@ -77,20 +101,22 @@ public class StoryControllerIntegrationTests {
         mongoDBContainer.close();
         redisContainer.stop();
         redisContainer.close();
+        rabbitContainer.stop();
+        rabbitContainer.close();
     }
 
     @Test
-    public void testThatGetAllStoriesForUserReturnsHttp401Unauthorized() throws Exception {
+    public void testThatGetArchivedStoriesForUserReturnsHttp401Unauthorized() throws Exception {
         UUID profileId = UUID.randomUUID();
-        mockMvc.perform(MockMvcRequestBuilders.get("/stories/users/" + profileId)
+        mockMvc.perform(MockMvcRequestBuilders.get("/stories/archive/" + profileId)
                         .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
                 .andExpect(MockMvcResultMatchers.status().isUnauthorized());
     }
 
     @Test
-    public void testThatGetAllStoriesForUserReturnsHttp200Ok() throws Exception {
+    public void testThatGetArchivedStoriesForUserReturnsHttp200Ok() throws Exception {
         UUID profileId = UUID.randomUUID();
-        mockMvc.perform(MockMvcRequestBuilders.get("/stories/users/" + profileId)
+        mockMvc.perform(MockMvcRequestBuilders.get("/stories/archive/" + profileId)
                 .header("Authorization", "Bearer " + generateJwt(profileId)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
@@ -106,22 +132,29 @@ public class StoryControllerIntegrationTests {
     public void testThatGetSpecificStoryForOthersReturnsHttp200OkIfExistsAndAvailableAndThenCacheWorks() throws Exception {
         UUID profileId = UUID.randomUUID();
         PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
+        ProfileDto dto = getProfileDto(profileId);
         StoryEntity story = service.createStory(profileId, TestDataUtil.createStoryEntity(), generateJwt(profileId));
         mockMvc.perform(MockMvcRequestBuilders.get("/stories/" + story.getId())
                         .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         assertTrue(redisTemplate.hasKey("story::"+SHA256.generate(story.getId())));
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.CREATE_STORY_QUEUE).getMessageCount() == 0);
+        assertTrue(redisTemplate.hasKey("story-feed:" + SHA256.generate(dto.getId().toString())));
     }
+
 
     @Test
     public void testThatGetSpecificStoryForOwnerReturnsHttp200OkIfExistsAndThenCacheWorks() throws Exception {
         UUID profileId = UUID.randomUUID();
         PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
+        ProfileDto dto = getProfileDto(profileId);
         StoryEntity story = service.createStory(profileId, TestDataUtil.createStoryEntity(), generateJwt(profileId));
         mockMvc.perform(MockMvcRequestBuilders.get("/stories/" + story.getId())
                         .header("Authorization", "Bearer " + generateJwt(profileId)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
         assertTrue(redisTemplate.hasKey("story::"+SHA256.generate(story.getId())));
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.CREATE_STORY_QUEUE).getMessageCount() == 0);
+        assertTrue(redisTemplate.hasKey("story-feed:" + SHA256.generate(dto.getId().toString())));
     }
 
     @Test
@@ -133,6 +166,7 @@ public class StoryControllerIntegrationTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
+        assertFalse(redisTemplate.hasKey("story-feed:" + SHA256.generate("1234")));
     }
 
     @Test
@@ -140,6 +174,7 @@ public class StoryControllerIntegrationTests {
         UUID profileId = UUID.randomUUID();
         PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
         CreateStoryDto createStoryDto = CreateStoryDto.builder().image("New Image url").build();
+        ProfileDto dto = getProfileDto(profileId);
         String json = objectMapper.writeValueAsString(createStoryDto);
         mockMvc.perform(MockMvcRequestBuilders.post("/stories/users/" + profileId)
                         .header("Authorization", "Bearer " + generateJwt(profileId))
@@ -148,6 +183,8 @@ public class StoryControllerIntegrationTests {
                 .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.available").value(true))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.image").value("New Image url"));
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.CREATE_STORY_QUEUE).getMessageCount() == 0);
+        assertTrue(redisTemplate.hasKey("story-feed:" + SHA256.generate(dto.getId().toString())));
     }
 
     @Test
@@ -161,6 +198,7 @@ public class StoryControllerIntegrationTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+        assertFalse(redisTemplate.hasKey("story-feed:" + SHA256.generate(profileId.toString())));
     }
 
     @Test
@@ -212,9 +250,25 @@ public class StoryControllerIntegrationTests {
     }
 
     @Test
+    public void testThatGettingStoriesFeedForUserReturnsHttp401Unauthorized() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/stories/users/" + UUID.randomUUID())
+                .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
+                .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+    }
+
+    @Test
+    public void testThatGettingStoriesFeedForUserReturnsHttp200Ok() throws Exception {
+        UUID profileId = UUID.randomUUID();
+        mockMvc.perform(MockMvcRequestBuilders.get("/stories/users/" + profileId)
+                .header("Authorization", "Bearer " + generateJwt(profileId)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
     public void testThatUpdateStoryReturnsHttp200IfSuccessful() throws Exception {
         UUID profileId = UUID.randomUUID();
         PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
+        ProfileDto dto = getProfileDto(profileId);
         StoryEntity entity = service.createStory(profileId, TestDataUtil.createStoryEntity(), generateJwt(profileId));
         CreateStoryDto createStoryDto = CreateStoryDto.builder().image("Updated url").build();
         String json = objectMapper.writeValueAsString(createStoryDto);
@@ -226,12 +280,15 @@ public class StoryControllerIntegrationTests {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.image").value("Updated url"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.available").value(true));
         assertTrue(redisTemplate.hasKey("story::"+SHA256.generate(entity.getId())));
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.CREATE_STORY_QUEUE).getMessageCount() == 0);
+        assertTrue(redisTemplate.hasKey("story-feed:" + SHA256.generate(dto.getId().toString())));
     }
 
     @Test
     public void testThatUpdateStoryReturnsHttp401Unauthorized() throws Exception {
         UUID profileId = UUID.randomUUID();
         PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
+        ProfileDto dto = getProfileDto(profileId);
         StoryEntity entity = service.createStory(profileId, TestDataUtil.createStoryEntity(), generateJwt(profileId));
         CreateStoryDto createStoryDto = CreateStoryDto.builder().image("Updated url").build();
         String json = objectMapper.writeValueAsString(createStoryDto);
@@ -240,6 +297,8 @@ public class StoryControllerIntegrationTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.CREATE_STORY_QUEUE).getMessageCount() == 0);
+        assertTrue(redisTemplate.hasKey("story-feed:" + SHA256.generate(dto.getId().toString())));
     }
 
     @Test
@@ -254,10 +313,23 @@ public class StoryControllerIntegrationTests {
     public void testThatDeleteStoryReturnsHttp401Unauthorized() throws Exception {
         UUID profileId = UUID.randomUUID();
         PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
+        ProfileDto dto = getProfileDto(profileId);
         StoryEntity entity = service.createStory(profileId, TestDataUtil.createStoryEntity(), generateJwt(profileId));
         mockMvc.perform(MockMvcRequestBuilders.delete("/stories/" + entity.getId())
                 .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
                 .andExpect(MockMvcResultMatchers.status().isUnauthorized());
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.CREATE_STORY_QUEUE).getMessageCount() == 0);
+        assertTrue(redisTemplate.hasKey("story-feed:" + SHA256.generate(dto.getId().toString())));
+    }
+
+    private @NotNull ProfileDto getProfileDto(UUID profileId) throws JsonProcessingException {
+        Pageable pageable = PageRequest.of(0, 1);
+        ProfileDto dto = TestDataUtil.createProfileDto();
+        Page<ProfileDto> stubBody = new PageImpl<>(List.of(dto), pageable, 1);
+        PROFILE_SERVICE.stubFor(WireMock.get(WireMock.urlMatching("/profiles/" + profileId + "/followees.*"))
+                .willReturn(WireMock.ok(objectMapper.writeValueAsString(stubBody))
+                        .withHeader("Content-Type", "application/json")));
+        return dto;
     }
 
     private String generateJwt(UUID id) {

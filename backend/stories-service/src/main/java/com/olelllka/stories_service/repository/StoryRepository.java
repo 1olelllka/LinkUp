@@ -20,4 +20,14 @@ public interface StoryRepository extends MongoRepository<StoryEntity, String> {
     void deleteByUserId(UUID id);
 
     List<StoryEntity> findByAvailableTrueAndCreatedAtBefore(Date expiryDate);
+
+    @Query("""
+            {
+                $and: [
+                    {'id' : { $in: ?0 }},
+                    {'available' : true}
+                ]
+            }
+            """)
+    Page<StoryEntity> findByIdsAndByAvailable(List<String> ids, Pageable pageable);
 }

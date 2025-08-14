@@ -101,4 +101,27 @@ public class StoryRepositoryMongoDataTest {
         assertEquals(stories.getTotalElements(), 0);
     }
 
+    @Test
+    public void testThatMongoFindsOnlyAvailableStoriesByListOfIds() {
+        UUID profileId = UUID.randomUUID();
+        StoryEntity story1 = TestDataUtil.createStoryEntity();
+        story1.setUserId(profileId);
+        story1.setAvailable(true);
+        StoryEntity story2 = TestDataUtil.createStoryEntity();
+        story2.setUserId(profileId);
+        story2.setAvailable(true);
+        StoryEntity story3 = TestDataUtil.createStoryEntity();
+        story3.setUserId(profileId);
+        story3.setAvailable(true);
+        StoryEntity story4 = TestDataUtil.createStoryEntity();
+        story4.setUserId(profileId);
+        story4.setAvailable(false);
+        List<StoryEntity> saved = repository.saveAll(List.of(story1, story2, story3, story4));
+        Pageable pageable = PageRequest.of(0, 4);
+        Page<StoryEntity> result = repository.findByIdsAndByAvailable(
+                List.of(saved.get(0).getId(), saved.get(1).getId(), saved.getLast().getId()), pageable
+        );
+        assertEquals(2, result.getTotalElements());
+    }
+
 }

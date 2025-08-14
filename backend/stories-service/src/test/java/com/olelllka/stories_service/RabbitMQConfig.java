@@ -1,5 +1,7 @@
 package com.olelllka.stories_service;
 
+import feign.Logger;
+import feign.slf4j.Slf4jLogger;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -12,6 +14,7 @@ import org.springframework.context.annotation.Bean;
 public class RabbitMQConfig {
     public static final String delete_queue = "delete_profile_queue_story";
     public static final String profile_exchange = "profile_fanout_exchange";
+    public final static String CREATE_STORY_QUEUE = "create_story_queue";
 
     @Bean
     public Queue deleteQueue() {

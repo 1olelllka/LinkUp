@@ -26,11 +26,20 @@ public class StoryController {
     private final StoryService service;
     private final StoryMapper<StoryEntity, StoryDto> mapper;
 
+    @GetMapping("/archive/{user_id}")
+    public ResponseEntity<Page<StoryDto>> getArchivedStoriesForUser(@PathVariable UUID user_id,
+                                                                    @RequestHeader(name="Authorization") String header,
+                                                                    Pageable pageable) {
+        Page<StoryEntity> entities = service.getArchiveForUser(user_id, header.substring(7), pageable);
+        Page<StoryDto> result = entities.map(mapper::toDto);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
     @GetMapping("/users/{user_id}")
-    public ResponseEntity<Page<StoryDto>> getAllStoriesForUser(@PathVariable UUID user_id,
-                                                               @RequestHeader(name="Authorization") String header,
-                                                               Pageable pageable) {
-        Page<StoryEntity> entities = service.getStoriesForUser(user_id, header.substring(7), pageable);
+    public ResponseEntity<Page<StoryDto>> getStoriesFeedForUser(@PathVariable UUID user_id,
+                                                                @RequestHeader(name="Authorization") String header,
+                                                                Pageable pageable) {
+        Page<StoryEntity> entities = service.getStoriesFeed(user_id, header.substring(7), pageable);
         Page<StoryDto> result = entities.map(mapper::toDto);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }

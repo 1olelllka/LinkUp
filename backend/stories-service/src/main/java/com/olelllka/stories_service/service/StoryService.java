@@ -7,7 +7,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 public interface StoryService {
-    Page<StoryEntity> getStoriesForUser(UUID id, String jwt, Pageable pageable);
+    Page<StoryEntity> getArchiveForUser(UUID id, String jwt, Pageable pageable);
 
     StoryEntity getSpecificStory(String storyId, String jwt);
 
@@ -16,4 +16,6 @@ public interface StoryService {
     StoryEntity updateSpecificStory(String storyId, StoryEntity entity, String jwt);
 
     void deleteSpecificStory(String storyId, String jwt);
+
+    Page<StoryEntity> getStoriesFeed(UUID userId, String token, Pageable pageable);
 }
