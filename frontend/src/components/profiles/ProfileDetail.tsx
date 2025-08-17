@@ -16,12 +16,10 @@ export function ProfileDetail() {
   const [isFollowing, setIsFollowing] = useState<boolean>(false);
   const followers = useFollowList({
     userId,
-    pageNumber: 0,
     type: "follower",
   });
   const followee = useFollowList({
     userId,
-    pageNumber: 0,
     type: "followee",
   });
   

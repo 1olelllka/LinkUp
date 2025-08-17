@@ -18,7 +18,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { NavLink, useNavigate } from "react-router"
-import { ChevronUp, Link, MessageCircle, Search, Signpost, UserRoundPen } from "lucide-react";
+import { Archive, ChevronUp, Link, MessageCircle, Search, Signpost, UserRoundPen } from "lucide-react";
 import { useProfileStore } from "@/store/useProfileStore";
 import { logout } from "@/services/authServices";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -41,6 +41,11 @@ const items = [
     title: "Search",
     url: "/search",
     icon: Search,
+  },
+  {
+    title: "Archive",
+    url: "/archive",
+    icon: Archive
   },
   {
     title: "My Profile",
@@ -109,19 +114,19 @@ export function AppSidebar() {
                   side="top"
                 >
                   <DropdownMenuItem 
-                  onClick={async () => {
-                    logout().then(response => {
-                    if (response.status == 200) {
-                        useAuthStore.getState().clearToken();
-                        clearProfile();
-                        navigate("/login")
-                    } else {
-                        console.log("Unexpected status --> " + response);
-                    }
-                    }).catch(err => console.log(err));
-                }}
-                className="rounded"
-                >
+                    onClick={async () => {
+                      logout().then(response => {
+                      if (response.status == 200) {
+                          useAuthStore.getState().clearToken();
+                          clearProfile();
+                          navigate("/login")
+                      } else {
+                          console.log("Unexpected status --> " + response);
+                      }
+                      }).catch(err => console.log(err));
+                  }}
+                  className="rounded"
+                  >
                     <span>Sign out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>

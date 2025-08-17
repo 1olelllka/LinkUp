@@ -7,6 +7,7 @@ import { ProfileSearchPage } from "@/pages/ProfileSearchPage";
 import { ProfilePage } from "@/pages/ProfilePage";
 import { FollowersPage } from "@/pages/FollowersPage";
 import { ProfileDetailPage } from "@/pages/ProfileDetailPage";
+import { StoryArchivePage } from "@/pages/StoryArchivePage";
 
 export const router = createBrowserRouter([
   {
@@ -48,5 +49,9 @@ export const router = createBrowserRouter([
   {
     path: "/profile/:userId/followees",
     element: <FollowersPage type="followee"/>
+  },
+  {
+    path: "/archive",
+    element: <StoryArchivePage />
   }
 ]);

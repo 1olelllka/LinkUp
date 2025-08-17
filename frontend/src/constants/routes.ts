@@ -41,5 +41,10 @@ export const API_ROUTES = {
         list: (userId: string) => `/notifications/users/${userId}`,
         delete: (id: string) => `/notifications/${id}`,
         update_status: (ids: string[]) => `/notifications/read?ids=${ids}`
+    },
+    stories: {
+        list: (userId: string) => `/stories/users/${userId}`,
+        archive: (userId : string) => `/stories/archive/${userId}`,
+        detail: (id: string) => `/stories/${id}`
     }
 }

@@ -14,7 +14,7 @@ import java.util.UUID;
 @Repository
 public interface StoryRepository extends MongoRepository<StoryEntity, String> {
 
-    @Query("{ 'userId': ?0 }")
+    @Query(value = "{ 'userId': ?0 }", sort = "{ 'createdAt' : -1 }")
     Page<StoryEntity> findStoryByUserId(UUID id, Pageable pageable);
 
     void deleteByUserId(UUID id);
