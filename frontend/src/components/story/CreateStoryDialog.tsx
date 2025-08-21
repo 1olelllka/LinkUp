@@ -31,7 +31,7 @@ export const CreateStoryDialog = ({trigger} : {trigger: React.ReactNode}) => {
             const res = await createNewStory(useProfileStore.getState().profile?.userId, {image: imageUrl});
             if (res?.status == 201) {
                 setOpen(false);
-                navigate("/feeds");
+                navigate("/archive");
             }
         }
         setLoading(false);
