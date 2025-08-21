@@ -12,6 +12,17 @@ export const getAllStoriesForArchiveByUser = async (userId: string, pageNumber: 
     return res.data;
 }
 
+export const createNewStory = async (userId: string | undefined, data: {image: string}) => {
+    if (!userId) return;
+    const res = await axiosInterceptor.post(`${API_ROUTES.stories.list(userId)}`, data);
+    return res;
+}
+
+export const updateStory = async (id : string, data: {image: string}) => {
+    const res = await axiosInterceptor.patch(`${API_ROUTES.stories.detail(id)}`, data);
+    return res;
+}
+
 export const deleteSpecificStory = async (id : string) => {
     const res = await axiosInterceptor.delete(`${API_ROUTES.stories.detail(id)}`);
     return res;

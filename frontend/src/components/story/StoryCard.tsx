@@ -1,6 +1,6 @@
 
 import { Card, CardContent } from "@/components/ui/card"
-import { Eraser } from "lucide-react"
+import { DiamondPlus, Eraser } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog"
 import { deleteSpecificStory } from "@/services/storyServices"
 import type { Story } from "@/types/Stories"
+import { UpdateStoryDialog } from "./UpdateStoryDialog"
 
 export const StoryCard = ({
   story,
@@ -52,49 +53,54 @@ export const StoryCard = ({
             {story.available ? "Visible for others" : "Not visible for others"}
           </span>
         </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <span className="flex justify-end p-1">
-              <Eraser
-                className="hover:text-red-400 cursor-pointer"
-                size={20}
-              />
-            </span>
-          </DialogTrigger>
-          <DialogContent className="w-100">
-            <DialogHeader>
-              <DialogTitle>Are you sure?</DialogTitle>
-              <DialogDescription>
-                After deletion the story cannot be restored
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline">Cancel</Button>
-              </DialogClose>
-              <Button
-                variant="destructive"
-                onClick={async () => {
-                  deleteSpecificStory(story.id)
-                    .then((response) => {
-                      if (response.status == 204) {
-                        setStories((prev) =>
-                          prev.filter((s) => s.id != story.id)
-                        )
-                      } else {
-                        console.log(
-                          "Unexpected response status -> " + response
-                        )
-                      }
-                    })
-                    .catch((err) => console.log(err))
-                }}
-              >
-                Delete
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <div className="flex justify-end">
+          <UpdateStoryDialog trigger={
+              <DiamondPlus className="hover:text-blue-400 cursor-pointer" size={20}/>
+          } imageUrl={story.image} id={story.id}/>
+          <Dialog>
+            <DialogTrigger asChild>
+              <span className="p-1">
+                <Eraser
+                  className="hover:text-red-400 cursor-pointer"
+                  size={20}
+                />
+              </span>
+            </DialogTrigger>
+            <DialogContent className="w-100">
+              <DialogHeader>
+                <DialogTitle>Are you sure?</DialogTitle>
+                <DialogDescription>
+                  After deletion the story cannot be restored
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button
+                  variant="destructive"
+                  onClick={async () => {
+                    deleteSpecificStory(story.id)
+                      .then((response) => {
+                        if (response.status == 204) {
+                          setStories((prev) =>
+                            prev.filter((s) => s.id != story.id)
+                          )
+                        } else {
+                          console.log(
+                            "Unexpected response status -> " + response
+                          )
+                        }
+                      })
+                      .catch((err) => console.log(err))
+                  }}
+                >
+                  Delete
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </CardContent>
     </Card>
   )
