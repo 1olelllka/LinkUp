@@ -13,6 +13,18 @@ export const getPostDetailsById = async (id: number) => {
     return res.data;
 }
 
+export const createNewPost = async (userId: string | undefined, data: {image: string, desc: string}) => {
+    if (!userId) return;
+    const res = await axiosInterceptor.post(`${API_ROUTES.posts.list}/${userId}`, data);
+    return res;
+}
+
+export const updatePost = async (id: number | undefined, data: {image : string, desc: string}) => {
+    if (!id) return;
+    const res = await axiosInterceptor.patch(`${API_ROUTES.posts.detail(id)}`, data);
+    return res;
+}
+
 export const deletePostById = async (id: number) => {
     const res = await axiosInterceptor.delete(`${API_ROUTES.posts.detail(id)}`);
     return res;

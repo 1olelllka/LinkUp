@@ -24,27 +24,27 @@ export function PostModal({ postId, trigger }: { postId: number, trigger: React.
     }
   }, [open]);
 
-    useEffect(() => {
-      const fetchData = async () => {
-        try {
-          const postData = await getPostDetailsById(postId);
-          setPost(postData);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const postData = await getPostDetailsById(postId);
+        setPost(postData);
 
-          const profileData = await getSpecificProfileInfo(postData?.user_id);
-          setProfile(profileData);
+        const profileData = await getSpecificProfileInfo(postData?.user_id);
+        setProfile(profileData);
 
-          const commentData = await getAllCommentsForSpecificPost(postId, 1);
-          setCommentPage(commentData);
-          setComments(commentData.results.sort((a : Comment, b : Comment) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
-        } catch (err) {
-          console.error("Failed to fetch post/profile", err);
-        }
-      };
-
-      if (shouldFetch && !post) {
-        fetchData();
+        const commentData = await getAllCommentsForSpecificPost(postId, 1);
+        setCommentPage(commentData);
+        setComments(commentData.results.sort((a : Comment, b : Comment) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+      } catch (err) {
+        console.error("Failed to fetch post/profile", err);
       }
-    }, [shouldFetch, postId, post]);
+    };
+
+    if (shouldFetch && !post) {
+      fetchData();
+    }
+  }, [shouldFetch, postId, post]);
 
     const loadMoreComments = useCallback(async () => {
       if (loading || !postId) return;
@@ -141,9 +141,7 @@ const handleDeleteComment = async (id: number) => {
           </div>
         )}
 
-          <div className="md:w-1/2 w-full p-6 flex flex-col h-full min-h-0">
-
-            {/* Header - avatar + post info + comment form */}
+          <div className="md:w-1/2 w-full p-6 flex flex-col h-full min-h-0 overflow-y-auto">
             <div className="flex flex-col gap-4 flex-none">
               <div className="flex items-center gap-4">
                 <CustomAvatar name={profile?.name} photo={profile?.photo} size={48} />
@@ -161,7 +159,7 @@ const handleDeleteComment = async (id: number) => {
               <CommentForm postId={post?.id || 0} onSubmit={handleAddTopLevelComment} />
             </div>
 
-            <div className="mt-4 flex-1 min-h-0 overflow-y-auto pr-2">
+            <div className="mt-4 flex-1 min-h-0 pr-2">
               {comments?.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No comments yet.</p>
               ) : (

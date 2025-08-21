@@ -7,13 +7,17 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Plus } from "lucide-react";
 import { useProfileStore } from "@/store/useProfileStore";
 import { deletePostById } from "@/services/postServices";
 import { useCallback } from "react";
+import { Button } from "../ui/button";
+import { useNavigate } from "react-router";
 
 export const UserPosts = ({ userId } : {userId : string | undefined}) => {
   const {posts, setPosts, postPage, loadMorePosts, loading, setLoading} = useUserPosts(userId);
+  const currentUser = useProfileStore.getState().profile?.userId;
+  const navigate = useNavigate();
 
   const handleLoadPosts = useCallback(async () => {
     await loadMorePosts();
@@ -21,7 +25,18 @@ export const UserPosts = ({ userId } : {userId : string | undefined}) => {
 
   return (
     <div className="mt-5 bg-slate-50 p-6 rounded-xl shadow-lg transition-all w-[99%]">
-      <h2 className="text-2xl font-bold mb-4">Posts</h2>
+      <div className="flex flex-row justify-between">
+        <h2 className="text-2xl font-bold mb-4">Posts</h2>
+        {userId == currentUser && 
+          <Button 
+          variant={"outline"} 
+          size={"icon"} 
+          className="cursor-pointer"
+          onClick={() => navigate('/create-post')}>
+            <Plus />
+          </Button>
+        }
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {posts && posts.length > 0 
         ? posts.map((post) => (
@@ -46,9 +61,13 @@ export const UserPosts = ({ userId } : {userId : string | undefined}) => {
             )}
 
               <CardContent className="p-4 flex flex-col h-full">
-                <div>
-                  <p className="text-md text-gray-800">{post.desc}</p>
-                </div>
+              <div>
+                <p className="text-md text-gray-800">
+                  {post.desc.length > 100 
+                    ? post.desc.substring(0, 100) + "..." 
+                    : post.desc}
+                </p>
+              </div>
 
                 <div className="flex items-center justify-between mt-auto pt-4">
                 {post.user_id?.toString() === useProfileStore.getState().profile?.userId ? (
@@ -59,6 +78,10 @@ export const UserPosts = ({ userId } : {userId : string | undefined}) => {
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
+                      <DropdownMenuItem
+                       onClick={() => navigate(`/update-post/${post.id}`)}>
+                        Update
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={async (e) => {
                           e.stopPropagation();

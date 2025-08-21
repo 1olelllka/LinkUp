@@ -14,6 +14,7 @@ import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:5173", maxAge = 3600)
 public class ImageController {
 
     public static final String UPLOAD_DIR = "./uploads/";

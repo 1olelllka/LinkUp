@@ -8,6 +8,8 @@ import { ProfilePage } from "@/pages/ProfilePage";
 import { FollowersPage } from "@/pages/FollowersPage";
 import { ProfileDetailPage } from "@/pages/ProfileDetailPage";
 import { StoryArchivePage } from "@/pages/StoryArchivePage";
+import { CreatePostPage } from "@/pages/CreatePostPage";
+import { UpdatePostPage } from "@/pages/UpdatePostPage";
 
 export const router = createBrowserRouter([
   {
@@ -53,5 +55,13 @@ export const router = createBrowserRouter([
   {
     path: "/archive",
     element: <StoryArchivePage />
+  },
+  {
+    path: "/create-post",
+    element: <CreatePostPage />
+  },
+  {
+    path: "/update-post/:postId",
+    element: <UpdatePostPage />
   }
 ]);

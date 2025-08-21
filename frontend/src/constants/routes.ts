@@ -46,5 +46,8 @@ export const API_ROUTES = {
         list: (userId: string) => `/stories/users/${userId}`,
         archive: (userId : string) => `/stories/archive/${userId}`,
         detail: (id: string) => `/stories/${id}`
+    },
+    images: {
+        upload: `https://linkup.loca.lt/upload`
     }
 }
