@@ -57,7 +57,7 @@ public class FeedServiceUnitTest {
         // when
         when(redisTemplate.opsForList()).thenReturn(mock(ListOperations.class));
         when(jwtUtil.extractId(jwt)).thenReturn(profileId.toString());
-        when(redisTemplate.opsForList().range("feed:profile:"+SHA256.hash(profileId.toString()), 0, 0)).thenReturn(List.of());
+        when(redisTemplate.opsForList().range("feed:profile:"+SHA256.hash(profileId.toString()), 0, -1)).thenReturn(List.of());
         Page<PostDto> result = feedService.getFeedForProfile(profileId, pageable, jwt);
         // then
         assertAll(
@@ -78,7 +78,7 @@ public class FeedServiceUnitTest {
         String jwt = "jwt";
         // when
         when(redisTemplate.opsForList()).thenReturn(mock(ListOperations.class));
-        when(redisTemplate.opsForList().range("feed:profile:"+SHA256.hash(profileId.toString()), 0, 0)).thenReturn(List.of("1"));
+        when(redisTemplate.opsForList().range("feed:profile:"+SHA256.hash(profileId.toString()), 0, -1)).thenReturn(List.of("1"));
         when(postsInterface.getPosts(1)).thenReturn(ResponseEntity.ok(postDto));
         when(jwtUtil.extractId(jwt)).thenReturn(profileId.toString());
         Page<PostDto> result = feedService.getFeedForProfile(profileId, pageable, jwt);
