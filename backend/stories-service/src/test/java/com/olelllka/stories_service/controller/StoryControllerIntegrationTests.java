@@ -315,10 +315,10 @@ public class StoryControllerIntegrationTests {
         PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
         ProfileDto dto = getProfileDto(profileId);
         StoryEntity entity = service.createStory(profileId, TestDataUtil.createStoryEntity(), generateJwt(profileId));
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.CREATE_STORY_QUEUE).getMessageCount() == 0);
         mockMvc.perform(MockMvcRequestBuilders.delete("/stories/" + entity.getId())
                 .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
                 .andExpect(MockMvcResultMatchers.status().isUnauthorized());
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.CREATE_STORY_QUEUE).getMessageCount() == 0);
         assertTrue(redisTemplate.hasKey("story-feed:" + SHA256.generate(dto.getId().toString())));
     }
 
