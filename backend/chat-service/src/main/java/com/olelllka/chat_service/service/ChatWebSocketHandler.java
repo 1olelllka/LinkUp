@@ -1,6 +1,7 @@
 package com.olelllka.chat_service.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.olelllka.chat_service.domain.dto.JWTMessage;
 import com.olelllka.chat_service.domain.dto.NotificationDto;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
@@ -27,8 +28,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private ChatRepository chatRepository;
     private MessageRepository messageRepository;
     private MessagePublisher messagePublisher;
+    private JWTUtil jwtUtil;
     private ProfileFeign profileService;
     private static final ConcurrentHashMap<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, UUID> authenticatedSessions = new ConcurrentHashMap<>();
     private ResponseEntity<User> req1;
     private ResponseEntity<User> req2;
 
@@ -36,11 +39,13 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     public ChatWebSocketHandler(ChatRepository chatRepository,
                                 MessageRepository messageRepository,
                                 ProfileFeign profileService,
-                                MessagePublisher messagePublisher) {
+                                MessagePublisher messagePublisher,
+                                JWTUtil jwtUtil) {
         this.chatRepository = chatRepository;
         this.messageRepository = messageRepository;
         this.messagePublisher = messagePublisher;
         this.profileService = profileService;
+        this.jwtUtil = jwtUtil;
     }
 
     @Override
@@ -60,16 +65,27 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A server error occurred on external service."));
         }
         sessions.put(sender + ":" + receiver, session);
-//        session.sendMessage(new TextMessage("Connection established! Your userId: " + userId));
     }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
         String payload = message.getPayload();
-        MessageEntity msg = objectMapper.readValue(payload, MessageEntity.class);
-
         UUID senderId = UUID.fromString(session.getUri().getQuery().split("=")[1].substring(0, 36));
+        if (!authenticatedSessions.containsKey(session.getId())) {
+            JWTMessage msg = objectMapper.readValue(payload, JWTMessage.class);
+
+            if (!jwtUtil.isTokenValid(msg.getToken())) {
+                session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Invalid or expired token."));
+            }
+
+            if (!jwtUtil.extractId(msg.getToken()).equals(senderId.toString())) {
+                session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Bad authorization."));
+            }
+            authenticatedSessions.put(session.getId(), senderId);
+            return;
+        }
+        MessageEntity msg = objectMapper.readValue(payload, MessageEntity.class);
         UUID targetUserId = UUID.fromString(session.getUri().getQuery().split("=")[2]);
         String chatMessage = msg.getContent();
 

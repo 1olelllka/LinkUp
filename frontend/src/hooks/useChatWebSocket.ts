@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import type { Message } from '@/types/Chat';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export const useChatWebSocket = (sender: string | undefined, receiver: string | undefined) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'Connecting' | 'Open' | 'Closing' | 'Closed'>('Closed');
   const [lastMessage, setLastMessage] = useState<Message | null>(null);
+  const token = useAuthStore.getState().token;
 
   useEffect(() => {
     if (!sender || !receiver) return;
@@ -14,7 +16,7 @@ export const useChatWebSocket = (sender: string | undefined, receiver: string | 
     setConnectionStatus('Connecting');
 
     ws.onopen = () => {
-      console.log('WebSocket connected');
+      ws.send(JSON.stringify({token: token}));
       setConnectionStatus('Open');
     };
 
@@ -48,7 +50,7 @@ export const useChatWebSocket = (sender: string | undefined, receiver: string | 
     return () => {
       ws.close();
     };
-  }, [sender, receiver]);
+  }, [sender, receiver, token]);
 
   const sendMessage = useCallback((message: string) => {
     if (socket && socket.readyState === WebSocket.OPEN) {
