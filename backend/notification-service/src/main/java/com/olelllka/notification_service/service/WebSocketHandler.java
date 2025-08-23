@@ -1,7 +1,8 @@
 package com.olelllka.notification_service.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.olelllka.notification_service.domain.dto.JWTMessage;
 import com.olelllka.notification_service.feign.ProfileFeign;
-import com.olelllka.notification_service.rest.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -16,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WebSocketHandler extends TextWebSocketHandler {
 
     private static final ConcurrentHashMap<UUID, WebSocketSession> sessions = new ConcurrentHashMap<>();
+    private final JWTUtil jwtUtil;
     private final ProfileFeign profileService;
 
 
@@ -28,7 +30,19 @@ public class WebSocketHandler extends TextWebSocketHandler {
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A server error occurred on external service."));
         }
         sessions.put(userId, session);
-//        session.sendMessage(new TextMessage("Connection established! Your userId: " + userId));
+    }
+
+    @Override
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+        String jwtToken = message.getPayload();
+        ObjectMapper mapper = new ObjectMapper();
+        JWTMessage jwt = mapper.readValue(jwtToken, JWTMessage.class);
+        if (!jwtUtil.isTokenValid(jwt.getToken())) {
+            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Token expired."));
+        }
+        if (!jwtUtil.extractId(jwt.getToken()).equals(getUserIdFromUri(session).toString())) {
+            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Bad authorization."));
+        }
     }
 
     @Override

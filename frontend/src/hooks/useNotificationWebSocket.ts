@@ -1,14 +1,18 @@
+import { useAuthStore } from "@/store/useAuthStore";
 import { useEffect } from "react"
 import { toast } from "sonner";
 
 export const useNotificationWebSocket = (userId: string | null) => {
+  const token = useAuthStore.getState().token;
   useEffect(() => {
     if (!userId) return;
 
     const ws = new WebSocket(`ws://localhost:8080/notifications?userId=${userId}`);
     console.log("Connecting WS...");
 
-    ws.onopen = () => console.log("WS connected");
+    ws.onopen = () => {
+      ws.send(JSON.stringify({token: token}))
+    }
     ws.onmessage = (ev) => {
         console.log("received message");
         toast(ev.data);
@@ -20,7 +24,7 @@ export const useNotificationWebSocket = (userId: string | null) => {
       ws.close();
       console.log("WS cleanup");
     };
-  }, [userId]);
+  }, [userId, token]);
 
   return {};
 };

@@ -1,12 +1,14 @@
 package com.olelllka.notification_service.service;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Base64;
+import java.util.Date;
 
 @Component
 public class JWTUtil {
@@ -29,5 +31,15 @@ public class JWTUtil {
         byte[] decodedSecret = Base64.getDecoder().decode(key);
         return Keys.hmacShaKeyFor(decodedSecret);
     }
+
+    public boolean isTokenValid(String jwt) {
+        try {
+            Claims claims = getClaims(jwt);
+            return !claims.getExpiration().before(new Date());
+        } catch (JwtException | IllegalArgumentException e) {
+            return false; // invalid signature, malformed, or expired
+        }
+    }
+
 
 }
