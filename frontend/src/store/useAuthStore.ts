@@ -7,6 +7,8 @@ type AuthState = {
     clearToken: () => void;
 }
 
+const TTL = 1000 * 60 * 60 // 1 hour
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -19,10 +21,24 @@ export const useAuthStore = create<AuthState>()(
       storage: {
         getItem: (name) => {
           const item = sessionStorage.getItem(name);
-          return item ? JSON.parse(item) : null;
+          if (!item) return null;
+          try {
+            const parsed = JSON.parse(item);
+            if (parsed.timestamp && Date.now() - parsed.timestamp > TTL) {
+              sessionStorage.removeItem(name);
+              return null;
+            }
+            return parsed.data;
+          } catch {
+            return null;
+          }
         },
         setItem: (name, value) => {
-          sessionStorage.setItem(name, JSON.stringify(value));
+          const toSet = {
+            data: value,
+            timestamp: Date.now()
+          }
+          sessionStorage.setItem(name, JSON.stringify(toSet));
         },
         removeItem: (name) => {
           sessionStorage.removeItem(name);
