@@ -16,6 +16,8 @@ import { getMe, login } from "@/services/authServices";
 import { API_BASE } from "@/constants/routes";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useProfileStore } from "@/store/useProfileStore";
+import { toast } from "sonner";
+import type { AxiosError } from "axios";
 
 
 const formSchema = z.object({
@@ -41,9 +43,31 @@ export const LoginForm = () => {
             useAuthStore.getState().setToken(res.accessToken);
             const authData = await getMe();
             useProfileStore.getState().setProfile(authData);
+            toast.success(`Welcome back ${authData.alias}!`);
             navigate("/profile")
         } catch (err) {
-            console.log(err);
+            const error = err as AxiosError<{ message?: string }>;
+            if (error.response) {
+                const status = error.response.status;
+                const backendMsg = error.response.data?.message;
+                if (status === 429) {
+                    toast.error("Too many requests. Please wait a little bit.");
+                } else if (status === 500) {
+                    toast.error("Server error. Please try again later.");
+                } else if (status === 403) {
+                    toast.error(backendMsg);
+                } else if (status === 404) {
+                    toast.error("Not found.");
+                } else if (status === 400) {
+                    toast.warning(backendMsg);
+                } else {
+                    toast.error(backendMsg || `Unexpected error: ${status}`);
+                }
+            } else if (error.request) {
+                toast.error("No response from server. Check your connection.");
+            } else {
+                toast.error(error.message);
+            }
         }
     }
 

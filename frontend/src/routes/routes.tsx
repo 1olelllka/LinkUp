@@ -10,6 +10,8 @@ import { ProfileDetailPage } from "@/pages/ProfileDetailPage";
 import { StoryArchivePage } from "@/pages/StoryArchivePage";
 import { CreatePostPage } from "@/pages/CreatePostPage";
 import { UpdatePostPage } from "@/pages/UpdatePostPage";
+import { NotFoundPage } from "@/pages/NotFoundPage";
+import { ProtectedRoute } from "./ProtectedRoute";
 
 export const router = createBrowserRouter([
   {
@@ -26,42 +28,49 @@ export const router = createBrowserRouter([
   },
   {
     path: "/feeds",
-    element: <FeedPage />,
+    element: 
+    <ProtectedRoute children={
+      <FeedPage />
+    } />,
   },
   {
     path: "/chats",
-    element: <ChatsPage />,
+    element: <ProtectedRoute children={<ChatsPage />} />
   },
   {
     path: "/search",
-    element: <ProfileSearchPage />,
+    element: <ProtectedRoute children={<ProfileSearchPage />} />,
   },
   {
     path: "/profile",
-    element: <ProfilePage />,
+    element:<ProtectedRoute children={<ProfilePage />} />,
   },
   {
     path: "/profile/:userId",
-    element: <ProfileDetailPage />
+    element: <ProtectedRoute children={<ProfileDetailPage />} />
   },
   {
     path: "/profile/:userId/followers",
-    element: <FollowersPage type="follower"/>
+    element: <ProtectedRoute children={<FollowersPage type="follower"/>} />
   },
   {
     path: "/profile/:userId/followees",
-    element: <FollowersPage type="followee"/>
+    element: <ProtectedRoute children={<FollowersPage type="followee"/>} />
   },
   {
     path: "/archive",
-    element: <StoryArchivePage />
+    element: <ProtectedRoute children={<StoryArchivePage />} />
   },
   {
     path: "/create-post",
-    element: <CreatePostPage />
+    element: <ProtectedRoute children={<CreatePostPage />} />
   },
   {
     path: "/update-post/:postId",
-    element: <UpdatePostPage />
+    element: <ProtectedRoute children={<UpdatePostPage />} />
+  },
+  {
+    path: "*",
+    element: <NotFoundPage />
   }
 ]);
