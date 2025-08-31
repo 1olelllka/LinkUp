@@ -5,8 +5,9 @@ import { type ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { AppSidebar } from "./LeftSidebar";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bell } from "lucide-react";
 import { RightSidebar } from "./RightSidebar";
+import { NotificationSheet } from "@/components/notification/NotificationSheet";
 
 export const FeedLayout = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
@@ -16,26 +17,32 @@ export const FeedLayout = ({ children }: { children: ReactNode }) => {
       <main className="transition-all flex-1">
         <div className="flex flex-row">
           <SidebarTrigger className="mt-3"/>
-              <Button
-                data-sidebar="trigger"
-                data-slot="sidebar-trigger"
-                variant="ghost"
-                size="icon"
-                className="size-7 mt-3"
-                onClick={() => navigate(-1)}
-              >
-              <ArrowLeft />
+          <NotificationSheet trigger={
+            <Button
+              variant={"ghost"}
+              size="icon"
+              className="size-7 mt-3"
+            >
+              <Bell />
             </Button>
-              <Button
-                data-sidebar="trigger"
-                data-slot="sidebar-trigger"
-                variant="ghost"
-                size="icon"
-                className="size-7 mt-3"
-                onClick={() => navigate(1)}
-              >
-                <ArrowRight />
-              </Button>
+          }/>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7 mt-3"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7 mt-3"
+            onClick={() => navigate(1)}
+          >
+            <ArrowRight />
+          </Button>
+
         </div>
         {children}
       </main>

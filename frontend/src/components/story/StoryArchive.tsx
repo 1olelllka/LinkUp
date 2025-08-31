@@ -3,11 +3,12 @@ import { useProfileStore } from "@/store/useProfileStore"
 import { useCallback, useState } from "react";
 import { StoryCard } from "./StoryCard";
 import { StoryDetailLightbox } from "./StoryDetailLightBox";
+import { ServiceError } from "../errors/ServiceUnavailable";
 
 export function StoryArchive() {
 
   const userId = useProfileStore.getState().profile?.userId;
-  const {stories, storyPage, loading, loadMoreStoriesInArchive, setStories} = useArchive(userId);
+  const {stories, storyPage, loading, loadMoreStoriesInArchive, setStories, error} = useArchive(userId);
   const [open, setOpen] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
 
@@ -25,38 +26,44 @@ export function StoryArchive() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        {stories?.map((story, idx) => (
-          <StoryCard
-            key={story.id}
-            story={story}
-            setStories={setStories}
-            onClickImage={() => {
-              setSelectedIndex(idx)
-              setOpen(true)
-            }}
-          />
-        ))}
-      </div>
-      {storyPage && storyPage.last != true && 
-        <div className="mt-2">
-          {loading 
-          ? <p 
-          className="text-center font-semibold text-sm hover:underline cursor-pointer text-slate-400">
-            🔄 Loading...</p>
-          : <p 
-          className="text-center font-semibold text-sm hover:underline cursor-pointer text-slate-400"
-          onClick={handleLoadingMoreStories}
-          >🚀 Load More</p>
-        }
+      {error
+      ? <ServiceError err={error} />
+      : 
+      <>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {stories?.map((story, idx) => (
+            <StoryCard
+              key={story.id}
+              story={story}
+              setStories={setStories}
+              onClickImage={() => {
+                setSelectedIndex(idx)
+                setOpen(true)
+              }}
+            />
+          ))}
         </div>
-      }
-      <StoryDetailLightbox
-        stories={stories}
-        open={open}
-        setOpen={setOpen}
-        selectedIndex={selectedIndex}
-      />
+        {storyPage && storyPage.last != true && 
+          <div className="mt-2">
+            {loading 
+            ? <p 
+            className="text-center font-semibold text-sm hover:underline cursor-pointer text-slate-400">
+              🔄 Loading...</p>
+            : <p 
+            className="text-center font-semibold text-sm hover:underline cursor-pointer text-slate-400"
+            onClick={handleLoadingMoreStories}
+            >🚀 Load More</p>
+          }
+          </div>
+        }
+        <StoryDetailLightbox
+          stories={stories}
+          open={open}
+          setOpen={setOpen}
+          selectedIndex={selectedIndex}
+        />
+      </>
+    }
     </div>
   )
 }

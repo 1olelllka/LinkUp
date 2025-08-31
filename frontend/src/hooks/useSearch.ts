@@ -4,6 +4,7 @@ import { useDebounce } from "./useDebounce";
 import { searchProfile } from "@/services/profileServices";
 import type { ProfilePage } from "@/types/Profile";
 import { useSearchParams } from "react-router";
+import { AxiosError } from "axios";
 
 export const useSearch = (searchTerm: string) => {
     const debouncedTerm = useDebounce(searchTerm, 500);
@@ -19,6 +20,7 @@ export const useSearch = (searchTerm: string) => {
     });
     const searchParams = useSearchParams();
     const pageNumber = searchParams[0].get('page');
+    const [error, setError] = useState<AxiosError>();
 
     useEffect(() => {
         if (debouncedTerm.trim() == "") {
@@ -27,8 +29,8 @@ export const useSearch = (searchTerm: string) => {
         }
         searchProfile(debouncedTerm, pageNumber)
         .then(setSearchResult)
-        .catch(err => console.log(err));
+        .catch(err => setError(err as AxiosError));
     }, [debouncedTerm, pageNumber]);
 
-    return searchResult;
+    return {searchResult, error};
 }

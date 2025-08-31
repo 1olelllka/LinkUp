@@ -8,6 +8,8 @@ import { useNavigate } from "react-router";
 import { uploadImage } from "@/services/imageServices";
 import { useProfileStore } from "@/store/useProfileStore";
 import { createNewStory } from "@/services/storyServices";
+import { toast } from "sonner";
+import type { AxiosError } from "axios";
 
 export const CreateStoryDialog = ({trigger} : {trigger: React.ReactNode}) => {
     const [image, setImage] = useState<File | null>(null);
@@ -16,8 +18,8 @@ export const CreateStoryDialog = ({trigger} : {trigger: React.ReactNode}) => {
     const [open, setOpen] = useState(false);
 
     const handleSubmitForm = async (e: React.FormEvent<HTMLFormElement>) => {
-        if (loading) return;
         e.preventDefault();
+        if (loading) return;
 
         if (!image) {
             alert("Please upload an image.");
@@ -25,16 +27,36 @@ export const CreateStoryDialog = ({trigger} : {trigger: React.ReactNode}) => {
         }
 
         setLoading(true);
-        const uploadedImage = await uploadImage(image);
-        if (uploadedImage.status == 200) {
-            const imageUrl = uploadedImage.data.url;
-            const res = await createNewStory(useProfileStore.getState().profile?.userId, {image: imageUrl});
-            if (res?.status == 201) {
-                setOpen(false);
-                navigate("/archive");
+        try {
+
+            const uploadedImage = await uploadImage(image);
+            if (uploadedImage.status == 200) {
+                const imageUrl = uploadedImage.data.url;
+                try {
+                    const res = await createNewStory(useProfileStore.getState().profile?.userId, {image: imageUrl});
+                    if (res?.status == 201) {
+                        setOpen(false);
+                        navigate("/archive");
+                    } else {
+                        toast.warning("Unknown error occured. Try again.")
+                    }
+                } catch (err) {
+                    const error = err as AxiosError;
+                    if (error.response && (error.response.status == 400 || error.response.status == 404 || error.response.status == 401)) {
+                        toast.error("Error while creating new story. " + (error.response.data as {message: string}).message);
+                    } else {
+                        toast.error("Error while creating new story. " + error.message);
+                    }
+                }
+            } else {
+                toast.warning("Unknown error occured. Try again.");
             }
+        } catch (err) {
+            const error = err as AxiosError;
+            toast.error("Error while uploading the image. " + error.message);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     }
 
     return (

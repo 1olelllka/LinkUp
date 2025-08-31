@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { fetchUserFeed } from "@/services/feedServices";
 import type { Post, FeedPage } from "@/types/Post";
+import { AxiosError } from "axios";
 
 export const useFeed = (userId: string | undefined) => {
     const [posts, setPosts] = useState<Post[]>([]);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<AxiosError>();
     const [postPage, setPostPage] = useState<FeedPage>();
     const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(0);
@@ -16,7 +17,7 @@ export const useFeed = (userId: string | undefined) => {
                 setPostPage(response);
                 setPosts(response.content)
             })
-            .catch(setError)
+            .catch(err => setError(err as AxiosError));
         }
     }, [userId]);
 
@@ -35,5 +36,5 @@ export const useFeed = (userId: string | undefined) => {
         }
     }
 
-    return { posts, loading, postPage, loadMoreFeeds ,error }
+    return { posts, loading, postPage, loadMoreFeeds, error }
 }

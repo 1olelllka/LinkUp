@@ -1,5 +1,6 @@
 import { fetchChatList } from "@/services/chatServices";
 import type { ChatListResponse, ChatPage } from "@/types/Chat";
+import { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 
 export const useChatList = (userId: string | undefined, initialPage: number = 0) => {
@@ -7,13 +8,12 @@ export const useChatList = (userId: string | undefined, initialPage: number = 0)
   const [chatUsersPage, setChatUsersPage] = useState<ChatPage | null>(null);
   const [allChats, setAllChats] = useState<ChatListResponse[]>([]);
   const [loading, setLoading] = useState(false);
-
+  const [error, setError] = useState<AxiosError>();
+  
+  
   useEffect(() => {
     if (!userId) return;
-    if (pageNumber === 0) {
-      setAllChats([]);
-    }
-
+    
     setLoading(true);
     fetchChatList(userId, pageNumber)
       .then((response) => {
@@ -24,7 +24,7 @@ export const useChatList = (userId: string | undefined, initialPage: number = 0)
         }
         setChatUsersPage(response);
       })
-      .catch((err) => console.log(err))
+      .catch((err) => setError(err as AxiosError))
       .finally(() => setLoading(false));
   }, [userId, pageNumber]);
 
@@ -34,5 +34,5 @@ export const useChatList = (userId: string | undefined, initialPage: number = 0)
     }
   };
 
-  return { allChats, setAllChats, chatUsersPage, loadNextPage, loading, setPageNumber };
+  return { allChats, setAllChats, chatUsersPage, loadNextPage, loading, setPageNumber, error };
 };

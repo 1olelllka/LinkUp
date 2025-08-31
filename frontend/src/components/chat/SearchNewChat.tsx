@@ -27,7 +27,7 @@ export const SearchNewChat = ({
     setSearchTerm(initialSearch);
   }
 
-  const searchResult = useSearch(searchTerm);
+  const {searchResult} = useSearch(searchTerm);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;

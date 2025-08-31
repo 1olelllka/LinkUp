@@ -24,6 +24,8 @@ import { logout } from "@/services/authServices";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { toast } from "sonner";
+import type { AxiosError } from "axios";
 
 
 const items = [
@@ -121,9 +123,13 @@ export function AppSidebar() {
                           clearProfile();
                           navigate("/login")
                       } else {
-                          console.log("Unexpected status --> " + response);
+                          toast.error(`Unexpected error occured. Status - ${response.status}. Message - ${response.data.message}`)
                       }
-                      }).catch(err => console.log(err));
+                      })
+                      .catch(err => {
+                        const error = err as AxiosError;
+                        toast.error(`Unexpected error occured. ${error.message}`)
+                      });
                   }}
                   className="rounded"
                   >

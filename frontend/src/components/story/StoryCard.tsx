@@ -15,6 +15,8 @@ import {
 import { deleteSpecificStory } from "@/services/storyServices"
 import type { Story } from "@/types/Stories"
 import { UpdateStoryDialog } from "./UpdateStoryDialog"
+import { toast } from "sonner"
+import type { AxiosError } from "axios"
 
 export const StoryCard = ({
   story,
@@ -87,12 +89,17 @@ export const StoryCard = ({
                             prev.filter((s) => s.id != story.id)
                           )
                         } else {
-                          console.log(
-                            "Unexpected response status -> " + response
-                          )
+                          toast.warning("Unexpected response. " + response.data);
                         }
                       })
-                      .catch((err) => console.log(err))
+                      .catch((err) => {
+                        const error = err as AxiosError;
+                        if (error.response && error.response.status == 401) {
+                          toast.error("Error while deleting the story. " + (error.response.data as {message: string}).message);
+                        } else {
+                          toast.error(error.message);
+                        }
+                      })
                   }}
                 >
                   Delete

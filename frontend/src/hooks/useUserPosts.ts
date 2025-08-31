@@ -1,5 +1,6 @@
 import { getPostsForSpecificUser } from "@/services/postServices";
 import type { Post, PostPage } from "@/types/Post";
+import { AxiosError } from "axios";
 import { useEffect, useState } from "react"
 
 export const useUserPosts = (userId: string | undefined) => {
@@ -7,6 +8,7 @@ export const useUserPosts = (userId: string | undefined) => {
     const [posts, setPosts] = useState<Post[]>([]);
     const [pageNumber, setPageNumber] = useState(1);
     const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<AxiosError>();
 
     useEffect(() => {
         if (userId) {
@@ -16,7 +18,7 @@ export const useUserPosts = (userId: string | undefined) => {
                 setPosts(response.results)
                 setPageNumber(1)
              })
-            .catch(err => console.log(err));
+            .catch(err => setError(err as AxiosError));
         }
     }, [userId])
 
@@ -30,10 +32,11 @@ export const useUserPosts = (userId: string | undefined) => {
             setPageNumber(pageNumber + 1)
         } catch (err) {
             console.log(err);
+            setError(err as AxiosError);
         } finally {
             setLoading(false);
         }
     }
 
-    return {posts, setPosts, postPage, loadMorePosts, loading, setLoading};
+    return {posts, setPosts, postPage, loadMorePosts, loading, setLoading, error};
 }

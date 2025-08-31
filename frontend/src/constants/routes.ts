@@ -1,4 +1,3 @@
-
 export const API_BASE = "http://localhost:8080/api";
 
 export const API_ROUTES = {
@@ -6,7 +5,8 @@ export const API_ROUTES = {
         login: `${API_BASE}/auth/login`,
         signup: `${API_BASE}/auth/register`,
         me: `/auth/me`,
-        logout: '/auth/logout'
+        logout: '/auth/logout',
+        health: `${API_BASE}/auth/actuator/health`
     },
     profile: {
         search: `${API_BASE}/profiles?search=`,
@@ -15,7 +15,8 @@ export const API_ROUTES = {
         profileFollowees: (userId: string, page: number = 0) => `${API_BASE}/profiles/${userId}/followees?page=${page}`,
         followStatus: (from: string, to: string) => `${API_BASE}/profiles/follow-status?from=${from}&to=${to}`,
         follow: `/profiles/follow`,
-        unfollow: `/profiles/unfollow`
+        unfollow: `/profiles/unfollow`,
+        health: `${API_BASE}/profiles/actuator/health`
     },
     chats: {
         list: "/chats/users/",
@@ -49,5 +50,8 @@ export const API_ROUTES = {
     },
     images: {
         upload: `https://linkup.loca.lt/upload`
+    },
+    gateway: {
+        health: `http://localhost:8080/actuator/health`
     }
 }

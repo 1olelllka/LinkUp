@@ -1,5 +1,6 @@
 import { getAllStoriesForArchiveByUser } from "@/services/storyServices";
 import type { Story, StoryPage } from "@/types/Stories";
+import { AxiosError } from "axios";
 import { useEffect, useState } from "react"
 
 export const useArchive = (userId: string | undefined) => {
@@ -7,6 +8,7 @@ export const useArchive = (userId: string | undefined) => {
     const [storyPage, setStoryPage] = useState<StoryPage>();
     const [page, setPage] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<AxiosError>();
 
     useEffect(() => {
         if (!userId) return;
@@ -16,6 +18,7 @@ export const useArchive = (userId: string | undefined) => {
             setStories(response.content);
             setPage(0);
         })
+        .catch(err => setError(err as AxiosError))
     }, [userId]);
 
     const loadMoreStoriesInArchive = async () => {
@@ -27,11 +30,11 @@ export const useArchive = (userId: string | undefined) => {
             setStoryPage(res);
             setStories((prev) => [...prev, ...res.content]);
         } catch (err) {
-            console.log(err);
+            setError(err as AxiosError);
         } finally {
             setLoading(false);
         }
     }
 
-    return {stories, storyPage, loading, setStories, loadMoreStoriesInArchive};
+    return {stories, storyPage, loading, setStories, loadMoreStoriesInArchive, error};
 }

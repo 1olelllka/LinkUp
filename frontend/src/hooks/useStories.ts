@@ -1,5 +1,6 @@
 import { getAllStoriesForUser } from "@/services/storyServices";
 import type { Story, StoryPage } from "@/types/Stories";
+import { AxiosError } from "axios";
 import { useEffect, useState } from "react"
 
 
@@ -8,6 +9,7 @@ export const useStories = (userId : string | undefined) => {
     const [storyPage, setStoryPage] = useState<StoryPage>();
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(0);
+    const [error, setError] = useState<AxiosError>();
 
     useEffect(() => {
         if (!userId) return;
@@ -16,7 +18,7 @@ export const useStories = (userId : string | undefined) => {
             setStoryPage(response);
             setStories(response.content);
             setPage(0);
-        }).catch((err) => console.log(err));
+        }).catch((err) => setError(err as AxiosError));
     }, [userId])
 
     const loadMoreStories = async () => {
@@ -28,11 +30,11 @@ export const useStories = (userId : string | undefined) => {
             setStories((prev) => [...prev, ...res.content]);
             setPage(page + 1);
         } catch (err) {
-            console.log(err);
+            setError(err as AxiosError)
         } finally {
             setLoading(false);
         }
     }
 
-    return {stories, storyPage, loadMoreStories};
+    return {stories, storyPage, loadMoreStories, error};
 }
