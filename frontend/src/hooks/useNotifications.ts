@@ -1,6 +1,8 @@
 import { getAllNotificationsForUser, updateAllNotificationStatuses } from "@/services/notificationService";
 import type { Notification, NotificationPage } from "@/types/Notification";
+import { AxiosError } from "axios";
 import { useEffect, useRef, useState } from "react"
+import { toast } from "sonner";
 
 
 export const useNotifications = (userId : string) => {
@@ -9,6 +11,7 @@ export const useNotifications = (userId : string) => {
     const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(0);
     const pendingReadIds = useRef<Set<string>>(new Set());
+    const [error, setError] = useState<AxiosError>();
 
     useEffect(() => {
         if (!userId) return;
@@ -18,14 +21,14 @@ export const useNotifications = (userId : string) => {
             setNotifications(response.content);
             setCurrentPage(0);
         })
-        .catch(err => console.log(err));
+        .catch(err => setError(err as AxiosError));
     }, [userId]);
 
     useEffect(() => {
         const interval = setInterval(() => {
         if (pendingReadIds.current.size > 0) {
             updateAllNotificationStatuses([...pendingReadIds.current])
-            .catch(console.error);
+            .catch(err => toast.error("Error while upding notification's read status. " + (err as AxiosError).message));
             pendingReadIds.current.clear();
         }
         }, 2000);
@@ -50,7 +53,7 @@ export const useNotifications = (userId : string) => {
             setNotificationPage(res);
             setNotifications((prev) => [...prev, ...res.content]);
         } catch (err) {
-            console.log(err);
+            setError(err as AxiosError)
         } finally {
             setLoading(false);
         }
@@ -63,5 +66,7 @@ export const useNotifications = (userId : string) => {
         loadNewNotifications, 
         setNotifications, 
         setNotificationPage, 
-        markAsRead};
+        markAsRead,
+        error
+    };
 }

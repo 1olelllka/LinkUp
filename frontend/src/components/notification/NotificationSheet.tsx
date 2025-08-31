@@ -12,11 +12,14 @@ import { formatDistanceToNow } from "date-fns"
 import { Trash } from "lucide-react";
 import { Button } from "../ui/button";
 import { deleteAllNotificationsForUser, deleteSpecificNotification } from "@/services/notificationService";
+import { ServiceError } from "../errors/ServiceUnavailable";
+import { toast } from "sonner";
+import type { AxiosError } from "axios";
 
 export const NotificationSheet = ({trigger} : {trigger: React.ReactNode}) => {
     const [open, setOpen] = useState(false);
     const currentUser = useProfileStore(state => state.profile?.userId);
-    const {notifications, notificationPage, loading, loadNewNotifications, setNotifications, setNotificationPage, markAsRead} =
+    const {notifications, notificationPage, loading, loadNewNotifications, setNotifications, setNotificationPage, markAsRead, error} =
         useNotifications(open && currentUser ? currentUser : "");
 
     const handleNewNotitications = useCallback(async () => {
@@ -45,6 +48,15 @@ export const NotificationSheet = ({trigger} : {trigger: React.ReactNode}) => {
     return (
         <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>{trigger}</SheetTrigger>
+        {error 
+        ? 
+        <SheetContent>
+            <SheetHeader>
+                <SheetTitle className="text-3xl">Notifications</SheetTitle>
+            </SheetHeader>
+            <ServiceError err={error} />
+        </SheetContent>
+        : 
         <SheetContent>
             <SheetHeader>
                 <div className="flex flex-row space-x-2">
@@ -62,10 +74,10 @@ export const NotificationSheet = ({trigger} : {trigger: React.ReactNode}) => {
                                         setNotifications([]);
                                         setNotificationPage(null);
                                     } else {
-                                        console.log("Unexpected status code - " + response);
+                                        toast.error("Unexpected server response while deleting all of the notifications. " + response.data);
                                     }
                                 })
-                                .catch(err => console.log(err));
+                                .catch(err => toast.error("Error while deleting all of the notifications. " + (err as AxiosError).message));
                             }
                         }}
                     >
@@ -103,7 +115,7 @@ export const NotificationSheet = ({trigger} : {trigger: React.ReactNode}) => {
                                     } else {
                                         console.log("Unexpected response status - " + response);
                                     }
-                                }).catch(err => console.log(err));
+                                }).catch(err => toast.error("Error while deleting the notification. " + (err as AxiosError).message));
                             }}/>
                         </div>
                         </div>
@@ -129,6 +141,7 @@ export const NotificationSheet = ({trigger} : {trigger: React.ReactNode}) => {
                 </p>
                 )}
         </SheetContent>
+        }
         </Sheet>
     )
 }
