@@ -3,6 +3,7 @@ import { getMe } from "@/services/authServices";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useProfileStore } from "@/store/useProfileStore";
 import axios from "axios";
+import { toast } from "sonner";
 
 export async function ensureAccessToken(): Promise<string | null> {
   const token = useAuthStore.getState().token;
@@ -19,7 +20,6 @@ export async function ensureAccessToken(): Promise<string | null> {
         withCredentials: true,
       }
     );
-    console.log(res);
     const newToken = res.data?.accessToken;
     if (newToken) {
       setToken(newToken);
@@ -29,6 +29,7 @@ export async function ensureAccessToken(): Promise<string | null> {
     }
   } catch (err) {
     console.error("Token refresh failed", err);
+    toast.error("Session expired")
     clearToken();
   }
   return null;

@@ -55,13 +55,13 @@ export function ProfileDetail() {
           <div className="flex justify-center md:justify-start gap-8 pt-2">
             <div className="text-center">
               <NavLink to={`/profile/${userId}/followers`}>
-                <p className="text-lg font-bold">{followers?.totalElements}</p>
+                <p className="text-lg font-bold">{followers.followListPage?.totalElements}</p>
                 <p className="text-sm text-muted-foreground">Followers</p>
               </NavLink>
             </div>
             <div className="text-center">
               <NavLink to={`/profile/${userId}/followees`}>
-                <p className="text-lg font-bold">{followee?.totalElements}</p>
+                <p className="text-lg font-bold">{followee.followListPage?.totalElements}</p>
                 <p className="text-sm text-muted-foreground">Following</p>
               </NavLink>
             </div>

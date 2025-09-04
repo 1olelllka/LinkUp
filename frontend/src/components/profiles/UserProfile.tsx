@@ -39,13 +39,13 @@ export const UserProfile = () => {
             <div className="flex gap-8 text-center">
               <div>
                 <NavLink to={`/profile/${useProfileStore.getState().profile?.userId}/followers`}>
-                  <p className="text-xl font-semibold cursor-pointer">{followersPage?.totalElements ?? 0}</p>
+                  <p className="text-xl font-semibold cursor-pointer">{followersPage.followListPage?.totalElements ?? 0}</p>
                 </NavLink>
                 <p className="text-sm text-muted-foreground">Followers</p>
               </div>
               <div>
                 <NavLink to={`/profile/${useProfileStore.getState().profile?.userId}/followees`}>
-                  <p className="text-xl font-semibold cursor-pointer">{followeesPage?.totalElements ?? 0}</p>
+                  <p className="text-xl font-semibold cursor-pointer">{followeesPage.followListPage?.totalElements ?? 0}</p>
                 </NavLink>
                 <p className="text-sm text-muted-foreground">Following</p>
               </div>

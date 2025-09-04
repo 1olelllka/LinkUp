@@ -68,7 +68,12 @@ export const AuthDataForm = (data : AuthDataFormProps) => {
                 })
             })
         } catch (err) {
-            console.log(err);
+            const error = err as AxiosError;
+            if (error.response?.status == 400 || error.response?.status == 403) {
+                toast.error((error.response.data as {message: string}).message);
+            } else {
+                toast.error(error.message);
+            }
         }
     }
 
