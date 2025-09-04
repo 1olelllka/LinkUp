@@ -1,11 +1,13 @@
 import { fetchMessagesList } from "@/services/chatServices";
 import type { Message, MessagePage } from "@/types/Chat";
+import type { AxiosError } from "axios";
 import { useCallback, useEffect, useState } from "react";
 
 export const useMessageList = (chatId: string) => {
   const [messagesPage, setMessagesPage] = useState<MessagePage>();
   const [messages, setMessages] = useState<Message[]>([]);
   const [page, setPage] = useState<number>(0);
+  const [error, setError] = useState<AxiosError | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
@@ -17,7 +19,7 @@ export const useMessageList = (chatId: string) => {
           setMessages(page.content.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
           setPage(0);
         })
-        .catch(err => console.log(err))
+        .catch(err => setError(err as AxiosError))
         .finally(() => setLoading(false));
     }
   }, [chatId]);
@@ -35,7 +37,7 @@ export const useMessageList = (chatId: string) => {
       setPage(pageNumber);
       console.log('success');
     } catch (err) {
-      console.log(err);
+      setError(err as AxiosError);
     } finally {
       setLoading(false);
     }
@@ -43,5 +45,5 @@ export const useMessageList = (chatId: string) => {
 
 
 
-  return { messagesPage, messages, setMessages, loading, loadMoreMessages, page };
+  return { messagesPage, messages, setMessages, loading, loadMoreMessages, page, error };
 };

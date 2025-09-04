@@ -41,8 +41,8 @@ public class ProfileController {
 
     @PatchMapping("/{profile_id}")
     public ResponseEntity<ProfileDto> updateProfileById(@PathVariable UUID profile_id,
-                                                        @Valid @RequestBody PatchProfileDto dto,
                                                         @RequestHeader(name="Authorization") String header,
+                                                        @Valid @RequestBody PatchProfileDto dto,
                                                         BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             String msg = bindingResult.getAllErrors().stream().map(err -> err.getDefaultMessage()).collect(Collectors.joining(" "));

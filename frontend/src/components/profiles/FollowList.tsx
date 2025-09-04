@@ -2,6 +2,7 @@ import { useParams } from "react-router";
 import { useFollowList } from "@/hooks/useFollowList";
 import { ProfileList } from "./ProfileList";
 import { ProfilePagination } from "./ProfilePagination";
+import { ServiceError } from "../errors/ServiceUnavailable";
 
 interface FollowListProp {
   type: "follower" | "followee"
@@ -9,7 +10,7 @@ interface FollowListProp {
 
 export function FollowList({type} : FollowListProp) {
   const { userId } = useParams();
-  const followerPage = useFollowList({
+  const {followListPage, error} = useFollowList({
     userId: userId,
     type: type
   })
@@ -18,11 +19,16 @@ export function FollowList({type} : FollowListProp) {
     <div className="bg-slate-50 rounded-2xl shadow-lg p-6 min-h-[calc(100vh-48px)] transition-all w-[99%]">
       <div className="max-w-4xl">
         <h1 className="text-3xl font-bold mb-6">{type === "followee" ? "Followees" : "Followers"}</h1>
-
-        {followerPage && 
+        {error
+        ? <ServiceError err={error} /> 
+        : 
         <>
-          <ProfileList profileList={followerPage} />
-          <ProfilePagination pageOptions={followerPage} />
+          {followListPage && 
+          <>
+            <ProfileList profileList={followListPage} />
+            <ProfilePagination pageOptions={followListPage} />
+          </>
+          }
         </>
         }
       </div>

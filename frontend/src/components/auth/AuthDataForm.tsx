@@ -26,6 +26,8 @@ import { patchMe } from "@/services/authServices";
 import { deleteProfile } from "@/services/profileServices";
 import { useProfileStore } from "@/store/useProfileStore";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
+import type { AxiosError } from "axios";
 
 const formSchema = z.object({
     email: z.email("Invalid Email."),
@@ -120,7 +122,15 @@ export const AuthDataForm = (data : AuthDataFormProps) => {
                         <DialogClose asChild>
                             <Button variant="destructive" onClick={() => {
                                 deleteProfile(useProfileStore.getState().profile?.userId)
-                                navigate("/");
+                                .then(status => {
+                                    if (status == 204) {
+                                        navigate("/");
+                                    } else {
+                                        toast.warning("Unknown error occured. Please try again later. The request failed with status " + status);
+                                    }
+                                }).catch(err => {
+                                    toast.error((err as AxiosError).message);
+                                })
                             }}>Delete</Button>
                         </DialogClose>
                         <div className="flex gap-2 ml-auto">

@@ -8,6 +8,8 @@ import { UserPosts } from "../posts/UserPosts";
 import { useProfileStore } from "@/store/useProfileStore";
 import { checkFollowStatus, followProfile, unfollowProfile } from "@/services/profileServices";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import type { AxiosError } from "axios";
 
 export function ProfileDetail() {
   const { userId } = useParams();
@@ -71,12 +73,23 @@ export function ProfileDetail() {
               {isFollowing ? (
                 <>
                   <Button variant="outline" onClick={() => {
-                    unfollowProfile(useProfileStore.getState().profile?.userId, userId)
-                    .then(response => {
-                      if (response == 200) {
-                        setIsFollowing(false);
-                      }
-                    });
+                    if (useProfileStore.getState().profile?.userId && userId) {
+                      unfollowProfile(useProfileStore.getState().profile?.userId, userId)
+                      .then(response => {
+                        if (response.status == 200) {
+                          setIsFollowing(false);
+                        } else {
+                          toast.warning("Unknown error occured. Please try again later. The request failed with status " + response.status);
+                        }
+                      }).catch(err => {
+                        const error = err as AxiosError;
+                        if (error.response && (error.response.status == 400 || error.response.status == 401)) {
+                          toast.error((error.response.data as {message : string}).message);
+                        } else {
+                          toast.error((err as AxiosError).message);
+                        }
+                      });
+                    }
                   }}>Unfollow</Button>
                   <p className="text-xs text-muted-foreground">
                     You follow this user
@@ -84,12 +97,23 @@ export function ProfileDetail() {
                 </>
               ) : (
                 <Button onClick={() => {
+                  if (useProfileStore.getState().profile?.userId && userId) {
                     followProfile(useProfileStore.getState().profile?.userId, userId)
                     .then(response => {
-                      if (response == 200) {
+                      if (response.status == 200) {
                         setIsFollowing(true);
+                      } else {
+                        toast.warning("Unknown error occured. Please try again later. The request failed with status " + response.status);
+                      }
+                    }).catch(err => {
+                      const error = err as AxiosError;
+                      if (error.response && (error.response.status == 400 || error.response.status == 401)) {
+                        toast.error((error.response.data as {message : string}).message);
+                      } else {
+                        toast.error((err as AxiosError).message);
                       }
                     });
+                  }
                 }}>Follow</Button>
               )}
             </div>

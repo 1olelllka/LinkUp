@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import type { Profile } from "@/types/Profile";
 import { patchPersonalProfileInfo } from "@/services/profileServices";
+import type { AxiosError } from "axios";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name must not be empty."),
@@ -76,9 +78,15 @@ export const PersonalDataForm = ({profile, setProfile} : PersonalDataFormProps) 
               ...data
             });
           }
-          console.log("Updated profile:", data);
         } catch (err) {
-          console.log(err);
+          const error = err as AxiosError;
+          if (error.status == 400) {
+            toast.error("Validation error: " + (error.response?.data as {message: string}).message);
+          } else if (error.status == 404 || error.status == 401) {
+            toast.error("Client Error: " + (error.response?.data as {message: string}).message);
+          } else {
+            toast.error(error.message);
+          }
         }
     };
 

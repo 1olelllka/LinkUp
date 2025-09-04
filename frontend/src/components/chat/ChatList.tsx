@@ -20,6 +20,8 @@ import { Button } from "../ui/button";
 import { deleteChatById } from "@/services/chatServices";
 import { SearchNewChat } from "./SearchNewChat";
 import { ServiceError } from "../errors/ServiceUnavailable";
+import { toast } from "sonner";
+import type { AxiosError } from "axios";
 
 
 type selectedChat = {
@@ -124,9 +126,9 @@ export const ChatList = () => {
                                               setSelectedChat(null);
                                               setAllChats((prev) => prev.filter((c) => c.id != chat.id))
                                             } else {
-                                              console.log("Unexpected response status -> " + response);
+                                              toast.warning("Unexpected response from server received: " + response.data);
                                             }
-                                          }).catch(err => console.log(err));
+                                          }).catch(err => toast.error((err as AxiosError).message));
                                         }}>
                                         Delete
                                       </Button>

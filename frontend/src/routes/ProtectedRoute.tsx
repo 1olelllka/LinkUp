@@ -1,11 +1,12 @@
 import { ForbiddenPage } from "@/pages/ForbiddenPage";
-import { useAuthStore } from "@/store/useAuthStore"
+import { ensureAccessToken } from "@/utils/ensureAccessToken";
 
 
 export const ProtectedRoute = ({children} : {children: React.ReactNode}) => {
-    const isAuthenticated = useAuthStore.getState().token != null;
+    const isAuthenticated = ensureAccessToken();
 
     if (!isAuthenticated) {
+
         return <ForbiddenPage />
     }
     return <>{children}</>;

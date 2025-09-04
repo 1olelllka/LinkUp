@@ -42,21 +42,15 @@ export const checkFollowStatus = async (from: string | undefined, to: string | u
 }
 
 export const followProfile = async (followerId: string | undefined, followeeId: string | undefined) => {
-    if (followeeId && followerId) {
-        const res = await axiosInterceptor.post(`${API_ROUTES.profile.follow}`, {followerId: followerId, followeeId: followeeId});
-        return res.status;
-    }
-    return 400;
+    const res = await axiosInterceptor.post(`${API_ROUTES.profile.follow}`, {followerId: followerId, followeeId: followeeId});
+    return res;
 }
 
 export const unfollowProfile = async (followerId: string | undefined, followeeId: string | undefined) => {
-    if (followeeId && followerId) {
-        const res = await axiosInterceptor.delete(`${API_ROUTES.profile.unfollow}`, {
-            data: {followerId: followerId, followeeId: followeeId}
-        });
-        return res.status;
-    }
-    return 400;
+    const res = await axiosInterceptor.delete(`${API_ROUTES.profile.unfollow}`, {
+        data: {followerId: followerId, followeeId: followeeId}
+    });
+    return res
 }
 
 export const deleteProfile = async (userId: string | undefined) => {
