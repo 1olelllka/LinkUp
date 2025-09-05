@@ -15,7 +15,7 @@ export const useNotificationWebSocket = (userId: string | null) => {
     }
     ws.onmessage = (ev) => {
         console.log("received message");
-        toast(ev.data);
+        toast(ev.data, {position: "top-right"});
     }
     ws.onerror = (err) => console.error("WS error", err);
     ws.onclose = () => console.log("WS closed");

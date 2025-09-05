@@ -6,6 +6,8 @@ import { uploadImage } from "@/services/imageServices";
 import { createNewPost } from "@/services/postServices";
 import { useProfileStore } from "@/store/useProfileStore";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
+import type { AxiosError } from "axios";
 
 export const CreatePost = () => {
   const [image, setImage] = useState<File | null>(null);
@@ -21,15 +23,22 @@ export const CreatePost = () => {
       alert("Please upload an image.");
       return;
     }
-
     setLoading(true);
     const uploadedImage = await uploadImage(image);
     if (uploadedImage.status == 200) {
       const imageUrl = uploadedImage.data.url;
-      const res = await createNewPost(useProfileStore.getState().profile?.userId, {image: imageUrl, desc: desc});
-      if (res?.status == 201) {
-        navigate("/profile");
+      try {
+        const res = await createNewPost(useProfileStore.getState().profile?.userId, {image: imageUrl, desc: desc});
+        if (res?.status == 201) {
+          toast.success("Successfully created post!");
+          navigate("/profile");
+        }
+        } catch (err) {
+          const error = err as AxiosError;
+          toast.error("Unexpected error occured. " + error.message);
       }
+    } else {
+      toast.error("Unexpected error while uploading the image")
     }
     setLoading(false);
   };

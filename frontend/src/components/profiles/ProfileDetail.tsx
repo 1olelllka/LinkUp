@@ -10,11 +10,12 @@ import { checkFollowStatus, followProfile, unfollowProfile } from "@/services/pr
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
+import { ServiceError } from "../errors/ServiceUnavailable";
 
 export function ProfileDetail() {
   const { userId } = useParams();
   const currentUserId = useProfileStore.getState().profile?.userId;
-  const profile = useProfileDetail(userId);
+  const {profile, detailError} = useProfileDetail(userId);
   const [isFollowing, setIsFollowing] = useState<boolean>(false);
   const followers = useFollowList({
     userId,
@@ -41,43 +42,71 @@ export function ProfileDetail() {
 
   return (
     <div>
-      <Card className="p-6 flex flex-row justify-between items-center md:items-start gap-10 w-[99%] border-0 shadow-lg bg-slate-50 transition-all">
-        <div className="flex-1 space-y-3 text-center md:text-left">
-          <div>
-            <h1 className="text-2xl font-bold">{profile?.name}</h1>
-            <p className="text-muted-foreground">@{profile?.username}</p>
-          </div>
-
-          {profile?.aboutMe && (
-            <p className="text-sm text-muted-foreground">{profile.aboutMe}</p>
-          )}
-
-          <div className="flex justify-center md:justify-start gap-8 pt-2">
-            <div className="text-center">
-              <NavLink to={`/profile/${userId}/followers`}>
-                <p className="text-lg font-bold">{followers.followListPage?.totalElements}</p>
-                <p className="text-sm text-muted-foreground">Followers</p>
-              </NavLink>
+      {detailError
+      ? <ServiceError err={detailError} />
+      : 
+      <>
+        <Card className="p-6 flex flex-row justify-between items-center md:items-start gap-10 w-[99%] border-0 shadow-lg bg-slate-50 transition-all">
+          <div className="flex-1 space-y-3 text-center md:text-left">
+            <div>
+              <h1 className="text-2xl font-bold">{profile?.name}</h1>
+              <p className="text-muted-foreground">@{profile?.username}</p>
             </div>
-            <div className="text-center">
-              <NavLink to={`/profile/${userId}/followees`}>
-                <p className="text-lg font-bold">{followee.followListPage?.totalElements}</p>
-                <p className="text-sm text-muted-foreground">Following</p>
-              </NavLink>
-            </div>
-          </div>
 
-          {/* Follow/unfollow button and status */}
-          {useProfileStore.getState().profile?.userId != userId && (
-            <div className="pt-4 space-y-2">
-              {isFollowing ? (
-                <>
-                  <Button variant="outline" onClick={() => {
+            {profile?.aboutMe && (
+              <p className="text-sm text-muted-foreground">{profile.aboutMe}</p>
+            )}
+
+            <div className="flex justify-center md:justify-start gap-8 pt-2">
+              <div className="text-center">
+                <NavLink to={`/profile/${userId}/followers`}>
+                  <p className="text-lg font-bold">{followers.followListPage?.totalElements}</p>
+                  <p className="text-sm text-muted-foreground">Followers</p>
+                </NavLink>
+              </div>
+              <div className="text-center">
+                <NavLink to={`/profile/${userId}/followees`}>
+                  <p className="text-lg font-bold">{followee.followListPage?.totalElements}</p>
+                  <p className="text-sm text-muted-foreground">Following</p>
+                </NavLink>
+              </div>
+            </div>
+
+            {/* Follow/unfollow button and status */}
+            {useProfileStore.getState().profile?.userId != userId && (
+              <div className="pt-4 space-y-2">
+                {isFollowing ? (
+                  <>
+                    <Button variant="outline" onClick={() => {
+                      if (useProfileStore.getState().profile?.userId && userId) {
+                        unfollowProfile(useProfileStore.getState().profile?.userId, userId)
+                        .then(response => {
+                          if (response.status == 200) {
+                            setIsFollowing(false);
+                          } else {
+                            toast.warning("Unknown error occured. Please try again later. The request failed with status " + response.status);
+                          }
+                        }).catch(err => {
+                          const error = err as AxiosError;
+                          if (error.response && (error.response.status == 400 || error.response.status == 401)) {
+                            toast.error((error.response.data as {message : string}).message);
+                          } else {
+                            toast.error((err as AxiosError).message);
+                          }
+                        });
+                      }
+                    }}>Unfollow</Button>
+                    <p className="text-xs text-muted-foreground">
+                      You follow this user
+                    </p>
+                  </>
+                ) : (
+                  <Button onClick={() => {
                     if (useProfileStore.getState().profile?.userId && userId) {
-                      unfollowProfile(useProfileStore.getState().profile?.userId, userId)
+                      followProfile(useProfileStore.getState().profile?.userId, userId)
                       .then(response => {
                         if (response.status == 200) {
-                          setIsFollowing(false);
+                          setIsFollowing(true);
                         } else {
                           toast.warning("Unknown error occured. Please try again later. The request failed with status " + response.status);
                         }
@@ -90,43 +119,21 @@ export function ProfileDetail() {
                         }
                       });
                     }
-                  }}>Unfollow</Button>
-                  <p className="text-xs text-muted-foreground">
-                    You follow this user
-                  </p>
-                </>
-              ) : (
-                <Button onClick={() => {
-                  if (useProfileStore.getState().profile?.userId && userId) {
-                    followProfile(useProfileStore.getState().profile?.userId, userId)
-                    .then(response => {
-                      if (response.status == 200) {
-                        setIsFollowing(true);
-                      } else {
-                        toast.warning("Unknown error occured. Please try again later. The request failed with status " + response.status);
-                      }
-                    }).catch(err => {
-                      const error = err as AxiosError;
-                      if (error.response && (error.response.status == 400 || error.response.status == 401)) {
-                        toast.error((error.response.data as {message : string}).message);
-                      } else {
-                        toast.error((err as AxiosError).message);
-                      }
-                    });
-                  }
-                }}>Follow</Button>
-              )}
-            </div>
-          )}
-        </div>
+                  }}>Follow</Button>
+                )}
+              </div>
+            )}
+          </div>
 
-        {/* Right side: avatar */}
-        <div className="shrink-0">
-          <CustomAvatar name={profile?.name} photo={profile?.photo} size={100} />
-        </div>
-      </Card>
+          {/* Right side: avatar */}
+          <div className="shrink-0">
+            <CustomAvatar name={profile?.name} photo={profile?.photo} size={100} />
+          </div>
+        </Card>
 
-      <UserPosts userId={userId} />
+        <UserPosts userId={userId} />  
+      </>
+      }
     </div>
   );
 }

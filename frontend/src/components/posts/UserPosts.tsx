@@ -24,8 +24,6 @@ export const UserPosts = ({ userId } : {userId : string | undefined}) => {
     await loadMorePosts();
   }, [loadMorePosts])
 
-  console.log(error)
-
   return (
     <div className="mt-5 bg-slate-50 p-6 rounded-xl shadow-lg transition-all w-[99%]">
       {error

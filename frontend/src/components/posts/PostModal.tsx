@@ -7,6 +7,8 @@ import { createNewCommentForSpecificPost, deleteSpecificComment, getAllCommentsF
 import { getSpecificProfileInfo } from "@/services/profileServices";
 import { Comments } from "./Comments";
 import { CommentForm } from "./CommentForm";
+import type { AxiosError } from "axios";
+import { toast } from "sonner";
 
 export function PostModal({ postId, trigger }: { postId: number, trigger: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -37,7 +39,8 @@ export function PostModal({ postId, trigger }: { postId: number, trigger: React.
         setCommentPage(commentData);
         setComments(commentData.results.sort((a : Comment, b : Comment) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
       } catch (err) {
-        console.error("Failed to fetch post/profile", err);
+        const error = err as AxiosError;
+        toast.error("Failed to fetch post/profile. " + error.message);
       }
     };
 
@@ -53,9 +56,10 @@ export function PostModal({ postId, trigger }: { postId: number, trigger: React.
         const res = await getAllCommentsForSpecificPost(postId, currentPage + 1);
         setCurrentPage(prevPage => prevPage + 1);
         setCommentPage(res);
-        setComments(prev => [...prev, ...res.results]);  // Spread array here
+        setComments(prev => [...prev, ...res.results]);
       } catch (err) {
-        console.log(err);
+        const error = err as AxiosError;
+        toast.error("Failed to load more comments. " + error.message);
       } finally {
         setLoading(false);
       }
@@ -86,8 +90,8 @@ export function PostModal({ postId, trigger }: { postId: number, trigger: React.
         )
       );
     } catch (err) {
-      console.error("Failed to post reply", err);
-      // optionally show toast
+      const error = err as AxiosError;
+      toast.error("Failed to post reply. " + error.message);
     }
   };
 
@@ -97,7 +101,8 @@ export function PostModal({ postId, trigger }: { postId: number, trigger: React.
 
       setComments((prev = []) => [...prev, newComment]);
     } catch (err) {
-      console.log(err);
+      const error = err as AxiosError;
+      toast.error("Failed to post new comment. " + error.message);
     }
   };
 
@@ -119,7 +124,8 @@ const handleDeleteComment = async (id: number) => {
       });
     }
   } catch (err) {
-    console.log(err);
+    const error = err as AxiosError;
+    toast.error("Failed to delete the comment. " + error.message);
   }
 }
 

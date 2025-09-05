@@ -6,6 +6,8 @@ import { uploadImage } from "@/services/imageServices";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { usePostDetails } from "@/hooks/usePostDetails";
+import { toast } from "sonner";
+import type { AxiosError } from "axios";
 
 
 export const UpdatePost = () => {
@@ -35,12 +37,20 @@ export const UpdatePost = () => {
 
     setLoading(true);
     const uploadedImage = await uploadImage(image);
-    if (uploadedImage.status == 200) {
+        if (uploadedImage.status == 200) {
       const imageUrl = uploadedImage.data.url;
-      const res = await updatePost(postId ? parseInt(postId) : undefined, {image: imageUrl, desc: desc});
-      if (res?.status == 200) {
-        navigate("/profile");
+      try {
+        const res = await updatePost(postId ? parseInt(postId) : undefined, {image: imageUrl, desc: desc});
+        if (res?.status == 201) {
+          toast.success("Successfully created post!");
+          navigate("/profile");
+        }
+        } catch (err) {
+          const error = err as AxiosError;
+          toast.error("Unexpcted error occured. " + error.message);
       }
+    } else {
+      toast.error("Unexpected error while uploading the image")
     }
     setLoading(false);
   };
