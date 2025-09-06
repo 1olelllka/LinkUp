@@ -8,6 +8,7 @@ import { useProfileStore } from "@/store/useProfileStore";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
+import { SubmitLoader } from "../load/SubmitLoader";
 
 export const CreatePost = () => {
   const [image, setImage] = useState<File | null>(null);
@@ -24,34 +25,34 @@ export const CreatePost = () => {
       return;
     }
     setLoading(true);
-    const uploadedImage = await uploadImage(image);
-    if (uploadedImage.status == 200) {
-      const imageUrl = uploadedImage.data.url;
-      try {
-        const res = await createNewPost(useProfileStore.getState().profile?.userId, {image: imageUrl, desc: desc});
-        if (res?.status == 201) {
-          toast.success("Successfully created post!");
-          navigate("/profile");
+    try {
+      const uploadedImage = await uploadImage(image);
+      if (uploadedImage.status == 200) {
+        const imageUrl = uploadedImage.data.url;
+        try {
+          const res = await createNewPost(useProfileStore.getState().profile?.userId, {image: imageUrl, desc: desc});
+          if (res?.status == 201) {
+            toast.success("Successfully created post!");
+            navigate("/profile");
+          }
+          } catch (err) {
+            const error = err as AxiosError;
+            toast.error("Unexpected error occured. " + error.message);
         }
-        } catch (err) {
-          const error = err as AxiosError;
-          toast.error("Unexpected error occured. " + error.message);
       }
-    } else {
-      toast.error("Unexpected error while uploading the image")
+    } catch {
+        toast.error("Unexpected error while uploading the image")
     }
     setLoading(false);
   };
 
   return (
     <div className="mx-2">
+        {loading && (
+            <SubmitLoader />
+        )}
       <h2 className="text-2xl font-bold my-4">Create new post</h2>
       <form className="w-100 space-y-5" onSubmit={handleSubmitForm}>
-        {loading && (
-          <>
-            <h1 className="text-xl font-semibold">🔄Loading...</h1>
-          </>
-        )}
         <div className="space-y-3">
           <Label>Upload the image</Label>
           <Input

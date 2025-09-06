@@ -8,22 +8,27 @@ import { useEffect, useState } from "react";
 export const useMyProfileDetail = () => {
     const [profile, setProfile] = useState<Profile>();
     const [error, setError] = useState<AxiosError>();
+    const [loading, setLoading] = useState(false);
     
     useEffect(() => {
-    getMe()
-    .then((response) => {
-        const user = response;
-        setProfile(user);
-        getSpecificProfileInfo(user.userId)
+    setLoading(true);
+    // setTimeout(() => {
+        getMe()
         .then((response) => {
-            const combinedProfile = {
-                ...user,
-                ...response
-            };
-            setProfile(combinedProfile);
-        }).catch(err => setError(err as AxiosError));
-    }).catch(err => setError(err as AxiosError));
+            const user = response;
+            setProfile(user);
+            getSpecificProfileInfo(user.userId)
+            .then((response) => {
+                const combinedProfile = {
+                    ...user,
+                    ...response
+                };
+                setProfile(combinedProfile);
+            }).catch(err => setError(err as AxiosError));
+        }).catch(err => setError(err as AxiosError))
+        .finally(() => setLoading(false));
+    // }, 2500)
   }, []);
 
-  return {profile, setProfile, error};
+  return {profile, setProfile, error, loading};
 }

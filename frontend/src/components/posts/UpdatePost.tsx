@@ -8,6 +8,7 @@ import { useNavigate, useParams } from "react-router";
 import { usePostDetails } from "@/hooks/usePostDetails";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
+import { SubmitLoader } from "../load/SubmitLoader";
 
 
 export const UpdatePost = () => {
@@ -30,46 +31,46 @@ export const UpdatePost = () => {
     if (loading) return;
     e.preventDefault();
 
-    if (!image) {
-      alert("Please upload an image.");
-      return;
-    }
-
     setLoading(true);
-    const uploadedImage = await uploadImage(image);
-        if (uploadedImage.status == 200) {
-      const imageUrl = uploadedImage.data.url;
+    try {
+      let uploadedImage;
+      if (image) {
+        uploadedImage = await uploadImage(image);
+      }
+      if ((uploadedImage && uploadedImage.status == 200) || imageUrl) {
+        if (uploadedImage) {
+          const url = uploadedImage.data.url;
+          setImageUrl(url);
+        }
       try {
         const res = await updatePost(postId ? parseInt(postId) : undefined, {image: imageUrl, desc: desc});
-        if (res?.status == 201) {
-          toast.success("Successfully created post!");
+        if (res?.status == 200) {
+          toast.success("Successfully updated post!");
           navigate("/profile");
         }
         } catch (err) {
           const error = err as AxiosError;
           toast.error("Unexpcted error occured. " + error.message);
       }
-    } else {
-      toast.error("Unexpected error while uploading the image")
+      }
+    } catch {
+        toast.error("Unexpected error while uploading the image")
     }
     setLoading(false);
   };
 
   return (
     <div className="mx-2">
+        {loading && (
+          <SubmitLoader />
+        )}
       <h2 className="text-2xl font-bold my-4">Update post</h2>
       <form className="w-100 space-y-5" onSubmit={handleSubmitForm}>
-        {loading && (
-          <>
-            <h1 className="text-xl font-semibold">🔄Loading...</h1>
-          </>
-        )}
         <div className="space-y-3">
           <Label>Upload the image</Label>
           <Input
             type="file"
             accept="image/*"
-            required
             className="cursor-pointer"
             onChange={(e) => {
               const file = e.target.files?.[0] || null;

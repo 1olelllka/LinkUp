@@ -3,6 +3,7 @@ import { useFollowList } from "@/hooks/useFollowList";
 import { ProfileList } from "./ProfileList";
 import { ProfilePagination } from "./ProfilePagination";
 import { ServiceError } from "../errors/ServiceUnavailable";
+import { PageLoader } from "../load/PageLoader";
 
 interface FollowListProp {
   type: "follower" | "followee"
@@ -10,7 +11,7 @@ interface FollowListProp {
 
 export function FollowList({type} : FollowListProp) {
   const { userId } = useParams();
-  const {followListPage, error} = useFollowList({
+  const {followListPage, error, loading} = useFollowList({
     userId: userId,
     type: type
   })
@@ -23,10 +24,16 @@ export function FollowList({type} : FollowListProp) {
         ? <ServiceError err={error} /> 
         : 
         <>
-          {followListPage && 
+          {loading
+          ? <PageLoader />
+          : 
           <>
-            <ProfileList profileList={followListPage} />
-            <ProfilePagination pageOptions={followListPage} />
+            {followListPage && 
+            <>
+              <ProfileList profileList={followListPage} />
+              <ProfilePagination pageOptions={followListPage} />
+            </>
+            }
           </>
           }
         </>

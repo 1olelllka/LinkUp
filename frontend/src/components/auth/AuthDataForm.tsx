@@ -66,6 +66,7 @@ export const AuthDataForm = (data : AuthDataFormProps) => {
                     email: response.email,
                     alias: response.alias
                 })
+                toast.success("Successfully updated authentication data!");
             })
         } catch (err) {
             const error = err as AxiosError;

@@ -4,6 +4,8 @@ import type { Comment } from "@/types/Post";
 import { CommentForm } from "./CommentForm";
 import { useProfileStore } from "@/store/useProfileStore";
 import { Trash } from "lucide-react";
+import type { AxiosError } from "axios";
+import { toast } from "sonner";
 
 export function Comments({
   postId,
@@ -24,9 +26,15 @@ export function Comments({
 
   const canDelete = currentUserId && (currentUserId === comment.user_id);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deleteComment) {
-      deleteComment(comment.id);
+      try {
+        deleteComment(comment.id);
+        toast.success("Successfully deleted comment!");
+      } catch (err) {
+        const error = err as AxiosError;
+        toast.error("Failed to delete comment. " + error.message);
+      }
     }
     setShowDeleteConfirm(false);
   };

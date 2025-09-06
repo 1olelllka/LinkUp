@@ -18,6 +18,8 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useProfileStore } from "@/store/useProfileStore";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
+import { useState } from "react";
+import { SubmitLoader } from "../load/SubmitLoader";
 
 
 const formSchema = z.object({
@@ -34,10 +36,12 @@ export const LoginForm = () => {
             password: ""
         }
     })
+    const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
+        setLoading(true);
         try {
             const res = await login(values);
             useAuthStore.getState().setToken(res.accessToken);
@@ -55,7 +59,7 @@ export const LoginForm = () => {
                 } else if (status === 500) {
                     toast.error("Server error. Please try again later.");
                 } else if (status === 403) {
-                    toast.error(backendMsg);
+                    toast.error("Invalid username or password.");
                 } else if (status === 404) {
                     toast.error("Not found.");
                 } else if (status === 400) {
@@ -68,11 +72,14 @@ export const LoginForm = () => {
             } else {
                 toast.error(error.message);
             }
+        } finally {
+            setLoading(false);
         }
     }
 
     return (
         <div className="w-1/2 mx-auto h-96 bg-white flex relative border border-gray-300 rounded-2xl shadow-md overflow-hidden">
+            {loading && <SubmitLoader />}
             <div className="w-1/2 bg-blue-100 flex items-center justify-center p-6">
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full">

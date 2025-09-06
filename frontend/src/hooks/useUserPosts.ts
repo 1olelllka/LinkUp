@@ -8,22 +8,27 @@ export const useUserPosts = (userId: string | undefined) => {
     const [posts, setPosts] = useState<Post[]>([]);
     const [pageNumber, setPageNumber] = useState(1);
     const [loading, setLoading] = useState<boolean>(false);
+    const [pageLoading, setPageLoading] = useState(false);
     const [error, setError] = useState<AxiosError>();
 
     useEffect(() => {
         if (userId) {
-            getPostsForSpecificUser(userId, 1)
-            .then(response => {
-                setPostPage(response);
-                setPosts(response.results)
-                setPageNumber(1)
-             })
-            .catch(err => setError(err as AxiosError));
+            setPageLoading(true);
+            // setTimeout(() => {
+                getPostsForSpecificUser(userId, 1)
+                .then(response => {
+                    setPostPage(response);
+                    setPosts(response.results)
+                    setPageNumber(1)
+                 })
+                .catch(err => setError(err as AxiosError))
+                .finally(() => setPageLoading(false));
+            // }, 2500)
         }
     }, [userId])
 
     const loadMorePosts = async () => {
-        if (loading || !userId) return;
+        if (loading || !userId || pageLoading) return;
         setLoading(true);
         try {
             const res = await getPostsForSpecificUser(userId, pageNumber + 1);
@@ -38,5 +43,5 @@ export const useUserPosts = (userId: string | undefined) => {
         }
     }
 
-    return {posts, setPosts, postPage, loadMorePosts, loading, setLoading, error};
+    return {posts, setPosts, postPage, loadMorePosts, loading, pageLoading, setLoading, error};
 }

@@ -78,6 +78,7 @@ export const PersonalDataForm = ({profile, setProfile} : PersonalDataFormProps) 
               ...data
             });
           }
+          toast.success("Successfully updated personal data!")
         } catch (err) {
           const error = err as AxiosError;
           if (error.status == 400) {

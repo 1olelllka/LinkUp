@@ -5,13 +5,14 @@ import { ProfileList } from "./ProfileList";
 import { useSearchParams } from "react-router";
 import { ProfilePagination } from "./ProfilePagination";
 import { ServiceError } from "../errors/ServiceUnavailable";
+import { PageLoader } from "../load/PageLoader";
 
 export const ProfileSearch = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSearch = searchParams.get("query") || "";
   const [searchTerm, setSearchTerm] = useState(initialSearch);
 
-  const {searchResult, error} = useSearch(searchTerm);
+  const {searchResult, error, loading} = useSearch(searchTerm);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -41,8 +42,14 @@ export const ProfileSearch = () => {
           </div>
         : 
         <>
-          <ProfileList profileList={searchResult} />
-          <ProfilePagination pageOptions={searchResult}/>
+          {loading
+          ? <PageLoader />
+          : 
+          <>
+            <ProfileList profileList={searchResult} />
+            <ProfilePagination pageOptions={searchResult}/>
+          </>
+          }
         </>
         }
       </div>

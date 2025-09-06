@@ -11,11 +11,12 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
 import { ServiceError } from "../errors/ServiceUnavailable";
+import { PageLoader } from "../load/PageLoader";
 
 export function ProfileDetail() {
   const { userId } = useParams();
   const currentUserId = useProfileStore.getState().profile?.userId;
-  const {profile, detailError} = useProfileDetail(userId);
+  const {profile, detailError, detailLoading} = useProfileDetail(userId);
   const [isFollowing, setIsFollowing] = useState<boolean>(false);
   const followers = useFollowList({
     userId,
@@ -46,6 +47,9 @@ export function ProfileDetail() {
       ? <ServiceError err={detailError} />
       : 
       <>
+        {detailLoading
+          ? <PageLoader />
+          : 
         <Card className="p-6 flex flex-row justify-between items-center md:items-start gap-10 w-[99%] border-0 shadow-lg bg-slate-50 transition-all">
           <div className="flex-1 space-y-3 text-center md:text-left">
             <div>
@@ -130,7 +134,7 @@ export function ProfileDetail() {
             <CustomAvatar name={profile?.name} photo={profile?.photo} size={100} />
           </div>
         </Card>
-
+        }
         <UserPosts userId={userId} />  
       </>
       }

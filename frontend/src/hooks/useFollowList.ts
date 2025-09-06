@@ -10,20 +10,24 @@ export const useFollowList = (data: {userId: string | undefined, type: "followee
     const searchParams = useSearchParams()
     const pageNumber = searchParams[0].get("page");
     const [error, setError] = useState<AxiosError | null>(null);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (data.userId) {
+            setLoading(true);
             if (data.type === "followee") {
                 getFolloweesForSpecificProfile(data.userId, pageNumber)
                 .then(setFollowListPage)
-                .catch(setError);
+                .catch(setError)
+                .finally(() => setLoading(false));
             } else {
                 getFollowersForSpecificProfile(data.userId, pageNumber)
                 .then(setFollowListPage)
-                .catch(setError);
+                .catch(setError)
+                .finally(() => setLoading(false));
             }
         }
     }, [data.userId, pageNumber, data.type]);
 
-    return {followListPage, error}
+    return {followListPage, error, loading}
 }

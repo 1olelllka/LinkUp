@@ -13,6 +13,7 @@ import { GenderSelect } from "./GenderSelect";
 import { NavLink, useNavigate } from "react-router";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
+import { SubmitLoader } from "../load/SubmitLoader";
 
 const formSchema = z.object({
   alias: z.string().min(8, "Alias must be at least 8 characters and contain only letters, digits, or underscores."),
@@ -39,40 +40,45 @@ export const SignUpForm = () => {
         dateOfBirth: ""
         },
     });
+    const [loading, setLoading] = useState(false);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setLoading(true);
     try {
       const data = await register(values);
       console.log("Registered:", data);
       toast.success(`Successfully registered, ${values.alias}! Proceeding to login page...`);
       navigate("/login");
     } catch (err) {
-      const error = err as AxiosError<{ message?: string }>;
-            if (error.response) {
-              const status = error.response.status;
-              const backendMsg = error.response.data?.message;
+        const error = err as AxiosError<{ message?: string }>;
+        if (error.response) {
+          const status = error.response.status;
+          const backendMsg = error.response.data?.message;
 
-              if (status === 429) {
-                  toast.error("Too many requests. Please wait a little bit.");
-              } else if (status === 500) {
-                  toast.error("Server error. Please try again later.");
-              } else if (status === 409) {
-                  toast.error(backendMsg);
-              } else if (status == 400) {
-                toast.error(backendMsg);
-              } else {
-                  toast.error(backendMsg || `Unexpected error: ${status}`);
-              }
-            } else if (error.request) {
-                toast.error("No response from server. Check your connection.");
-            } else {
-                toast.error(error.message);
-            }
+          if (status === 429) {
+              toast.error("Too many requests. Please wait a little bit.");
+          } else if (status === 500) {
+              toast.error("Server error. Please try again later.");
+          } else if (status === 409) {
+              toast.error(backendMsg);
+          } else if (status == 400) {
+            toast.error(backendMsg);
+          } else {
+              toast.error(backendMsg || `Unexpected error: ${status}`);
+          }
+        } else if (error.request) {
+            toast.error("No response from server. Check your connection.");
+        } else {
+            toast.error(error.message);
+        }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-md border border-gray-200">
+      {loading && <SubmitLoader />}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <FormField

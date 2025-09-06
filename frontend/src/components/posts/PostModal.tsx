@@ -34,10 +34,16 @@ export function PostModal({ postId, trigger }: { postId: number, trigger: React.
 
         const profileData = await getSpecificProfileInfo(postData?.user_id);
         setProfile(profileData);
-
-        const commentData = await getAllCommentsForSpecificPost(postId, 1);
-        setCommentPage(commentData);
-        setComments(commentData.results.sort((a : Comment, b : Comment) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+        try {
+          const commentData = await getAllCommentsForSpecificPost(postId, 1);
+          setCommentPage(commentData);
+          setComments(commentData.results.sort((a : Comment, b : Comment) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+        } catch (err) {
+          const error = err as AxiosError;
+          if (error.status != 404) {
+            toast.error("Failed to fetch comments. " + error.message);
+          }
+        }
       } catch (err) {
         const error = err as AxiosError;
         toast.error("Failed to fetch post/profile. " + error.message);
