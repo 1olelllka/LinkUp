@@ -12,13 +12,17 @@ export const useArchive = (userId: string | undefined) => {
 
     useEffect(() => {
         if (!userId) return;
-        getAllStoriesForArchiveByUser(userId, 0)
-        .then(response => {
-            setStoryPage(response);
-            setStories(response.content);
-            setPage(0);
-        })
-        .catch(err => setError(err as AxiosError))
+        setLoading(true);
+        // setTimeout(() => {
+            getAllStoriesForArchiveByUser(userId, 0)
+            .then(response => {
+                setStoryPage(response);
+                setStories(response.content);
+                setPage(0);
+            })
+            .catch(err => setError(err as AxiosError))
+            .finally(() => setLoading(false));
+        // }, 2500)
     }, [userId]);
 
     const loadMoreStoriesInArchive = async () => {

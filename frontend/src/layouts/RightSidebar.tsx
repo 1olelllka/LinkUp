@@ -1,4 +1,5 @@
 import { ServiceError } from "@/components/errors/ServiceUnavailable";
+import { PageLoader } from "@/components/load/PageLoader";
 import { CreateStoryDialog } from "@/components/story/CreateStoryDialog";
 import { StoryDetailLightbox } from "@/components/story/StoryDetailLightBox";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ import { useEffect, useRef, useState } from "react";
 export function RightSidebar() {
 
   const userId = useProfileStore.getState().profile?.userId;
-  const {stories, storyPage, loadMoreStories, error} = useStories(userId);
+  const {stories, storyPage, loadMoreStories, error, loading} = useStories(userId);
   const [open, setOpen] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -82,6 +83,7 @@ export function RightSidebar() {
             setOpen={setOpen}
             selectedIndex={selectedIndex}
           />
+          {loading && <PageLoader />}
         </>
         }
       </SidebarContent>

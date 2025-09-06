@@ -13,12 +13,16 @@ export const useStories = (userId : string | undefined) => {
 
     useEffect(() => {
         if (!userId) return;
-        getAllStoriesForUser(userId, 0)
-        .then((response) => {
-            setStoryPage(response);
-            setStories(response.content);
-            setPage(0);
-        }).catch((err) => setError(err as AxiosError));
+        setLoading(true);
+        // setTimeout(() => {
+            getAllStoriesForUser(userId, 0)
+            .then((response) => {
+                setStoryPage(response);
+                setStories(response.content);
+                setPage(0);
+            }).catch((err) => setError(err as AxiosError))
+            .finally(() => setLoading(false));
+        // }, 2500)
     }, [userId])
 
     const loadMoreStories = async () => {
@@ -36,5 +40,5 @@ export const useStories = (userId : string | undefined) => {
         }
     }
 
-    return {stories, storyPage, loadMoreStories, error};
+    return {stories, storyPage, loadMoreStories, error, loading};
 }

@@ -10,6 +10,7 @@ import { useProfileStore } from "@/store/useProfileStore";
 import { createNewStory } from "@/services/storyServices";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
+import { SubmitLoader } from "../load/SubmitLoader";
 
 export const CreateStoryDialog = ({trigger} : {trigger: React.ReactNode}) => {
     const [image, setImage] = useState<File | null>(null);
@@ -28,7 +29,6 @@ export const CreateStoryDialog = ({trigger} : {trigger: React.ReactNode}) => {
 
         setLoading(true);
         try {
-
             const uploadedImage = await uploadImage(image);
             if (uploadedImage.status == 200) {
                 const imageUrl = uploadedImage.data.url;
@@ -37,6 +37,7 @@ export const CreateStoryDialog = ({trigger} : {trigger: React.ReactNode}) => {
                     if (res?.status == 201) {
                         setOpen(false);
                         navigate("/archive");
+                        toast.success("Successfully created new story!");
                     } else {
                         toast.warning("Unknown error occured. Try again.")
                     }
@@ -65,13 +66,11 @@ export const CreateStoryDialog = ({trigger} : {trigger: React.ReactNode}) => {
                 {trigger}
             </DialogTrigger>
             <DialogContent>
+                {loading && (
+                <SubmitLoader />
+                )}
                 <DialogTitle>Create Story</DialogTitle>
                 <form className="space-y-5" onSubmit={handleSubmitForm}>
-                {loading && (
-                <>
-                    <h1 className="text-xl font-semibold">🔄Loading...</h1>
-                </>
-                )}
                 <div className="space-y-3">
                     <Label>Upload the image</Label>
                     <Input

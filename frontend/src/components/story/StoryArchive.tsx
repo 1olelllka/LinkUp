@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { StoryCard } from "./StoryCard";
 import { StoryDetailLightbox } from "./StoryDetailLightBox";
 import { ServiceError } from "../errors/ServiceUnavailable";
+import { PageLoader } from "../load/PageLoader";
 
 export function StoryArchive() {
 
@@ -43,13 +44,11 @@ export function StoryArchive() {
             />
           ))}
         </div>
+        {loading && <PageLoader />}
         {storyPage && storyPage.last != true && 
           <div className="mt-2">
-            {loading 
-            ? <p 
-            className="text-center font-semibold text-sm hover:underline cursor-pointer text-slate-400">
-              🔄 Loading...</p>
-            : <p 
+            {!loading && 
+            <p 
             className="text-center font-semibold text-sm hover:underline cursor-pointer text-slate-400"
             onClick={handleLoadingMoreStories}
             >🚀 Load More</p>

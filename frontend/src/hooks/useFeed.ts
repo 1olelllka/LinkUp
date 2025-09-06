@@ -12,12 +12,14 @@ export const useFeed = (userId: string | undefined) => {
 
     useEffect(() => {
         if (userId) {
+            setLoading(true);
             fetchUserFeed(userId, 0)
             .then(response => {
                 setPostPage(response);
                 setPosts(response.content)
             })
-            .catch(err => setError(err as AxiosError));
+            .catch(err => setError(err as AxiosError))
+            .finally(() => setLoading(false));
         }
     }, [userId]);
 

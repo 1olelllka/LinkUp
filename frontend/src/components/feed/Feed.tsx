@@ -2,6 +2,7 @@ import { PostCard } from "@/components/posts/PostCard";
 import { useFeed } from "@/hooks/useFeed";
 import { useCallback } from "react";
 import { ServiceError } from "../errors/ServiceUnavailable";
+import { PageLoader } from "../load/PageLoader";
 
 export const Feed = ({userId}: {userId: string}) => {
   const { posts, postPage, loading, loadMoreFeeds, error } = useFeed(userId);
@@ -21,13 +22,10 @@ export const Feed = ({userId}: {userId: string}) => {
           {posts?.map((item) => (
             <PostCard key={item.id} {...item} />
           ))}
+          {loading && <PageLoader />}
           {postPage && !postPage.last && 
             <div className="mt-2">
-              {loading 
-              ? <p 
-              className="text-center font-semibold text-sm hover:underline cursor-pointer text-slate-400">
-                🔄 Loading...</p>
-              : <p 
+              {loading && <p 
               className="text-center font-semibold text-sm hover:underline cursor-pointer text-slate-400"
               onClick={handleLoadingMoreFeeds}
               >🚀 Load More</p>

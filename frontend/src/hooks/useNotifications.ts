@@ -15,13 +15,15 @@ export const useNotifications = (userId : string) => {
 
     useEffect(() => {
         if (!userId) return;
-        getAllNotificationsForUser(userId, 0)
-        .then(response => {
-            setNotificationPage(response);
-            setNotifications(response.content);
-            setCurrentPage(0);
-        })
-        .catch(err => setError(err as AxiosError));
+        setLoading(true);
+            getAllNotificationsForUser(userId, 0)
+            .then(response => {
+                setNotificationPage(response);
+                setNotifications(response.content);
+                setCurrentPage(0);
+            })
+            .catch(err => setError(err as AxiosError))
+            .finally(() => setLoading(false));
     }, [userId]);
 
     useEffect(() => {

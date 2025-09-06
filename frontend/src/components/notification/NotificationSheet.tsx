@@ -15,6 +15,7 @@ import { deleteAllNotificationsForUser, deleteSpecificNotification } from "@/ser
 import { ServiceError } from "../errors/ServiceUnavailable";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
+import { PageLoader } from "../load/PageLoader";
 
 export const NotificationSheet = ({trigger} : {trigger: React.ReactNode}) => {
     const [open, setOpen] = useState(false);
@@ -73,6 +74,7 @@ export const NotificationSheet = ({trigger} : {trigger: React.ReactNode}) => {
                                     if (response.status == 204) {
                                         setNotifications([]);
                                         setNotificationPage(null);
+                                        toast.success("Successfully deleted notifications!");
                                     } else {
                                         toast.error("Unexpected server response while deleting all of the notifications. " + response.data);
                                     }
@@ -112,6 +114,7 @@ export const NotificationSheet = ({trigger} : {trigger: React.ReactNode}) => {
                                 .then(response => {
                                     if (response.status == 204) {
                                         setNotifications((prev) => prev.filter(a => a.id != item.id));
+                                        toast.success("Successfully deleted notification!");
                                     } else {
                                         console.log("Unexpected response status - " + response);
                                     }
@@ -123,11 +126,7 @@ export const NotificationSheet = ({trigger} : {trigger: React.ReactNode}) => {
                     ))}
                     {notificationPage && !notificationPage.last && 
                     <div className="mt-2">
-                        {loading 
-                        ? <p 
-                        className="text-center font-semibold text-sm hover:underline cursor-pointer text-slate-400">
-                        🔄 Loading...</p>
-                        : <p 
+                        {!loading && <p 
                         className="text-center font-semibold text-sm hover:underline cursor-pointer text-slate-400"
                         onClick={handleNewNotitications}
                         >🚀 Load More</p>
@@ -135,11 +134,12 @@ export const NotificationSheet = ({trigger} : {trigger: React.ReactNode}) => {
                     </div>
                     }
                 </div>
-                ) : (
+                ) : !loading && (
                 <p className="text-md text-slate-500 text-center mt-5">
                     💤 Peace and quiet — no new notifications
                 </p>
                 )}
+                {loading && <PageLoader />}
         </SheetContent>
         }
         </Sheet>

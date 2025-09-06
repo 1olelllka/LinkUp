@@ -4,16 +4,15 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "../ui/dialog"
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { useNavigate } from "react-router";
 import { uploadImage } from "@/services/imageServices";
 import { updateStory } from "@/services/storyServices";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
+import { SubmitLoader } from "../load/SubmitLoader";
 
 export const UpdateStoryDialog = ({trigger, imageUrl, id} : {trigger: React.ReactNode, imageUrl: string, id: string}) => {
     const [image, setImage] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
     const [open, setOpen] = useState(false);
 
     const handleSubmitForm = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -33,9 +32,8 @@ export const UpdateStoryDialog = ({trigger, imageUrl, id} : {trigger: React.Reac
                 const imageUrl = uploadedImage.data.url;
                 try {
                     const res = await updateStory(id, {image: imageUrl});
-                    if (res?.status == 201) {
+                    if (res?.status == 200) {
                         setOpen(false);
-                        navigate("/archive");
                     } else {
                         toast.warning("Unknown error occured. Try again.")
                     }
@@ -68,12 +66,10 @@ export const UpdateStoryDialog = ({trigger, imageUrl, id} : {trigger: React.Reac
             </DialogTrigger>
             <DialogContent>
                 <DialogTitle>Update Story</DialogTitle>
-                <form className="space-y-5" onSubmit={handleSubmitForm}>
                 {loading && (
-                <>
-                    <h1 className="text-xl font-semibold">🔄Loading...</h1>
-                </>
+                <SubmitLoader />
                 )}
+                <form className="space-y-5" onSubmit={handleSubmitForm}>
                 <div className="space-y-3">
                     <Label>Upload the image</Label>
                     <Input

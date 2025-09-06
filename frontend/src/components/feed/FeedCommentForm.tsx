@@ -9,6 +9,8 @@ import { z } from "zod"
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createNewCommentForSpecificPost } from "@/services/postServices";
+import type { AxiosError } from "axios";
+import { toast } from "sonner";
 
 const commentSchema = z.object({
   text: z.string().min(1, "Comment cannot be empty"),
@@ -23,8 +25,10 @@ export const FeedCommentForm = ({postId: postId} : {postId: number}) => {
     const onSubmit = async (postId: number, text : string) => {
     try {
         await createNewCommentForSpecificPost({post: postId, text: text});
+        toast.success("Added new comment to the post!");
     } catch (err) {
-        console.log(err);
+        const error = err as AxiosError;
+        toast.error(error.message);
     }
     }
 
