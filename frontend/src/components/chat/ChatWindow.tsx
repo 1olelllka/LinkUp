@@ -15,6 +15,7 @@ import { ObjectId } from "bson";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
 import { ServiceError } from "../errors/ServiceUnavailable";
+import { PageLoader } from "../load/PageLoader";
 
 type ChatWindowProps = {
   chatId: string;
@@ -166,13 +167,11 @@ export const ChatWindow = ({
             ref={messagesContainerRef}
             className="flex-1 space-y-4 overflow-y-auto p-2 mb-4"
           >
+            {loading && (
+              <PageLoader />
+            )}
             {messages && messages.length > 0 ? (
               <>
-                {loading && (
-                  <p className="font-semibold text-center text-xs text-slate-400">
-                    🔄 Loading...
-                  </p>
-                )}
                 {messagesPage &&
                   messagesPage.pageable.pageNumber <
                     messagesPage.totalPages - 1 &&
@@ -254,7 +253,7 @@ export const ChatWindow = ({
                 )}
                 <div ref={messagesEndRef} />
               </>
-            ) : (
+            ) : !loading && (
               <div className="text-center text-gray-500 py-8">
                 🍪 No messages yet. Start the conversation!
               </div>

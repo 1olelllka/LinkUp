@@ -15,17 +15,19 @@ export const useChatList = (userId: string | undefined, initialPage: number = 0)
     if (!userId) return;
     
     setLoading(true);
-    fetchChatList(userId, pageNumber)
-      .then((response) => {
-        if (pageNumber === 0) {
-          setAllChats(response.content);
-        } else {
-          setAllChats((prev) => [...prev, ...response.content]);
-        }
-        setChatUsersPage(response);
-      })
-      .catch((err) => setError(err as AxiosError))
-      .finally(() => setLoading(false));
+    // setTimeout(() => {
+      fetchChatList(userId, pageNumber)
+        .then((response) => {
+          if (pageNumber === 0) {
+            setAllChats(response.content);
+          } else {
+            setAllChats((prev) => [...prev, ...response.content]);
+          }
+          setChatUsersPage(response);
+        })
+        .catch((err) => setError(err as AxiosError))
+        .finally(() => setLoading(false));
+    // }, 2500);
   }, [userId, pageNumber]);
 
   const loadNextPage = () => {

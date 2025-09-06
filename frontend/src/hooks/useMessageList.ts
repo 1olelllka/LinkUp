@@ -13,34 +13,38 @@ export const useMessageList = (chatId: string) => {
   useEffect(() => {
     if (chatId) {
       setLoading(true);
-      fetchMessagesList(chatId, 0)
-        .then((page: MessagePage) => {
-          setMessagesPage(page);
-          setMessages(page.content.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
-          setPage(0);
-        })
-        .catch(err => setError(err as AxiosError))
-        .finally(() => setLoading(false));
+      // setTimeout(() => {
+        fetchMessagesList(chatId, 0)
+          .then((page: MessagePage) => {
+            setMessagesPage(page);
+            setMessages(page.content.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
+            setPage(0);
+          })
+          .catch(err => setError(err as AxiosError))
+          .finally(() => setLoading(false));
+      // }, 2500)
     }
   }, [chatId]);
 
   const loadMoreMessages = useCallback(async (pageNumber: number) => {
     if (loading || !chatId) return;
     setLoading(true);
+    // setTimeout(async () => {
     try {
-      const res = await fetchMessagesList(chatId, pageNumber);
-      setMessagesPage(res)
-      const sortedNewMessages = res.content.sort(
-        (a : Message, b: Message) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      );
-      setMessages((prev) => [...sortedNewMessages, ...prev]);
-      setPage(pageNumber);
-      console.log('success');
-    } catch (err) {
-      setError(err as AxiosError);
-    } finally {
-      setLoading(false);
-    }
+        const res = await fetchMessagesList(chatId, pageNumber);
+        setMessagesPage(res)
+        const sortedNewMessages = res.content.sort(
+          (a : Message, b: Message) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        setMessages((prev) => [...sortedNewMessages, ...prev]);
+        setPage(pageNumber);
+        console.log('success');
+      } catch (err) {
+        setError(err as AxiosError);
+      } finally {
+        setLoading(false);
+      }
+      // }, 2500);
   }, [chatId, loading]);
 
 

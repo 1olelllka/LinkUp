@@ -22,6 +22,7 @@ import { SearchNewChat } from "./SearchNewChat";
 import { ServiceError } from "../errors/ServiceUnavailable";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
+import { PageLoader } from "../load/PageLoader";
 
 
 type selectedChat = {
@@ -125,6 +126,7 @@ export const ChatList = () => {
                                             if (response.status == 204) {
                                               setSelectedChat(null);
                                               setAllChats((prev) => prev.filter((c) => c.id != chat.id))
+                                              toast.success("Successfully deleted the chat!");
                                             } else {
                                               toast.warning("Unexpected response from server received: " + response.data);
                                             }
@@ -142,14 +144,15 @@ export const ChatList = () => {
                       );
                     })}
 
-                    {loading && (
+                    {/* {loading && (
                       <p className="font-semibold text-center text-slate-400">🔄 Loading...</p>
-                    )}
+                    )} */}
+                    {loading && <PageLoader />}
 
                     {chatUsersPage?.last && !loading && allChats.length > 0 && (
                       <p className="font-semibold text-center text-slate-400">🚀 You're all caught up!</p>
                     )}
-                    {allChats.length == 0 && (
+                    {!loading && allChats.length == 0 && (
                       <p className="font-semibold text-center text-slate-400 mt-10">💬 Start chatting with your friends!</p>
                     )}
                   </div>

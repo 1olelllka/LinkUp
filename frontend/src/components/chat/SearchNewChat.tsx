@@ -2,6 +2,7 @@ import { Input } from "@/components/ui/input";
 import { useSearch } from "@/hooks/useSearch";
 import { useProfileStore } from "@/store/useProfileStore";
 import { useSearchParams } from "react-router";
+import { PageLoader } from "../load/PageLoader";
 
 type SelectedChat = {
   id: string;
@@ -27,7 +28,7 @@ export const SearchNewChat = ({
     setSearchTerm(initialSearch);
   }
 
-  const {searchResult} = useSearch(searchTerm);
+  const {searchResult, loading} = useSearch(searchTerm);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -52,6 +53,7 @@ export const SearchNewChat = ({
       </div>
 
       <div className="space-y-3">
+        {loading && <PageLoader />}
         {searchResult.content.map((res) => {
           if (res.id === useProfileStore.getState().profile?.userId) return null;
 
