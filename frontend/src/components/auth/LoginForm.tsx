@@ -80,7 +80,7 @@ export const LoginForm = () => {
     return (
         <div className="w-1/2 mx-auto h-96 bg-white flex relative border border-gray-300 rounded-2xl shadow-md overflow-hidden">
             {loading && <SubmitLoader />}
-            <div className="w-1/2 bg-blue-100 flex items-center justify-center p-6">
+            <div className="w-1/2 bg-white flex items-center justify-center p-6">
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full">
                 <FormField
@@ -130,7 +130,7 @@ export const LoginForm = () => {
 
             <div className="w-1/2 bg-green-100 flex flex-col items-center justify-center p-6">
             <h1 className="mb-4 text-lg font-semibold">Log in with Google</h1>
-            <Button type="button" variant="outline" asChild>
+            <Button type="button" variant="outline" asChild className="hover:bg-[#2b9948] transition-all hover:text-white">
                 <a href={`${API_BASE}/auth/oauth2/authorization/google`}>
                     Continue with Google
                 </a>

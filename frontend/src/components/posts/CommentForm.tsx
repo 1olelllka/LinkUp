@@ -8,14 +8,18 @@ const commentSchema = z.object({
   text: z.string().min(1, "Comment cannot be empty"),
 });
 
-export function CommentForm({postId, onSubmit, autoFocus = false, placeholder = "Add a comment...",}: {
+export function CommentForm({postId, onSubmit, autoFocus = false, placeholder = "Add a comment...", profileReply}: {
   postId: number,
   onSubmit: (postId: number, text: string) => void;
   autoFocus?: boolean;
   placeholder?: string;
+  profileReply?: string;
 }) {
   const {register, handleSubmit, reset, formState: { errors }} = useForm<z.infer<typeof commentSchema>>({
     resolver: zodResolver(commentSchema),
+    defaultValues: {
+      text: profileReply ? "@" + profileReply + " " : ""
+    }
   });
 
   return (

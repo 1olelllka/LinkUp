@@ -11,10 +11,12 @@ export function Comments({
   postId,
   comment,
   addReply,
+  parentCommentId,
   deleteComment,
 }: {
   postId: number;
   comment: Comment;
+  parentCommentId: number;
   addReply: (postId: number, parentId: number, text: string) => void;
   deleteComment?: (commentId: number) => void;
   currentUserId?: number;
@@ -109,10 +111,11 @@ export function Comments({
           <CommentForm
             postId={postId}
             onSubmit={(postId, text) => {
-              addReply(postId, comment.id, text);
+              addReply(postId, parentCommentId, text);
               setReplying(false);
               setShowReplies(true);
             }}
+            profileReply={comment.username}
             autoFocus
             placeholder="Write a reply..."
           />
@@ -125,6 +128,7 @@ export function Comments({
           {comment.replies.map((reply) => (
             <Comments
               key={reply.id}
+              parentCommentId={comment.id}
               comment={reply}
               postId={postId}
               addReply={addReply}

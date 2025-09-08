@@ -1,5 +1,6 @@
+from typing import Iterable
 from django.db import models
-
+from django.core.exceptions import ValidationError
 class Post(models.Model):
     user_id = models.CharField(db_index=True, blank=True) # blank=True for validation purposes
     image = models.CharField(max_length=200)
@@ -28,8 +29,14 @@ class Comment(models.Model):
     def __str__(self):
         return "Comment #" + str(self.pk) + " by " + str(self.user_id) + " on " + str(self.post.pk)
     
-    
+
+    def clean(self) -> None:
+        if self.parent and self.parent.parent:
+            raise ValidationError("Only one level of replies allowed!")
+        
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs);
     class Meta:
-        ordering = ['-created_at']
         verbose_name = 'Comment'
         verbose_name_plural = 'Comments'

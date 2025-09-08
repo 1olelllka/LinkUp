@@ -37,7 +37,7 @@ export function PostModal({ postId, trigger }: { postId: number, trigger: React.
         try {
           const commentData = await getAllCommentsForSpecificPost(postId, 1);
           setCommentPage(commentData);
-          setComments(commentData.results.sort((a : Comment, b : Comment) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+          setComments(commentData.results);
         } catch (err) {
           const error = err as AxiosError;
           if (error.status != 404) {
@@ -74,27 +74,16 @@ export function PostModal({ postId, trigger }: { postId: number, trigger: React.
   const handleAddReply = async (postId: number, parentId: number, text: string) => {
     try {
       const newReply = await createNewCommentForSpecificPost({post: postId, parent: parentId, text: text});
-
       setComments((prev = []) =>
-        prev.map((comment) =>
-          comment.id === parentId
-            ? {
-                ...comment,
-                replies: [...(comment.replies || []), newReply],
-              }
-            : {
-                ...comment,
-                replies: comment.replies?.map((reply) =>
-                  reply.id === parentId
-                    ? {
-                        ...reply,
-                        replies: [...(reply.replies || []), newReply],
-                      }
-                    : reply
-                ),
-              }
-        )
-      );
+      prev.map((comment) =>
+        comment.id === parentId
+          ? {
+              ...comment,
+              replies: [...(comment.replies || []), newReply],
+            }
+          : comment
+      )
+    );
     } catch (err) {
       const error = err as AxiosError;
       toast.error("Failed to post reply. " + error.message);
@@ -180,6 +169,7 @@ const handleDeleteComment = async (id: number) => {
                     postId={post?.id || 0}
                     key={comment.id}
                     comment={comment}
+                    parentCommentId={comment.id}
                     addReply={handleAddReply}
                     deleteComment={handleDeleteComment}
                   />

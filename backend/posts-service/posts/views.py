@@ -14,7 +14,7 @@ from django.core.cache import cache
 import requests
 from django.http import JsonResponse
 from rest_framework.permissions import IsAuthenticated
-import json
+from django.core.exceptions import ValidationError
 
 class UserPostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-created_at')
@@ -96,7 +96,7 @@ class PostViewSet(viewsets.ModelViewSet):
         
 
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.filter(parent=None).order_by('-created_at')
+    queryset = Comment.objects.filter(parent=None)
     serializer_class = CommentSerializer
     authentication_classes = [JWTAuthentication]
 
@@ -126,7 +126,10 @@ class CommentViewSet(viewsets.ModelViewSet):
         data['photo'] = profile_response.json()['photo']
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
-            serializer.save()
+            try:
+                serializer.save()
+            except ValidationError as e:
+                return Response(data={"errors":e.message_dict}, status=400)
             return Response(data=serializer.data, status=201)
         return Response(data=serializer.errors, status=400)
 
@@ -143,7 +146,6 @@ class CommentDeleteAPIView(DestroyAPIView):
     permission_classes = [IsAuthenticated, IsOwner]
     
     def destroy(self, request, *args, **kwargs):
-        print("lox")
         try:
             comment = Comment.objects.get(pk=kwargs['comment_id'])
             self.perform_destroy(comment)
