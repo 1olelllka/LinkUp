@@ -12,6 +12,7 @@ import com.olelllka.chat_service.repository.MessageRepository;
 import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -26,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     private ChatRepository chatRepository;
-    private MessageRepository messageRepository;
+    private MessageService messageService;
     private MessagePublisher messagePublisher;
     private JWTUtil jwtUtil;
     private ProfileFeign profileService;
@@ -37,15 +38,15 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Autowired
     public ChatWebSocketHandler(ChatRepository chatRepository,
-                                MessageRepository messageRepository,
                                 ProfileFeign profileService,
                                 MessagePublisher messagePublisher,
+                                MessageService messageService,
                                 JWTUtil jwtUtil) {
         this.chatRepository = chatRepository;
-        this.messageRepository = messageRepository;
         this.messagePublisher = messagePublisher;
         this.profileService = profileService;
         this.jwtUtil = jwtUtil;
+        this.messageService = messageService;
     }
 
     @Override
@@ -114,8 +115,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                     .build();
             messagePublisher.createChatNotification(notification);
         }
-        // I've implemented sync write into db for simplicity, in future I'll try to do this async to prevent db overhead.
-        messageRepository.save(MessageEntity
+        MessageEntity msgToSave = MessageEntity
                 .builder()
                 .id(msg.getId())
                 .chatId(chatId)
@@ -123,7 +123,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 .to(targetUserId)
                 .createdAt(new Date())
                 .content(chatMessage)
-                .build());
+                .build();
+        messageService.saveMessageToDatabase(msgToSave);
     }
 
     @Override

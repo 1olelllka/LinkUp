@@ -79,6 +79,8 @@ public class ChatController {
         return ListOfChatsDto.builder()
                 .id(chat.getId())
                 .participants(chat.getParticipants())
+                .lastMessage(chat.getLastMessage())
+                .time(chat.getTime())
                 .build();
     }
 }

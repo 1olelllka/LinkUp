@@ -49,6 +49,8 @@ export const ChatList = () => {
     }
   };
 
+  console.log(allChats)
+
   return (
     <>
     {error 
@@ -88,7 +90,7 @@ export const ChatList = () => {
                         >
                           <div>
                             <h4 className="font-semibold">{other?.name} (@{other?.username})</h4>
-                            <p className="text-sm text-gray-500 truncate w-40">Dummy message</p>
+                            <p className="text-sm text-gray-500 truncate w-40">{chat.lastMessage}</p>
                           </div>
                           <div>
                             <Dialog 
@@ -138,7 +140,8 @@ export const ChatList = () => {
                                 </DialogFooter>
                               </DialogContent>
                             </Dialog>
-                            <span className="text-xs text-gray-400">11:53</span>
+                            <span className="text-xs text-gray-400">{new Date(chat.time).toLocaleTimeString([], 
+                              {hour: "2-digit",minute: "2-digit",})}</span>
                           </div>
                         </div>
                       );

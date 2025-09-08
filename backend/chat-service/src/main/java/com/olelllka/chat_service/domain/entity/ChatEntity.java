@@ -5,6 +5,7 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.Date;
 import java.util.UUID;
 
 @Document(collection = "Chat")
@@ -14,4 +15,6 @@ public class ChatEntity {
     @Id
     private String id;
     private User[] participants;
+    private String lastMessage;
+    private Date time;
 }

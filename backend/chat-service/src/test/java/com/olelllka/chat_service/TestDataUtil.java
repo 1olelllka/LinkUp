@@ -40,6 +40,8 @@ public class TestDataUtil {
                 .participants(new User[]
                         {createUser(participants[0]),
                         createUser(participants[1])})
+                .lastMessage("test")
+                .time(new Date())
                 .build();
     }
 
@@ -49,6 +51,8 @@ public class TestDataUtil {
                 .participants(new User[]
                         {createUser(participants[0]),
                         createUser(participants[1])})
+                .lastMessage("test")
+                .time(new Date())
                 .build();
     }
 

@@ -4,6 +4,7 @@ import com.olelllka.chat_service.domain.entity.User;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.Date;
 import java.util.UUID;
 
 @Builder
@@ -11,4 +12,6 @@ import java.util.UUID;
 public class ChatDto {
     private String id;
     private User[] participants;
+    private String lastMessage;
+    private Date time;
 }

@@ -1,6 +1,8 @@
 export type ChatListResponse = {
   id: string;
   participants: ChatUser[];
+  lastMessage: string;
+  time: string
 };
 
 export type ChatUser = {

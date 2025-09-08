@@ -2,7 +2,9 @@ package com.olelllka.chat_service.service;
 
 import com.olelllka.chat_service.TestDataUtil;
 import com.olelllka.chat_service.domain.dto.MessageDto;
+import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
+import com.olelllka.chat_service.repository.ChatRepository;
 import com.olelllka.chat_service.repository.MessageRepository;
 import com.olelllka.chat_service.rest.exception.AuthException;
 import com.olelllka.chat_service.rest.exception.NotFoundException;
@@ -31,6 +33,8 @@ public class MessageServiceUnitTest {
     private MessageRepository messageRepository;
     @Mock
     private JWTUtil jwtUtil;
+    @Mock
+    private ChatRepository chatRepository;
     @InjectMocks
     private MessageServiceImpl messageService;
 
@@ -158,6 +162,21 @@ public class MessageServiceUnitTest {
         verify(messageRepository, never()).deleteById(id);
         verify(messageRepository, times(1)).findById(id);
         verify(jwtUtil, times(1)).extractId(jwt);
+    }
+
+    @Test
+    public void testThatAsyncMessageSavingWorksFine() {
+        String chatId = "1234";
+        MessageEntity msg = TestDataUtil.createMessageEntity(chatId);
+        msg.setContent("Test-Content");
+        ChatEntity chat = TestDataUtil.createChatEntity();
+        // when
+        when(chatRepository.findById(chatId)).thenReturn(Optional.of(chat));
+        // then
+        messageService.saveMessageToDatabase(msg);
+        assertEquals(msg.getContent(), chat.getLastMessage());
+        assertEquals(msg.getCreatedAt(), chat.getTime());
+        verify(messageRepository, times(1)).save(msg);
     }
 
 }
