@@ -12,6 +12,12 @@ export const fetchMessagesList = async (chatId: string, pageNumber: number) => {
     return res.data;
 }
 
+export const getChatByTwoUsers = async (user1: string | undefined, user2: string | undefined) => {
+    if (!user1 || !user2) return;
+    const res = await axiosInterceptor.get(`${API_ROUTES.chats.two_users(user1, user2)}`);
+    return res.data;
+}
+
 export const updateMessageById = async (id: string, data: {content: string}) => {
     const res = await axiosInterceptor.patch(`${API_ROUTES.messages.details(id)}`, data);
     return res.data;

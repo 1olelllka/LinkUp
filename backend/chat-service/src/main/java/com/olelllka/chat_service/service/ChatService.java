@@ -13,4 +13,6 @@ public interface ChatService {
     ChatEntity createNewChat(@NotEmpty UUID userId1, @NotEmpty UUID userId2);
 
     void deleteChat(String chatId, String jwt);
+
+    ChatEntity getChatByTwoUsers(UUID id1, UUID id2, String token);
 }

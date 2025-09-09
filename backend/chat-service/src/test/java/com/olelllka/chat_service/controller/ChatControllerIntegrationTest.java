@@ -91,6 +91,46 @@ public class ChatControllerIntegrationTest {
     }
 
     @Test
+    public void testThatGetChatByTwoUsersReturnsHttp404NotFound() throws Exception {
+        UUID user1 = UUID.randomUUID();
+        UUID user2 = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok().withResponseBody(
+                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user1))))
+                .withHeader("Content-Type", "application/json")));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok().withResponseBody(
+                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user2))))
+                .withHeader("Content-Type", "application/json")));
+        ChatEntity saved = chatService.createNewChat(user1, user2);
+        mockMvc.perform(MockMvcRequestBuilders.get("/chats?user1=" + saved.getParticipants()[0].getId() + "&user2=" + UUID.randomUUID())
+                        .header("Authorization", "Bearer " + generateJwt(user1)))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
+    public void testThatGetChatByTwoUsersReturnsHttp401UnauthorizedIfTokenInvalid() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/chats?user1=" + UUID.randomUUID() + "&user2=" + UUID.randomUUID())
+                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
+    public void testThatGetChatByTwoUsersReturnsHttp200Ok() throws Exception {
+        UUID user1 = UUID.randomUUID();
+        UUID user2 = UUID.randomUUID();
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok().withResponseBody(
+                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user1))))
+                .withHeader("Content-Type", "application/json")));
+        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok().withResponseBody(
+                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user2))))
+                .withHeader("Content-Type", "application/json")));
+        ChatEntity saved = chatService.createNewChat(user1, user2);
+        mockMvc.perform(MockMvcRequestBuilders.get("/chats?user1=" + user1 + "&user2=" + user2)
+                        .header("Authorization", "Bearer " + generateJwt(user1)))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").exists());
+    }
+
+    @Test
     public void testThatGetChatsByUserReturnsHttp401Unauthorized() throws Exception {
         UUID user1 = UUID.randomUUID();
         UUID user2 = UUID.randomUUID();

@@ -3,6 +3,16 @@ import { useSearch } from "@/hooks/useSearch";
 import { useProfileStore } from "@/store/useProfileStore";
 import { useSearchParams } from "react-router";
 import { PageLoader } from "../load/PageLoader";
+import { getChatByTwoUsers } from "@/services/chatServices";
+import type { AxiosError } from "axios";
+import { toast } from "sonner";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
+
 
 type SelectedChat = {
   id: string;
@@ -29,6 +39,13 @@ export const SearchNewChat = ({
   }
 
   const {searchResult, loading} = useSearch(searchTerm);
+
+  const goToPage = (page: number) => {
+      searchParams.set("page", String(page));
+      setSearchParams(searchParams);
+  };
+  
+  const currentPage = searchResult.pageable.pageNumber + 1;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -61,10 +78,24 @@ export const SearchNewChat = ({
             <div
               key={res.id}
               onClick={() =>
-                setSelectedChat({
-                  id: res.id,
-                  selectedReceiverName: res.name,
-                  receiverId: res.id,
+                getChatByTwoUsers(useProfileStore.getState().profile?.userId, res.id)
+                .then(response => {
+                  setSelectedChat({
+                    id: response.id,
+                    selectedReceiverName: res.name,
+                    receiverId: res.id
+                  })
+                }).catch(err => {
+                  const error = err as AxiosError;
+                  if (error.status == 404) {
+                    setSelectedChat({
+                      id: res.id,
+                      selectedReceiverName: res.name,
+                      receiverId: res.id,
+                    })
+                  } else {
+                    toast.error(error.message)
+                  }
                 })
               }
               className={`p-4 rounded-xl cursor-pointer transition flex justify-between items-center ${
@@ -77,16 +108,28 @@ export const SearchNewChat = ({
                 <h4 className="font-semibold">
                   {res.name} (@{res.username})
                 </h4>
-                <p className="text-sm text-gray-500 truncate w-40">
-                  Type new message
-                </p>
-              </div>
-              <div>
-                <span className="text-xs text-gray-400">11:53</span>
               </div>
             </div>
           );
         })}
+        <Pagination>
+          <PaginationContent>
+            {!searchResult.first && 
+            <PaginationPrevious 
+            className="cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              goToPage(currentPage - 1)
+            }}/>}
+            {!searchResult.last && 
+            <PaginationNext 
+            className="cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              goToPage(currentPage + 1)
+            }}/>}
+          </PaginationContent>
+        </Pagination>
       </div>
     </>
   );

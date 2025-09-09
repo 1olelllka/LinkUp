@@ -85,6 +85,8 @@ public class ChatServiceUnitTest {
         User user1 = User.builder().id(userId1).name("RandomUser1").username("randommmm1").build();
         User user2 = User.builder().id(userId2).name("RandomUser2").username("randommmm2").build();
         ChatEntity expected = TestDataUtil.createChatEntity();
+        expected.setLastMessage(null);
+        expected.setTime(null);
         User users[] = new User[2];
         users[0] = user1;
         users[1] = user2;
@@ -168,5 +170,45 @@ public class ChatServiceUnitTest {
         verify(chatRepository, times(1)).findById(chatId);
         verify(chatRepository, times(1)).existsById(chatId);
         verify(mongoTemplate, never()).findAllAndRemove(query, MessageEntity.class, "Message");
+    }
+
+    @Test
+    public void testThatGetChatByTwoUsersThrowsAuthException() {
+        // given
+        UUID u1 = UUID.randomUUID();
+        UUID u2 = UUID.randomUUID();
+        // when
+        when(jwtUtil.isTokenValid("token")).thenReturn(false);
+        // then
+        assertThrows(AuthException.class, () -> chatService.getChatByTwoUsers(u1, u2, "token"));
+        verify(chatRepository, never()).findChatByTwoMembers(any(UUID.class), any(UUID.class));
+    }
+
+    @Test
+    public void testThatGetChatByTwoUsersThrowsNotFoundException() {
+        // given
+        UUID u1 = UUID.randomUUID();
+        UUID u2 = UUID.randomUUID();
+        // when
+        when(jwtUtil.isTokenValid("token")).thenReturn(true);
+        when(jwtUtil.extractId("token")).thenReturn(u1.toString());
+        when(chatRepository.findChatByTwoMembers(u1, u2)).thenReturn(Optional.empty());
+        // then
+        assertThrows(NotFoundException.class, () -> chatService.getChatByTwoUsers(u1, u2, "token"));
+    }
+
+    @Test
+    public void testThatGetChatByTwoUsersWorksAsExpected() {
+        // given
+        UUID u1 = UUID.randomUUID();
+        UUID u2 = UUID.randomUUID();
+        // when
+        when(jwtUtil.isTokenValid("token")).thenReturn(true);
+        when(jwtUtil.extractId("token")).thenReturn(u1.toString());
+        when(chatRepository.findChatByTwoMembers(u1, u2)).thenReturn(Optional.of(TestDataUtil.createChatEntity()));
+        // then
+        ChatEntity res = chatService.getChatByTwoUsers(u1, u2, "token");
+        assertNotNull(res);
+        assertEquals("test", res.getLastMessage());
     }
 }

@@ -19,6 +19,7 @@ export const useChatList = (userId: string | undefined, initialPage: number = 0)
       fetchChatList(userId, pageNumber)
         .then((response) => {
           if (pageNumber === 0) {
+            console.log(response)
             setAllChats(response.content);
           } else {
             setAllChats((prev) => [...prev, ...response.content]);

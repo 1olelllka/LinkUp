@@ -69,4 +69,13 @@ public class ChatServiceImpl implements ChatService {
         query.addCriteria(Criteria.where("chatId").is(chatId));
         mongoTemplate.findAllAndRemove(query, MessageEntity.class, "Message");
     }
+
+    @Override
+    public ChatEntity getChatByTwoUsers(UUID id1, UUID id2, String token) {
+        if (!jwtUtil.isTokenValid(token) || (!jwtUtil.extractId(token).equals(id1.toString()) && jwtUtil.extractId(token).equals(id2.toString()))) {
+            throw new AuthException("You are not authorized to perform such operation.");
+        }
+        return repository.findChatByTwoMembers(id1, id2)
+                .orElseThrow(() -> new NotFoundException("Chat with such users was not found."));
+    }
 }

@@ -10,29 +10,36 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { NavLink, useNavigate } from "react-router"
-import { Archive, ChevronUp, Link, MessageCircle, Search, Signpost, UserRoundPen } from "lucide-react";
+import { NavLink, useNavigate } from "react-router";
+import {
+  Archive,
+  ChevronUp,
+  Link,
+  MessageCircle,
+  Search,
+  Signpost,
+  UserRoundPen,
+} from "lucide-react";
 import { useProfileStore } from "@/store/useProfileStore";
 import { logout } from "@/services/authServices";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
-
 
 const items = [
   {
     title: "Feed",
     url: "/feeds",
-    icon: Signpost
+    icon: Signpost,
   },
   {
     title: "Messages",
@@ -47,37 +54,35 @@ const items = [
   {
     title: "Archive",
     url: "/archive",
-    icon: Archive
+    icon: Archive,
   },
   {
     title: "My Profile",
     url: "/profile",
-    icon: UserRoundPen
+    icon: UserRoundPen,
   },
-]
+];
 
 export function AppSidebar() {
   const { profile, clearProfile } = useProfileStore();
   const navigate = useNavigate();
-  const {open} = useSidebar();
+  const { open } = useSidebar();
 
   return (
     <Sidebar collapsible="icon" variant="floating">
       <SidebarHeader>
-          <SidebarMenu className="ml-1">
-              {open ? (
-              <SidebarMenuItem className="flex flex-row gap-2">
-                  <Link className="border-1 rounded-md p-1"/>
-                  <Label>LinkUP!</Label>
-              </SidebarMenuItem>
-              )
-              : (
-              <SidebarMenuItem>
-                  <Link className="border-1 rounded-md p-1"/>
-              </SidebarMenuItem>
-              )
-              }
-          </SidebarMenu>
+        <SidebarMenu className="ml-1">
+          {open ? (
+            <SidebarMenuItem className="flex flex-row gap-2">
+              <Link className="border-1 rounded-md p-1" />
+              <Label>LinkUP!</Label>
+            </SidebarMenuItem>
+          ) : (
+            <SidebarMenuItem>
+              <Link className="border-1 rounded-md p-1" />
+            </SidebarMenuItem>
+          )}
+        </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -104,9 +109,10 @@ export function AppSidebar() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuButton>
+                    {/* Intentionally put avatar image to '' to get fallback of the first letter */}
                     <Avatar className="size-6">
-                      <AvatarImage src="" />
-                      <AvatarFallback>{profile?.alias.at(0)}</AvatarFallback>
+                      <AvatarImage src=''/>
+                      <AvatarFallback className="mr-2 bg-white-200">{profile?.alias.at(0)}</AvatarFallback>
                     </Avatar>
                     {profile?.alias || "Anonymous"}
                     <ChevronUp className="ml-auto" />
@@ -141,5 +147,5 @@ export function AppSidebar() {
           </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

@@ -13,7 +13,7 @@ import java.util.UUID;
 @Repository
 public interface ChatRepository extends MongoRepository<ChatEntity, String> {
 
-    @Query("{ 'participants.id': ?0 }")
+    @Query(value = "{ 'participants.id': ?0 }", sort ="{'time' : -1}")
     Page<ChatEntity> findChatsByUserId(UUID userId, Pageable pageable);
 
     @Query("""

@@ -20,7 +20,8 @@ export const API_ROUTES = {
     },
     chats: {
         list: "/chats/users/",
-        detail: (id: string) => `/chats/${id}`
+        detail: (id: string) => `/chats/${id}`,
+        two_users: (user1: string, user2: string) => `/chats?user1=${user1}&user2=${user2}`
     },
     messages: {
         list: "/chats/",

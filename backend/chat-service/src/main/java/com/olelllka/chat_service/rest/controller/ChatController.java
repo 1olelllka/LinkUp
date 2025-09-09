@@ -40,6 +40,14 @@ public class ChatController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
+    @GetMapping("")
+    public ResponseEntity<ChatEntity> getChatByTwoUsers(@RequestParam(name = "user1") UUID user1,
+                                                        @RequestParam(name= "user2") UUID user2,
+                                                        @RequestHeader(name="Authorization") String authHeader) {
+        ChatEntity chat = chatService.getChatByTwoUsers(user1, user2, authHeader.substring(7));
+        return new ResponseEntity<>(chat, HttpStatus.OK);
+    }
+
     @DeleteMapping("/{chat_id}")
     public ResponseEntity deleteChat(@RequestHeader(name="Authorization") String header,
                                     @PathVariable String chat_id) {
