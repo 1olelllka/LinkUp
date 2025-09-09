@@ -64,3 +64,8 @@ export const deleteProfile = async (userId: string | undefined) => {
     }
     return 400;
 }
+
+export const checkProfileHealth = async () => {
+    const res = await axios(`${API_ROUTES.profile.health}`);
+    return res;
+}

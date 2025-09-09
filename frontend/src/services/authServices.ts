@@ -35,3 +35,8 @@ export async function logout() {
     const res = await axiosInterceptor.post(`${API_ROUTES.auth.logout}`);
     return res;
 }
+
+export async function checkAuthHealth() {
+    const res = await axios(`${API_ROUTES.auth.health}`);
+    return res;
+}

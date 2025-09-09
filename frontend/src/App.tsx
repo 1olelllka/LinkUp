@@ -8,6 +8,8 @@ import { useHealthStore } from './store/useHealthStore';
 import { ServerErrorPage } from './pages/ServerErrorPage';
 import { useEffect } from 'react';
 import { checkGatewayHealthStatus } from './services/gateway';
+import { checkAuthHealth } from './services/authServices';
+import { checkProfileHealth } from './services/profileServices';
 
 function App() {
 
@@ -16,8 +18,10 @@ function App() {
   useEffect(() => {
     const check = async () => {
       try {
-        const res = await checkGatewayHealthStatus();
-        if (res.data.status != 'UP') {
+        const gateway = await checkGatewayHealthStatus();
+        const auth = await checkAuthHealth();
+        const profile = await checkProfileHealth();
+        if (gateway.data.status != 'UP' || auth.data.status != "UP" || profile.data.status != 'UP') {
           setDown(true);
         }
       } catch (err) {

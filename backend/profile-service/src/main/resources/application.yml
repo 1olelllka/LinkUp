@@ -43,5 +43,8 @@ management:
       show-details: always
   endpoints:
     web:
+      base-path: /profiles
       exposure:
         include: health, info
+    path-mapping:
+      health: /health
