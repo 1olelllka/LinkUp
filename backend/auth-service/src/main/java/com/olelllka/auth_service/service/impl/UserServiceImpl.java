@@ -9,9 +9,11 @@ import com.olelllka.auth_service.domain.entity.Role;
 import com.olelllka.auth_service.domain.entity.UserEntity;
 import com.olelllka.auth_service.repository.UserRepository;
 import com.olelllka.auth_service.rest.exception.DuplicateException;
+import com.olelllka.auth_service.rest.exception.UnauthorizedException;
 import com.olelllka.auth_service.service.JWTUtil;
 import com.olelllka.auth_service.service.MessagePublisher;
 import com.olelllka.auth_service.service.UserService;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -64,14 +66,22 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserEntity patchUser(String jwt, PatchUserDto patchUserDto) {
-        String id = jwtUtil.extractId(jwt);
-        return profileCacheHandlers.patchUserById(id, patchUserDto);
+        try {
+            String id = jwtUtil.extractId(jwt);
+            return profileCacheHandlers.patchUserById(id, patchUserDto);
+        } catch (JwtException | IllegalArgumentException ex) {
+            throw new UnauthorizedException(ex.getMessage());
+        }
     }
 
     @Override
     public UserEntity getUserByJwt(String jwt) {
-        String id = jwtUtil.extractId(jwt);
-        return profileCacheHandlers.getUserById(id);
+        try {
+            String id = jwtUtil.extractId(jwt);
+            return profileCacheHandlers.getUserById(id);
+        } catch (JwtException | IllegalArgumentException ex) {
+            throw new UnauthorizedException(ex.getMessage());
+        }
     }
 
     @Override
