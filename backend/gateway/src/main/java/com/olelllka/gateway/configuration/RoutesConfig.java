@@ -52,6 +52,11 @@ public class RoutesConfig {
                                         .filter(rateLimitingFilter)
                                         .circuitBreaker(c -> c.setName("chat-service").setFallbackUri("forward:/fallback")))
                                 .uri("lb://chat-service"))
+                // only for documentation purposes
+                .route("image-storage",
+                        r -> r.path("/api/image-storage/**")
+                                .filters(f -> f.stripPrefix(2))
+                                .uri("lb://image-storage"))
                 .route("chat-websocket-service",
                         r -> r.path("/chat")
                                 .filters(f -> f.circuitBreaker(c -> c.setName("chat-service").setFallbackUri("forward:/fallback")))

@@ -34,3 +34,9 @@ management:
     web:
       exposure:
         include: health, info
+
+springdoc:
+  api-docs:
+    path: /notifications/v3/api-docs
+  swagger-ui:
+    path: /notifications/swagger-ui.html

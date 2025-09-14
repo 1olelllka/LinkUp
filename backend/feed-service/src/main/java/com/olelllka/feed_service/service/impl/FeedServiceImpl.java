@@ -7,6 +7,7 @@ import com.olelllka.feed_service.service.FeedService;
 import com.olelllka.feed_service.service.JWTUtil;
 import com.olelllka.feed_service.service.SHA256;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.security.SignatureException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
@@ -37,7 +38,7 @@ public class FeedServiceImpl implements FeedService {
             if (!profileId.toString().equals(jwtUtil.extractId(jwt))) {
                 throw new AuthException("You're unauthorized to perform this action.");
             }
-        } catch (SignatureException ex) {
+        } catch (JwtException | IllegalArgumentException ex) {
             throw new AuthException(ex.getMessage());
         }
         int start = (int) pageable.getOffset();

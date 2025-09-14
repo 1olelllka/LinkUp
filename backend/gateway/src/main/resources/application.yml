@@ -82,3 +82,9 @@ springdoc:
         name: API Auth Service
       - url: /api/stories/v3/api-docs
         name: API Stories Service
+      - url: /api/notifications/v3/api-docs
+        name: API Notifications Service
+      - url: /api/feeds/v3/api-docs
+        name: API Feeds Service
+      - url: /api/image-storage/v3/api-docs
+        name: API Custom Image Storage

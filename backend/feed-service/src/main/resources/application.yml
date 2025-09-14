@@ -66,3 +66,9 @@ resilience4j:
         ignoreExceptions:
           - com.olelllka.feed_service.rest.exception.NotFoundException
           - com.olelllka.feed_service.rest.exception.AuthException
+
+springdoc:
+  api-docs:
+    path: /feeds/v3/api-docs
+  swagger-ui:
+    path: /feeds/swagger-ui.html

@@ -7,6 +7,7 @@ import com.olelllka.notification_service.rest.exception.ForbiddenException;
 import com.olelllka.notification_service.rest.exception.NotFoundException;
 import com.olelllka.notification_service.service.JWTUtil;
 import com.olelllka.notification_service.service.NotificationService;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.security.SignatureException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
@@ -52,7 +53,12 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void updateReadNotifications(List<String> ids, String token) {
-        String userId = jwtUtil.extractId(token);
+        String userId;
+        try {
+            userId = jwtUtil.extractId(token);
+        } catch (JwtException | IllegalArgumentException ex) {
+            throw new AuthException("You're unauthorized to perform this operation.");
+        }
         Query query = new Query(Criteria.where("id").in(ids)).addCriteria(Criteria.where("userId").is(userId));
         List<NotificationEntity> results = mongoTemplate.query(NotificationEntity.class)
                 .matching(query).all();
@@ -71,7 +77,7 @@ public class NotificationServiceImpl implements NotificationService {
             if (!jwtUtil.extractId(jwt).equals(resourceOwnerId.toString())) {
                 throw new AuthException("You're unauthorized to perform this operation.");
             }
-        } catch (SignatureException ex) {
+        } catch (JwtException | IllegalArgumentException ex) {
             throw new AuthException(ex.getMessage());
         }
     }
