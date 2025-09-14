@@ -12,6 +12,7 @@ import com.olelllka.stories_service.service.MessagePublisher;
 import com.olelllka.stories_service.service.SHA256;
 import com.olelllka.stories_service.service.StoryService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.security.SignatureException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
@@ -115,7 +116,7 @@ public class StoryServiceImpl implements StoryService {
             if (!id.equals(jwtUtil.extractId(jwt))) {
                 throw new AuthException("You're unauthorized to perform such operation.");
             }
-        } catch (SignatureException ex) {
+        } catch (JwtException | IllegalArgumentException ex) {
             throw new AuthException(ex.getMessage());
         }
     }

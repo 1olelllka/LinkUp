@@ -75,3 +75,9 @@ eureka:
     metadata-map:
       version: v0.9
       region: eu-central
+
+springdoc:
+  api-docs:
+    path: /stories/v3/api-docs
+  swagger-ui:
+    path: /stories/swagger-ui.html

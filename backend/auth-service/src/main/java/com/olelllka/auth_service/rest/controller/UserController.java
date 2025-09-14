@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping(path = "/auth")
 @RequiredArgsConstructor
-//@Tag(name="Auth Endpoints", description = "All of the endpoints in auth service")
 public class UserController {
 
     private final UserService userService;
@@ -40,10 +39,7 @@ public class UserController {
     @Tag(name="Authentication/authorization Endpoints", description = "Endpoints used for register, log in, log out and extending user's session")
     @Operation(summary = "Register new user")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Registered new user. The information about created user will be sent to profile service via RabbitMQ", content = {
-                        @Content(mediaType = "application/json",
-                                schema = @Schema(implementation = UserDto.class))
-            }),
+            @ApiResponse(responseCode = "201", description = "Registered new user. The information about created user will be sent to profile service via RabbitMQ"),
             @ApiResponse(responseCode = "400", description = "Validation error", content = {
                     @Content(mediaType = "application/json",
                     schema = @Schema(implementation = ErrorMessage.class))
@@ -71,9 +67,7 @@ public class UserController {
     @Tag(name="Authentication/authorization Endpoints")
     @Operation(summary = "Login existing user")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Login successful", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = JWTTokenResponse.class))
-            }),
+            @ApiResponse(responseCode = "200", description = "Login successful"),
             @ApiResponse(responseCode = "400", description = "Validation error", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))
             }),
@@ -123,9 +117,7 @@ public class UserController {
     @Tag(name="Authentication/authorization Endpoints")
     @Operation(summary = "Update session for user")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "JWT token successfully refreshed", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = JWTTokenResponse.class))
-            }),
+            @ApiResponse(responseCode = "200", description = "JWT token successfully refreshed"),
             @ApiResponse(responseCode = "401", description = "Unauthorized to perform JWT refresh", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))
             })
@@ -150,9 +142,7 @@ public class UserController {
     @Tag(name="User's auth information", description = "Endpoints to get/update user's auth information")
     @Operation(summary = "Get auth information about user")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully fetched information", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.class))
-            }),
+            @ApiResponse(responseCode = "200", description = "Successfully fetched information"),
             @ApiResponse(responseCode = "404", description = "User not found", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))
             }),
@@ -169,9 +159,7 @@ public class UserController {
     @Tag(name="User's auth information")
     @Operation(summary = "Update user's auth information")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User updated successfully. The updated information will be sent to profile service via RabbitMQ", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.class))
-            }),
+            @ApiResponse(responseCode = "200", description = "User updated successfully. The updated information will be sent to profile service via RabbitMQ"),
             @ApiResponse(responseCode = "400", description = "Validation error", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))
             }),

@@ -80,3 +80,5 @@ springdoc:
         name: API Gateway Service
       - url: /api/auth/v3/api-docs
         name: API Auth Service
+      - url: /api/stories/v3/api-docs
+        name: API Stories Service
