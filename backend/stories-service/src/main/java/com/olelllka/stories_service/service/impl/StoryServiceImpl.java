@@ -133,7 +133,4 @@ public class StoryServiceImpl implements StoryService {
                 .image("circuit-breaker.url")
                 .available(false)
                 .userId(UUID.randomUUID())
-                .createdAt(new Date())
-                .build();
-    }
-}
+               

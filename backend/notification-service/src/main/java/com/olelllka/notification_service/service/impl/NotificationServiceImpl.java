@@ -74,11 +74,4 @@ public class NotificationServiceImpl implements NotificationService {
 
     private void authorize(UUID resourceOwnerId, String jwt) {
         try {
-            if (!jwtUtil.extractId(jwt).equals(resourceOwnerId.toString())) {
-                throw new AuthException("You're unauthorized to perform this operation.");
-            }
-        } catch (JwtException | IllegalArgumentException ex) {
-            throw new AuthException(ex.getMessage());
-        }
-    }
-}
+            if (!jwtUtil.extractId(jwt).equals(resourceOwnerId.toS

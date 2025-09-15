@@ -48,3 +48,9 @@ management:
         include: health, info
     path-mapping:
       health: /health
+
+springdoc:
+  api-docs:
+    path: /profiles/v3/api-docs
+  swagger-ui:
+    path: /profiles/swagger-ui.html

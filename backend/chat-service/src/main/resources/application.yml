@@ -67,3 +67,8 @@ resilience4j:
         registerHealthIndicator: true
         ignoreExceptions:
           - com.olelllka.chat_service.rest.exception.NotFoundException
+springdoc:
+  api-docs:
+    path: /chats/v3/api-docs
+  swagger-ui:
+    path: /chats/swagger-ui.html

@@ -1,5 +1,6 @@
 package com.olelllka.chat_service.rest.controller;
 
+import com.olelllka.chat_service.domain.dto.ErrorMessage;
 import com.olelllka.chat_service.domain.dto.ListOfChatsDto;
 import com.olelllka.chat_service.domain.dto.MessageDto;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
@@ -9,6 +10,12 @@ import com.olelllka.chat_service.mapper.impl.MessageMapperImpl;
 import com.olelllka.chat_service.rest.exception.ValidationException;
 import com.olelllka.chat_service.service.ChatService;
 import com.olelllka.chat_service.service.MessageService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,6 +30,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = "/chats")
+@Tag(name = "Chat Service API Endpoints", description = "All of the endpoints for chat service")
 @RequiredArgsConstructor
 public class ChatController {
 
@@ -31,6 +39,13 @@ public class ChatController {
     private final ChatMapperImpl chatMapper;
     private final MessageMapperImpl messageMapper;
 
+    @Operation(summary = "Get all chats for user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully fetched page of chats for user"),
+            @ApiResponse(responseCode = "401", description = "Authorization error", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))
+            })
+    })
     @GetMapping("/users/{user_id}")
     public ResponseEntity<Page<ListOfChatsDto>> getAllChatsForUser(@RequestHeader(name="Authorization") String header,
                                                                     Pageable pageable,
@@ -40,6 +55,16 @@ public class ChatController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
+    @Operation(summary = "Get chat by two users")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully fetched chat"),
+            @ApiResponse(responseCode = "401", description = "Authorization error", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))
+            }),
+            @ApiResponse(responseCode = "404", description = "Chat not found", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))
+            })
+    })
     @GetMapping("")
     public ResponseEntity<ChatEntity> getChatByTwoUsers(@RequestParam(name = "user1") UUID user1,
                                                         @RequestParam(name= "user2") UUID user2,
@@ -48,6 +73,13 @@ public class ChatController {
         return new ResponseEntity<>(chat, HttpStatus.OK);
     }
 
+    @Operation(summary = "Delete chat for two users and all of the messages there")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Successfully deleted the chat"),
+            @ApiResponse(responseCode = "401", description = "Authorization error", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))
+            })
+    })
     @DeleteMapping("/{chat_id}")
     public ResponseEntity deleteChat(@RequestHeader(name="Authorization") String header,
                                     @PathVariable String chat_id) {
@@ -55,6 +87,13 @@ public class ChatController {
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
+    @Operation(summary = "Get all messages for chat")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully fetched all of the messages for chat"),
+            @ApiResponse(responseCode = "401", description = "Authorization error", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))
+            })
+    })
     @GetMapping("/{chat_id}/messages")
     public ResponseEntity<Page<MessageDto>> getAllMessagesForChat(@RequestHeader(name="Authorization") String header,
                                                                     @PathVariable String chat_id, Pageable pageable) {
@@ -63,6 +102,19 @@ public class ChatController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
+    @Operation(summary = "Update specific message")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully updated the message"),
+            @ApiResponse(responseCode = "401", description = "Authorization error", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))
+            }),
+            @ApiResponse(responseCode = "400", description = "Validation error", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))
+            }),
+            @ApiResponse(responseCode = "404", description = "Message not found", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))
+            })
+    })
     @PatchMapping("/messages/{msg_id}")
     public ResponseEntity<MessageDto> updateSpecificMessage(@RequestHeader(name="Authorization") String header,
                                                             @PathVariable String msg_id,
@@ -76,6 +128,13 @@ public class ChatController {
         return new ResponseEntity<>(messageMapper.toDto(updated), HttpStatus.OK);
     }
 
+    @Operation(summary = "Delete specific message")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Successfully deleted the message"),
+            @ApiResponse(responseCode = "401", description = "Authorization error", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))
+            })
+    })
     @DeleteMapping("/messages/{msg_id}")
     public ResponseEntity deleteSpecificMessage(@RequestHeader(name="Authorization") String header,
                                                 @PathVariable String msg_id) {

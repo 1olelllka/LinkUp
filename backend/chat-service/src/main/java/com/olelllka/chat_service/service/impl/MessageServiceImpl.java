@@ -8,6 +8,7 @@ import com.olelllka.chat_service.rest.exception.AuthException;
 import com.olelllka.chat_service.rest.exception.NotFoundException;
 import com.olelllka.chat_service.service.JWTUtil;
 import com.olelllka.chat_service.service.MessageService;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 import org.springframework.data.domain.Page;
@@ -31,8 +32,12 @@ public class MessageServiceImpl implements MessageService {
         Page<MessageEntity> messages = repository.findByChatId(chatId, pageable);
         if (messages.hasContent()) {
             MessageEntity entity = messages.getContent().getFirst();
-            if (!jwtUtil.extractId(jwt).equals(entity.getFrom().toString()) && !jwtUtil.extractId(jwt).equals(entity.getTo().toString())) {
-                throw new AuthException("You're unauthorized to perform such operation.");
+            try {
+                if (!jwtUtil.extractId(jwt).equals(entity.getFrom().toString()) && !jwtUtil.extractId(jwt).equals(entity.getTo().toString())) {
+                    throw new AuthException("You're unauthorized to perform such operation.");
+                }
+            } catch (JwtException | IllegalArgumentException ex) {
+                throw new AuthException(ex.getMessage());
             }
         }
         return messages;
@@ -41,8 +46,12 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public MessageEntity updateMessage(String msgId, MessageDto updatedMsg, String jwt) {
         return repository.findById(msgId).map(msg -> {
-            if (!jwtUtil.extractId(jwt).equals(msg.getFrom().toString())) {
-                throw new AuthException("You're unauthorized to perform such operation.");
+            try {
+                if (!jwtUtil.extractId(jwt).equals(msg.getFrom().toString())) {
+                    throw new AuthException("You're unauthorized to perform such operation.");
+                }
+            } catch (JwtException | IllegalArgumentException ex) {
+                throw new AuthException(ex.getMessage());
             }
             Optional.of(updatedMsg.getContent()).ifPresent(msg::setContent);
             return repository.save(msg);
@@ -65,8 +74,12 @@ public class MessageServiceImpl implements MessageService {
     public void deleteSpecificMessage(String msgId, String jwt) {
         if (repository.existsById(msgId)) {
             MessageEntity entity = repository.findById(msgId).get();
-            if (!jwtUtil.extractId(jwt).equals(entity.getFrom().toString())) {
-                throw new AuthException("You're unauthorized to perform such operation.");
+            try {
+                if (!jwtUtil.extractId(jwt).equals(entity.getFrom().toString())) {
+                    throw new AuthException("You're unauthorized to perform such operation.");
+                }
+            } catch (JwtException | IllegalArgumentException ex) {
+                throw new AuthException(ex.getMessage());
             }
         }
         repository.deleteById(msgId);

@@ -14,6 +14,7 @@ import com.olelllka.profile_service.rest.exception.ValidationException;
 import com.olelllka.profile_service.service.JWTUtil;
 import com.olelllka.profile_service.service.MessagePublisher;
 import com.olelllka.profile_service.service.ProfileService;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.security.SignatureException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.actuate.elasticsearch.ElasticsearchRestClientHealthIndicator;
@@ -56,7 +57,7 @@ public class ProfileServiceImpl implements ProfileService {
             if (!profileId.toString().equals(jwtUtil.extractId(jwt))) {
                 throw new AuthException("You're unauthorized to perform such operation.");
             }
-        } catch (SignatureException ex) {
+        } catch (JwtException | IllegalArgumentException ex) {
             throw new AuthException(ex.getMessage());
         }
         ProfileEntity updated = repository.updateProfile(profileId,
@@ -87,7 +88,7 @@ public class ProfileServiceImpl implements ProfileService {
             if (!profileId.toString().equals(jwtUtil.extractId(jwt))) {
                 throw new AuthException("You're unauthorized to perform such action.");
             }
-        } catch (SignatureException ex) {
+        } catch (JwtException | IllegalArgumentException ex) {
             throw new AuthException(ex.getMessage());
         }
         repository.deleteById(profileId);
@@ -107,7 +108,7 @@ public class ProfileServiceImpl implements ProfileService {
             if (!profileId.toString().equals(jwtUtil.extractId(jwt))) {
                 throw new AuthException("You're unauthorized to perform such action.");
             }
-        } catch (SignatureException ex) {
+        } catch (JwtException | IllegalArgumentException ex) {
             throw new AuthException(ex.getMessage());
         }
         if (!repository.isFollowing(profileId, follow)) {
@@ -141,7 +142,7 @@ public class ProfileServiceImpl implements ProfileService {
             if (!profileId.toString().equals(jwtUtil.extractId(jwt))) {
                 throw new AuthException("You're unauthorized to perform such operation.");
             }
-        } catch (SignatureException ex) {
+        } catch (JwtException | IllegalArgumentException ex) {
             throw new AuthException(ex.getMessage());
         }
         if (repository.isFollowing(profileId, followId)) {

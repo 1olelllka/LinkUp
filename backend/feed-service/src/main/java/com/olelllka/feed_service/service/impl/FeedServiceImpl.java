@@ -64,7 +64,4 @@ public class FeedServiceImpl implements FeedService {
     }
 
     private Page<PostDto> fallbackMethod(UUID profileId, Pageable pageable, String jwt, Throwable t) {
-        log.warning("Circuit Breaker triggered: " + t.getMessage());
-        return Page.empty();
-    }
-}
+        log.warning("Circuit Breaker triggered: 

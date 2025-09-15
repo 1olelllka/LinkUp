@@ -9,6 +9,7 @@ import com.olelllka.chat_service.rest.exception.AuthException;
 import com.olelllka.chat_service.rest.exception.NotFoundException;
 import com.olelllka.chat_service.service.ChatService;
 import com.olelllka.chat_service.service.JWTUtil;
+import io.jsonwebtoken.JwtException;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -32,8 +33,12 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public Page<ChatEntity> getChatsForUser(UUID userId, Pageable pageable, String jwt) {
-        if (!jwtUtil.extractId(jwt).equals(userId.toString())) {
-            throw new AuthException("You're unauthorized to perform such operation.");
+        try {
+            if (!jwtUtil.extractId(jwt).equals(userId.toString())) {
+                throw new AuthException("You're unauthorized to perform such operation.");
+            }
+        } catch (JwtException | IllegalArgumentException ex) {
+            throw new AuthException(ex.getMessage());
         }
         return repository.findChatsByUserId(userId, pageable);
     }
@@ -60,8 +65,12 @@ public class ChatServiceImpl implements ChatService {
     public void deleteChat(String chatId, String jwt) {
         if (repository.existsById(chatId)) {
             ChatEntity entity = repository.findById(chatId).get();
-            if (!jwtUtil.extractId(jwt).equals(entity.getParticipants()[0].getId().toString()) && !jwtUtil.extractId(jwt).equals(entity.getParticipants()[1].getId().toString())) {
-                throw new AuthException("You're unauthorized to perform such operation.");
+            try {
+                if (!jwtUtil.extractId(jwt).equals(entity.getParticipants()[0].getId().toString()) && !jwtUtil.extractId(jwt).equals(entity.getParticipants()[1].getId().toString())) {
+                    throw new AuthException("You're unauthorized to perform such operation.");
+                }
+            } catch (JwtException | IllegalArgumentException ex) {
+                throw new AuthException(ex.getMessage());
             }
         }
         repository.deleteById(chatId);
@@ -72,8 +81,12 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public ChatEntity getChatByTwoUsers(UUID id1, UUID id2, String token) {
-        if (!jwtUtil.isTokenValid(token) || (!jwtUtil.extractId(token).equals(id1.toString()) && jwtUtil.extractId(token).equals(id2.toString()))) {
-            throw new AuthException("You are not authorized to perform such operation.");
+        try {
+            if (!jwtUtil.isTokenValid(token) || (!jwtUtil.extractId(token).equals(id1.toString()) && jwtUtil.extractId(token).equals(id2.toString()))) {
+                throw new AuthException("You are not authorized to perform such operation.");
+            }
+        } catch (JwtException | IllegalArgumentException ex) {
+            throw new AuthException(ex.getMessage());
         }
         return repository.findChatByTwoMembers(id1, id2)
                 .orElseThrow(() -> new NotFoundException("Chat with such users was not found."));

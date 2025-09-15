@@ -15,7 +15,54 @@ import requests
 from django.http import JsonResponse
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ValidationError
+from drf_spectacular.utils import (
+    extend_schema, extend_schema_view, OpenApiResponse, OpenApiExample
+)
+from drf_spectacular.types import OpenApiTypes
 
+@extend_schema(tags=['Posts management'])
+@extend_schema_view(
+    create=extend_schema(
+        summary="Create new post",
+        responses={
+            201: PostSerializer,
+            400: OpenApiResponse(
+                description='Bad Request – validation error or unexpected client error',
+                response=OpenApiTypes.OBJECT,
+                examples=[
+                    OpenApiExample(
+                        'Validation error',
+                        value={"error": "Unexpected client error occurred. Please try again later"},
+                        status_codes=['400'],
+                    )
+                ]
+            ),
+            401: OpenApiResponse(
+                description='Unauthorized – user not authenticated or token invalid',
+                response=OpenApiTypes.OBJECT,
+                examples=[
+                    OpenApiExample(
+                        'Unauthorized',
+                        value={"detail": "Authentication credentials were not provided."},
+                        status_codes=['401'],
+                    )
+                ]
+            ),
+            404: OpenApiResponse(
+                description='User with such id does not exist',
+                response=OpenApiTypes.OBJECT,
+                examples=[
+                    OpenApiExample(
+                        'User not found',
+                        value={"error": "User with such id does not exist"},
+                        status_codes=['404'],
+                    )
+                ]
+            )
+        },
+    ),
+    list=extend_schema(summary="List all posts by user")
+)
 class UserPostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-created_at')
     serializer_class = PostSerializer
@@ -48,7 +95,64 @@ class UserPostViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated(), IsOwner()]
         return []
     
-
+@extend_schema(
+    tags=['Posts management']
+)
+@extend_schema_view(
+    retrieve=extend_schema(
+        summary="Get specific post",
+        responses={
+            200: PostSerializer,
+            401: OpenApiResponse(
+                description='Unauthorized – user not authenticated or token invalid',
+                response=OpenApiTypes.OBJECT,
+                examples=[OpenApiExample('Unauthorized', value={"detail": "Authentication credentials were not provided."}, status_codes=['401'])]
+            ),
+            404: OpenApiResponse(
+                description='Post not found',
+                response=OpenApiTypes.OBJECT,
+                examples=[OpenApiExample('Not Found', value={"error": "Post not found"}, status_codes=['404'])]
+            ),
+        }
+    ),
+    partial_update=extend_schema(
+        summary="Update the post",
+        responses={
+            200: PostSerializer,
+            400: OpenApiResponse(
+                description='Bad Request – validation error',
+                response=OpenApiTypes.OBJECT,
+                examples=[OpenApiExample('Validation error', value={"error": "Invalid data"}, status_codes=['400'])]
+            ),
+            401: OpenApiResponse(
+                description='Unauthorized – user not authenticated or not the owner',
+                response=OpenApiTypes.OBJECT,
+                examples=[OpenApiExample('Unauthorized', value={"detail": "You do not have permission to perform this action."}, status_codes=['401'])]
+            ),
+            404: OpenApiResponse(
+                description='Post not found',
+                response=OpenApiTypes.OBJECT,
+                examples=[OpenApiExample('Not Found', value={"error": "Post not found"}, status_codes=['404'])]
+            ),
+        }
+    ),
+    destroy=extend_schema(
+        summary="Delete the post",
+        responses={
+            204: OpenApiResponse(description='Post deleted successfully'),
+            401: OpenApiResponse(
+                description='Unauthorized – user not authenticated or not the owner',
+                response=OpenApiTypes.OBJECT,
+                examples=[OpenApiExample('Unauthorized', value={"detail": "You do not have permission to perform this action."}, status_codes=['401'])]
+            ),
+            404: OpenApiResponse(
+                description='Post not found',
+                response=OpenApiTypes.OBJECT,
+                examples=[OpenApiExample('Not Found', value={"error": "Post not found"}, status_codes=['404'])]
+            ),
+        }
+    ),
+)
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-created_at')
     serializer_class = PostSerializer
@@ -95,6 +199,41 @@ class PostViewSet(viewsets.ModelViewSet):
         return []
         
 
+@extend_schema(tags=['Comments management'])
+@extend_schema_view(
+    list=extend_schema(
+        summary="List all comments by post",
+        responses={
+            200: CommentSerializer(many=True),
+            404: OpenApiResponse(
+                description="No comments found for this post",
+                response=OpenApiTypes.OBJECT,
+                examples=[OpenApiExample('Not Found', value={"error": "No comments was found"}, status_codes=['404'])]
+            ),
+        }
+    ),
+    create=extend_schema(
+        summary="Create new comment",
+        responses={
+            201: CommentSerializer,
+            400: OpenApiResponse(
+                description="Bad request – validation error or missing profile id",
+                response=OpenApiTypes.OBJECT,
+                examples=[OpenApiExample('Validation error', value={"error": "Profile id is required"}, status_codes=['400'])]
+            ),
+            401: OpenApiResponse(
+                description="Unauthorized – user not authenticated",
+                response=OpenApiTypes.OBJECT,
+                examples=[OpenApiExample('Unauthorized', value={"detail": "Authentication credentials were not provided."}, status_codes=['401'])]
+            ),
+            404: OpenApiResponse(
+                description="User or post not found",
+                response=OpenApiTypes.OBJECT,
+                examples=[OpenApiExample('Not Found', value={"error": "User with such id does not exist"}, status_codes=['404'])]
+            )
+        }
+    )
+)
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.filter(parent=None)
     serializer_class = CommentSerializer
@@ -138,7 +277,20 @@ class CommentViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated()]
         return []
     
-
+@extend_schema(tags=['Comments management'])
+@extend_schema_view(
+    delete=extend_schema(
+        summary="Delete specific comment",
+        responses={
+            204: OpenApiResponse(description="Comment deleted successfully"),
+            401: OpenApiResponse(
+                description="Unauthorized - user not authenticated or not owner",
+                response=OpenApiTypes.OBJECT,
+                examples=[OpenApiExample('Unauthorized', value={"detail": "You do not have permission to perform this action."}, status_codes=['401'])]
+            ),
+        }
+    )
+)
 class CommentDeleteAPIView(DestroyAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer

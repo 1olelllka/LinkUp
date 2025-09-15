@@ -12,6 +12,7 @@ INSTALLED_APPS = [
     'posts',
     'rest_framework',
     'corsheaders',
+    'drf_spectacular',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -21,6 +22,7 @@ INSTALLED_APPS = [
 ]
 
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10
 }
@@ -122,3 +124,11 @@ ALLOWED_HOSTS = ['*']
 JWT_SECRET='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
 RABBIT_PORT = 5672
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Posts Service API',
+    'DESCRIPTION': 'This API documentation shows all endpoints for Posts service',
+    'VERSION': '0.98',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SERVERS': [{'url': '/api/posts'}],
+}

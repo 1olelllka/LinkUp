@@ -78,10 +78,16 @@ springdoc:
     urls:
       - url: /v3/api-docs
         name: API Gateway Service
+      - url: /api/profiles/v3/api-docs
+        name: API Profile Service
+      - url: /api/posts/schema/
+        name: API Posts Service
       - url: /api/auth/v3/api-docs
         name: API Auth Service
       - url: /api/stories/v3/api-docs
         name: API Stories Service
+      - url: /api/chats/v3/api-docs
+        name: API Chats Service
       - url: /api/notifications/v3/api-docs
         name: API Notifications Service
       - url: /api/feeds/v3/api-docs
