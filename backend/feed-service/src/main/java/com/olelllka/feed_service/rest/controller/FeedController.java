@@ -27,4 +27,18 @@ public class FeedController {
     private final FeedService feedService;
 
     @Operation(summary = "Get feed for user")
-  
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully fetched feed"),
+            @ApiResponse(responseCode = "401", description = "Authorization error", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))
+            })
+    })
+    @GetMapping("/{profile_id}")
+    public ResponseEntity<Page<PostDto>> getFeedForSpecificProfile(@PathVariable UUID profile_id,
+                                                                   Pageable pageable,
+                                                                   @RequestHeader(name="Authorization") String header) {
+        Page<PostDto> result = feedService.getFeedForProfile(profile_id, pageable, header.substring(7));
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+}

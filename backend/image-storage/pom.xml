@@ -91,4 +91,13 @@
 				<configuration>
 					<excludes>
 						<exclude>
-							<groupId>org.projectlombo
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

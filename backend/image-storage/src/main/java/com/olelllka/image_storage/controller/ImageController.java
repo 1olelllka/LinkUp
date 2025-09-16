@@ -28,4 +28,32 @@ import java.io.IOException;
 public class ImageController {
 
     public static final String UPLOAD_DIR = "./uploads/";
-    private final Image
+    private final ImageService imageService;
+
+    @Operation(summary = "Upload new image")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully uploaded image"),
+            @ApiResponse(responseCode = "400", description = "File is not supported", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDto.class))
+            })
+    })
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UrlDto> uploadImage(@RequestParam("file") MultipartFile file) throws IOException {
+        String url = imageService.save(file);
+        return new ResponseEntity<>(UrlDto.builder().url(url).build(), HttpStatus.OK);
+    }
+
+    @Operation(summary = "Get image")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully fetched image", content = {
+                    @Content(mediaType = "image/png", schema = @Schema(implementation = Resource.class))
+            }),
+            @ApiResponse(responseCode = "404", description = "Image not found", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDto.class))
+            })
+    })
+    @GetMapping("/images/{img}")
+    public ResponseEntity<Resource> getImage(@PathVariable String img) {
+        return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(imageService.getResource(img));
+    }
+}
