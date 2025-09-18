@@ -6,7 +6,7 @@ export const API_ROUTES = {
         signup: `${API_BASE}/auth/register`,
         me: `/auth/me`,
         logout: '/auth/logout',
-        health: `${API_BASE}/auth/health`
+        health: `${API_BASE}/auth/actuator/health`
     },
     profile: {
         search: `${API_BASE}/profiles?search=`,
@@ -16,7 +16,7 @@ export const API_ROUTES = {
         followStatus: (from: string, to: string) => `${API_BASE}/profiles/follow-status?from=${from}&to=${to}`,
         follow: `/profiles/follow`,
         unfollow: `/profiles/unfollow`,
-        health: `${API_BASE}/profiles/health`
+        health: `${API_BASE}/profiles/actuator/health`
     },
     chats: {
         list: "/chats/users/",

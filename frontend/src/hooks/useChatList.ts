@@ -9,17 +9,17 @@ export const useChatList = (userId: string | undefined, initialPage: number = 0)
   const [allChats, setAllChats] = useState<ChatListResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<AxiosError>();
+  const [refresh, setRefresh] = useState(0);
   
   
   useEffect(() => {
     if (!userId) return;
-    
+    console.log('triggered');
     setLoading(true);
     // setTimeout(() => {
       fetchChatList(userId, pageNumber)
         .then((response) => {
           if (pageNumber === 0) {
-            console.log(response)
             setAllChats(response.content);
           } else {
             setAllChats((prev) => [...prev, ...response.content]);
@@ -29,7 +29,7 @@ export const useChatList = (userId: string | undefined, initialPage: number = 0)
         .catch((err) => setError(err as AxiosError))
         .finally(() => setLoading(false));
     // }, 2500);
-  }, [userId, pageNumber]);
+  }, [userId, pageNumber, refresh]);
 
   const loadNextPage = () => {
     if (chatUsersPage && !chatUsersPage.last && !loading) {
@@ -37,5 +37,5 @@ export const useChatList = (userId: string | undefined, initialPage: number = 0)
     }
   };
 
-  return { allChats, setAllChats, chatUsersPage, loadNextPage, loading, setPageNumber, error };
+  return { allChats, setAllChats, chatUsersPage, loadNextPage, loading, setPageNumber, error, setRefresh };
 };

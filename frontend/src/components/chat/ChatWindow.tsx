@@ -16,19 +16,24 @@ import { toast } from "sonner";
 import type { AxiosError } from "axios";
 import { ServiceError } from "../errors/ServiceUnavailable";
 import { PageLoader } from "../load/PageLoader";
+import type { ChatListResponse } from "@/types/Chat";
 
 type ChatWindowProps = {
   chatId: string;
   senderId: string | undefined;
   receiverId: string | undefined;
-  senderName: string;
+  receiverName: string;
+  setRefresh: (page: number) => void;
+  allChats: ChatListResponse[]
 };
 
 export const ChatWindow = ({
   chatId,
   senderId,
-  senderName,
+  receiverName,
   receiverId,
+  setRefresh,
+  allChats
 }: ChatWindowProps) => {
   const { connectionStatus, lastMessage, sendMessage } = useChatWebSocket(
     senderId,
@@ -99,6 +104,12 @@ export const ChatWindow = ({
       };
       setMessages((prev) => [...prev, messageToSend]);
       sendMessage(JSON.stringify(messageToSend));
+      if (!allChats.find((chat) => chat.id == chatId)) {
+        // trigger update list of chats if such chat does not exist
+        // if chat exists on another page which wasn't fetched yet, it'll
+        // be moved to the top of list by backend
+        setRefresh(Math.random() * 1000);
+      }
       setMessage("");
     }
   };
@@ -146,7 +157,7 @@ export const ChatWindow = ({
   return (
     <div className="flex flex-col h-full max-h-[90vh]">
       <div className="mb-4">
-        <h2 className="text-2xl font-bold">Chat with {senderName}</h2>
+        <h2 className="text-2xl font-bold">Chat with {receiverName}</h2>
         <p className="text-sm text-gray-500">
           Status:{" "}
           <span

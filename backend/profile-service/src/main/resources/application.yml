@@ -43,7 +43,7 @@ management:
       show-details: always
   endpoints:
     web:
-      base-path: /profiles
+      base-path: /profiles/actuator
       exposure:
         include: health, info
     path-mapping:

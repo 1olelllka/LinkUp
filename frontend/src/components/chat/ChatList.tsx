@@ -34,7 +34,7 @@ type selectedChat = {
 export const ChatList = () => {
   const [selectedChat, setSelectedChat] = useState<selectedChat | null>(null);
   const currentUserId = useProfileStore.getState().profile?.userId;
-  const { allChats, setAllChats, chatUsersPage, loadNextPage, loading, error } = useChatList(currentUserId, 0);
+  const { allChats, setAllChats, chatUsersPage, loadNextPage, loading, error, setRefresh } = useChatList(currentUserId, 0);
   const [deleteDialogChatId, setDeleteDialogChatId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
 
@@ -48,8 +48,6 @@ export const ChatList = () => {
       loadNextPage();
     }
   };
-
-  console.log(allChats)
 
   return (
     <>
@@ -70,7 +68,7 @@ export const ChatList = () => {
               >
                 <h2 className="text-xl font-bold mb-4">Messages</h2>
                 <SearchNewChat selectedChat={selectedChat} setSelectedChat={setSelectedChat} searchTerm={searchTerm} setSearchTerm={setSearchTerm}/>
-                {searchTerm.length == 0 &&         
+                {searchTerm.length == 0 &&
                   <div className="space-y-3">
                     {allChats.map((chat) => {
                       const other = chat.participants.find((p) => p.id !== currentUserId);
@@ -167,8 +165,10 @@ export const ChatList = () => {
                   <ChatWindow
                     chatId={selectedChat.id}
                     senderId={currentUserId}
-                    senderName={selectedChat.selectedReceiverName}
+                    receiverName={selectedChat.selectedReceiverName}
                     receiverId={selectedChat.receiverId}
+                    setRefresh={setRefresh}
+                    allChats={allChats}
                   />
                 ) : (
                   <div className="flex items-center justify-self-center h-[90%] fixed">
