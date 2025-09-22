@@ -16,7 +16,7 @@ export const getSpecificProfileInfo = async (userId: string) => {
 }
 
 export const patchPersonalProfileInfo = async (userId: string | undefined, data: 
-                                        {name? : string, aboutMe?: string, gender?: "MALE" | "FEMALE" | "UNDEFINED", dateOfBirth?: string}) => {
+                                        {name? : string, aboutMe?: string, gender?: "MALE" | "FEMALE" | "UNDEFINED", dateOfBirth?: string, photo?: string}) => {
     const res = await axiosInterceptor.patch(`${API_ROUTES.profile.profileDetail}${userId}`, data);
     return res.data;
 }

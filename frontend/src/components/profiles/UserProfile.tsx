@@ -10,6 +10,7 @@ import { CustomAvatar } from "./CustomAvatar";
 import { ServiceError } from "../errors/ServiceUnavailable";
 
 import { PageLoader } from "../load/PageLoader";
+import { AvatarDialog } from "./AvatarDialog";
 
 export const UserProfile = () => {
 
@@ -35,7 +36,9 @@ export const UserProfile = () => {
           <>
             <div className="flex items-center justify-between flex-wrap gap-6 mb-6">
               <div className="flex items-center gap-6">
-                <CustomAvatar name={profile?.name} photo={profile?.photo} size={84} />
+                <AvatarDialog children={
+                  <CustomAvatar name={profile?.name} photo={profile?.photo} size={84} className="cursor-pointer hover:opacity-80 transition-opacity" />
+                } setProfile={setProfile}/>
                 <div>
                   <h2 className="text-2xl font-bold">{profile?.username}</h2>
                   <p className="text-sm text-gray-500">Joined on {profile?.createdAt}</p>

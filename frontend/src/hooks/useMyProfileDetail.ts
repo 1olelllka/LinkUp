@@ -6,7 +6,10 @@ import { useEffect, useState } from "react";
 
 
 export const useMyProfileDetail = () => {
-    const [profile, setProfile] = useState<Profile>();
+    const [profile, setProfile] = useState<Profile>(
+        {id: "", name: "", username: "", 
+            email: "", authProvider: "", photo: "", aboutMe: "", gender: "UNDEFINED",
+            dateOfBirth: "", createdAt: ""});
     const [error, setError] = useState<AxiosError>();
     const [loading, setLoading] = useState(false);
     
