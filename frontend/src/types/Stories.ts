@@ -16,5 +16,6 @@ export type StoryPage = {
     totalPages: number,
     content: Story[],
     last: boolean,
+    first: boolean,
     numberOfElements: number,
 }

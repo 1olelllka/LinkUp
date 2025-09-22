@@ -23,6 +23,8 @@ function App() {
         const profile = await checkProfileHealth();
         if (gateway.data.status != 'UP' || auth.data.status != "UP" || profile.data.status != 'UP') {
           setDown(true);
+        } else if (gateway.data.status == 'UP' && auth.data.status == 'UP' && profile.data.status == 'UP') {
+          setDown(false);
         }
       } catch (err) {
         console.log(err);
@@ -30,7 +32,7 @@ function App() {
       }
     }
     check();
-    const interval = setInterval(check, 10000);
+    const interval = setInterval(check, 20000);
     return () => clearInterval(interval);
   }, [setDown])
 

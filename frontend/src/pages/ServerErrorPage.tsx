@@ -3,16 +3,22 @@ import { Button } from "@/components/ui/button"
 import { useHealthStore } from "@/store/useHealthStore"
 import { checkGatewayHealthStatus } from "@/services/gateway"
 import { toast } from "sonner"
+import { checkAuthHealth } from "@/services/authServices"
+import { checkProfileHealth } from "@/services/profileServices"
 
 export const ServerErrorPage = () => {
   const { setDown } = useHealthStore()
 
   const handleRetry = async () => {
     try {
-      const gatewayHealth = await checkGatewayHealthStatus();
-      if (gatewayHealth.data.status === 'UP') {
-        toast.success("The issues were resolved!")
-        setDown(false)
+        const gateway = await checkGatewayHealthStatus();
+        const auth = await checkAuthHealth();
+        const profile = await checkProfileHealth();
+        if (gateway.data.status != 'UP' || auth.data.status != "UP" || profile.data.status != 'UP') {
+          setDown(true);
+          toast.success("The issues were resolved!")
+        } else if (gateway.data.status == 'UP' && auth.data.status == 'UP' && profile.data.status == 'UP') {
+          setDown(false);
       }
     } catch {
       toast.error("The error persists")

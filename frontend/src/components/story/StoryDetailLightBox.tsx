@@ -1,48 +1,85 @@
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog"
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel"
-import type { Story } from "@/types/Stories"
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import type { Story, StoryPage } from "@/types/Stories";
+import { DialogTitle } from "@radix-ui/react-dialog";
+// Try these import variations
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, Keyboard } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import type { Swiper as Sw } from "swiper/types";
 
+export const StoryDetailLightbox = ({
+  stories,
+  open,
+  setOpen,
+  selectedIndex,
+  storyPage,
+  handleLoadingMoreStories,
+}: {
+  stories: Story[] | undefined;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  selectedIndex: number;
+  storyPage?: StoryPage;
+  handleLoadingMoreStories: () => Promise<void>;
+}) => {
 
-export const StoryDetailLightbox = ({ stories, open, setOpen, selectedIndex }
-    : {stories : Story[] | undefined, open: boolean, setOpen : (open : boolean) => void, selectedIndex: number}
-) => {
+  const handleSlideChange = (swiper : Sw) => {
+    if (swiper.isEnd && !storyPage?.last) {
+      handleLoadingMoreStories();
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-3xl w-full p-0 rounded-2xl overflow-hidden shadow-xl">
-        <Carousel opts={{ startIndex: selectedIndex }}>
-          <CarouselContent>
-            {stories?.map((story) => (
-              <CarouselItem key={story.id} className="flex justify-center">
-                <div className="relative w-full aspect-[9/16] max-h-[80vh] flex items-center justify-center">
+        <DialogTitle />
+        {stories && stories.length > 0 && (
+          <Swiper
+            initialSlide={selectedIndex}
+            navigation={true}
+            pagination={{
+              clickable: true,
+              dynamicBullets: true,
+            }}
+            keyboard={{
+              enabled: true,
+              onlyInViewport: true,
+            }}
+            modules={[Navigation, Pagination, Keyboard]}
+            className="h-[80vh] w-full"
+            spaceBetween={0}
+            slidesPerView={1}
+            loop={false}
+            onSlideChange={handleSlideChange}
+          >
+            {stories.map((story, idx) => (
+              <SwiperSlide
+                key={story.id || idx}
+                className="flex items-center justify-center"
+              >
+                <div className="relative w-full h-full flex items-center justify-center">
                   <img
                     src={story.image}
-                    className="w-full h-full object-contain"
+                    alt={`Story ${idx + 1}`}
+                    className="max-w-full max-h-full object-contain"
+                    loading="lazy"
                   />
                   {!story.available && (
                     <div className="absolute top-3 left-3 bg-red-600 text-white text-xs px-2 py-1 rounded">
                       Unavailable
                     </div>
                   )}
-                  <div className="absolute bottom-3 left-3 text-xs opacity-80">
+                  <div className="absolute bottom-3 left-3 text-white text-xs opacity-80 bg-black bg-opacity-50 px-2 py-1 rounded">
                     {new Date(story.createdAt).toLocaleDateString()}
                   </div>
                 </div>
-              </CarouselItem>
+              </SwiperSlide>
             ))}
-          </CarouselContent>
-          <CarouselPrevious className="left-2 bg-white/20 hover:bg-white/40 text-white rounded-full" />
-          <CarouselNext className="right-2 bg-white/20 hover:bg-white/40 text-white rounded-full" />
-        </Carousel>
+          </Swiper>
+        )}
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};

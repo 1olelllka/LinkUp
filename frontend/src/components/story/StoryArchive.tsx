@@ -34,7 +34,7 @@ export function StoryArchive() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {stories?.map((story, idx) => (
             <StoryCard
-              key={story.id}
+              key={idx}
               story={story}
               setStories={setStories}
               onClickImage={() => {
@@ -56,10 +56,12 @@ export function StoryArchive() {
           </div>
         }
         <StoryDetailLightbox
+          storyPage={storyPage}
           stories={stories}
           open={open}
           setOpen={setOpen}
           selectedIndex={selectedIndex}
+          handleLoadingMoreStories={handleLoadingMoreStories}
         />
       </>
     }
