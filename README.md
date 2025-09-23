@@ -45,30 +45,30 @@
   - [Image storage Service](#image-storage-service)
 
 #### Simplified Project Structure
-![CompleteProjectArchitecture](https://github.com/user-attachments/assets/348d2da5-7a2b-493d-b5e9-c098ba759d31)
+<img width="4920" height="2985" alt="CompleteProjectArchitecture" src="https://github.com/user-attachments/assets/11a380cf-a812-461b-aef4-762f102596f2" />
 
 #### Profile Service 
 *🛑 Critical Service*
-<img width="4555" height="2882" alt="ProfileService" src="https://github.com/user-attachments/assets/5ef301bf-fe1c-4c97-81eb-03b7ada587a6" />
+<img width="4517" height="3104" alt="ProfileService" src="https://github.com/user-attachments/assets/d3b39012-b332-4413-a9f6-4503ffbd5eca" />
 
 #### Posts Service
-![PostsService](https://github.com/user-attachments/assets/7535f4ff-28a5-40ab-a8cd-d1849a4ee389)
+<img width="4980" height="2860" alt="PostsService" src="https://github.com/user-attachments/assets/16075c8b-f6ba-41d1-8b44-f4f96c98d1da" />
 
 #### Feed Service
 *⚠️ Dependent on Profile and Posts service*
-![FeedService](https://github.com/user-attachments/assets/6c921ac1-5368-415b-8372-e3bdb0418067)
+<img width="4315" height="2000" alt="FeedService" src="https://github.com/user-attachments/assets/b2d26a72-0a0d-4cc2-80ee-b9a7a99c4664" />
 
 #### Auth Service
-<img width="2935" height="1739" alt="AuthService" src="https://github.com/user-attachments/assets/6f426fde-9361-4512-9d8e-6d6a79d48a3f" />
+<img width="4402" height="2609" alt="AuthService" src="https://github.com/user-attachments/assets/a2526584-3579-444f-a870-fd7f8425bdc9" />
 
 #### Chat Service
-<img width="4339" height="2187" alt="ChatService" src="https://github.com/user-attachments/assets/607225da-4649-49a5-b596-1a2c0af55d1a" />
+<img width="4359" height="2322" alt="ChatService" src="https://github.com/user-attachments/assets/94935272-0df9-4ac5-9ad1-6d6e8b4a41ac" />
 
 #### Stories Service
-<img width="4270" height="3027" alt="StoriesService" src="https://github.com/user-attachments/assets/4c25603e-9741-45f7-9dcb-64d851f0ce54" />
+<img width="4014" height="2379" alt="StoriesService" src="https://github.com/user-attachments/assets/2bc4d761-f81e-408c-b541-72a09ac7341d" />
 
 #### Notification Service
-<img width="3919" height="2557" alt="NotificationService" src="https://github.com/user-attachments/assets/d9b066cd-c944-43d7-acde-e72ca05c8fbf" />
+<img width="3918" height="2557" alt="NotificationService" src="https://github.com/user-attachments/assets/a6910e3b-a72f-4205-8a0c-8df51d538585" />
 
 #### Image storage Service
 ![ImageStorageService](https://github.com/user-attachments/assets/08e6f7bb-bc8f-4cb8-86aa-bc4d902a8a09)
@@ -78,9 +78,6 @@
 ## Current Status
 
 #### 🚧 Development in Progress 🚧
-
-- Backend: feature-complete (core services implemented, security hardening in progress)  
-- Frontend: implements all core functionalities, polishing in progress (error handling, UX improvements)
 
 ## License
 [Apache License 2.0](./LICENSE)
