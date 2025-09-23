@@ -14,8 +14,11 @@ export const useNotificationWebSocket = (userId: string | null) => {
       ws.send(JSON.stringify({token: token}))
     }
     ws.onmessage = (ev) => {
-        console.log("received message");
-        toast(ev.data, {position: "top-right"});
+        const text =
+        ev.data.length > 100
+          ? ev.data.slice(0, 100) + "..."
+          : ev.data;
+        toast(text, {position: "top-right"});
     }
     ws.onerror = (err) => console.error("WS error", err);
     ws.onclose = () => console.log("WS closed");

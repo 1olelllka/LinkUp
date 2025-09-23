@@ -136,7 +136,6 @@ const handleDeleteComment = async (id: number) => {
           <div className="md:w-1/2 w-full h-[40vh] md:h-full bg-black flex-shrink-0">
             <img
               src={post.image}
-              alt={post.title}
               className="w-full h-full object-cover"
             />
           </div>
@@ -153,7 +152,6 @@ const handleDeleteComment = async (id: number) => {
               </div>
 
               <div>
-                <h2 className="text-xl font-semibold">{post?.title}</h2>
                 <p className="text-gray-700">{post?.desc}</p>
               </div>
 

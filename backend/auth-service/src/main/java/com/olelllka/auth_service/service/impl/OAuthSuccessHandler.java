@@ -82,7 +82,8 @@ public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
         redisTemplate.opsForValue().set("refresh_token:" + cookie.getValue(), "", Duration.of(1, ChronoUnit.DAYS));
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().write(objectMapper.writeValueAsString(jwt));
-        response.setContentType("application/json");
+//        response.getWriter().write(objectMapper.writeValueAsString(jwt));
+//        response.setContentType("application/json");
+        response.sendRedirect("http://localhost:5173/profile");
     }
 }

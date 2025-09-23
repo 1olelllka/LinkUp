@@ -65,7 +65,6 @@ export const UserPosts = ({ userId } : {userId : string | undefined}) => {
                     <div className="relative h-60 w-full overflow-hidden rounded-t-xl">
                       <img
                         src={post.image}
-                        alt={post.title}
                         className="absolute top-0 left-0 w-full h-[120%] object-cover transition-transform duration-700 ease-in-out group-hover:translate-y-[-15%] rounded-t-xl"
                       />
                     </div>

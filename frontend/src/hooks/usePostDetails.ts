@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 
 
 export const usePostDetails = (id: number) => {
-    const [post, setPost] = useState<Post>();
+    const [post, setPost] = useState<Post>({id: -1, image: "", user_id: "", desc: "", created_at: ""});
 
     useEffect(() => {
         if (id) {
@@ -14,5 +14,5 @@ export const usePostDetails = (id: number) => {
         }
     }, [id])
 
-    return post;
+    return {post, setPost};
 }

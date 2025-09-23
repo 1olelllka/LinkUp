@@ -18,7 +18,7 @@ export const UpdatePost = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const postId = useParams()?.postId;
-  const post = usePostDetails(postId ? parseInt(postId) : 0);
+  const {post, setPost} = usePostDetails(postId ? parseInt(postId) : 0);
 
   useEffect(() => {
     if (post) {
@@ -37,21 +37,20 @@ export const UpdatePost = () => {
       if (image) {
         uploadedImage = await uploadImage(image);
       }
-      if ((uploadedImage && uploadedImage.status == 200) || imageUrl) {
-        if (uploadedImage) {
-          const url = uploadedImage.data.url;
-          setImageUrl(url);
-        }
       try {
-        const res = await updatePost(postId ? parseInt(postId) : undefined, {image: imageUrl, desc: desc});
+        const res = await updatePost(postId ? parseInt(postId) : undefined, {image: (uploadedImage && uploadedImage.status == 200) ? uploadedImage.data.url : imageUrl, desc: desc});
         if (res?.status == 200) {
           toast.success("Successfully updated post!");
+          setPost((prev) => ({
+            ...prev,
+            image: res.data.image,
+            desc: res.data.desc
+          }))
           navigate("/profile");
         }
         } catch (err) {
           const error = err as AxiosError;
           toast.error("Unexpcted error occured. " + error.message);
-      }
       }
     } catch {
         toast.error("Unexpected error while uploading the image")

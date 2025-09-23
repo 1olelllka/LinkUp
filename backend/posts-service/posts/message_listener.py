@@ -1,4 +1,4 @@
-from django.core.management.base import BaseCommand
+import json
 from django.db import transaction
 import pika
 from time import sleep
@@ -42,7 +42,7 @@ class RabbitMQConsumer:
 
     def process_message(self, ch, method, properties, body):
         try:
-            user_id = body.decode()            
+            user_id = json.loads(body)
             with transaction.atomic():
                 from posts.models import Post, Comment
                 posts_deleted = Post.objects.filter(user_id=user_id).delete()

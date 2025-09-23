@@ -6,7 +6,6 @@ export type Post = {
   desc: string;
   image: string;
   created_at: string;
-  title: string
 };
 
 export type Comment = {
