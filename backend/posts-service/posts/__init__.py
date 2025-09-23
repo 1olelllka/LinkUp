@@ -1,5 +1,4 @@
 import logging
-import signal
 
 import py_eureka_client.eureka_client as eureka
 import socket

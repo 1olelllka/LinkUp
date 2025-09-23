@@ -19,6 +19,7 @@ pytest-django = "*"
 pyjwt = "*"
 redis = "*"
 drf-spectacular = "*"
+httpx = "*"
 
 [dev-packages]
 
