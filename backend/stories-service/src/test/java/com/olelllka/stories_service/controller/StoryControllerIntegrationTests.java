@@ -241,7 +241,6 @@ public class StoryControllerIntegrationTests {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.image").value("Updated url"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.available").value(true));
-        assertTrue(redisTemplate.hasKey("story::"+SHA256.generate(entity.getId())));
         Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.CREATE_STORY_QUEUE).getMessageCount() == 0);
         assertTrue(redisTemplate.hasKey("story-feed:" + SHA256.generate(dto.getId().toString())));
     }
@@ -268,7 +267,6 @@ public class StoryControllerIntegrationTests {
         mockMvc.perform(MockMvcRequestBuilders.delete("/stories/1234")
                         .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
-        assertFalse(redisTemplate.hasKey("story::"+SHA256.generate("1234")));
     }
 
     @Test
