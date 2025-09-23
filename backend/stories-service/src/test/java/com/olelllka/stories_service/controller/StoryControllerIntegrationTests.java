@@ -12,7 +12,6 @@ import com.olelllka.stories_service.service.SHA256;
 import com.olelllka.stories_service.service.StoryService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import lombok.extern.java.Log;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -57,7 +56,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureMockMvc
 @Import(RabbitMQConfig.class)
-@Log
 public class StoryControllerIntegrationTests {
 
     @RegisterExtension
@@ -119,42 +117,6 @@ public class StoryControllerIntegrationTests {
         mockMvc.perform(MockMvcRequestBuilders.get("/stories/archive/" + profileId)
                 .header("Authorization", "Bearer " + generateJwt(profileId)))
                 .andExpect(MockMvcResultMatchers.status().isOk());
-    }
-
-    @Test
-    public void testThatGetSpecificStoryReturnsHttp404NotFoundIfDoesNotExist() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/stories/1234")
-                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
-                .andExpect(MockMvcResultMatchers.status().isNotFound());
-    }
-
-    @Test
-    public void testThatGetSpecificStoryForOthersReturnsHttp200OkIfExistsAndAvailableAndThenCacheWorks() throws Exception {
-        UUID profileId = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
-        ProfileDto dto = getProfileDto(profileId);
-        StoryEntity story = service.createStory(profileId, TestDataUtil.createStoryEntity(), generateJwt(profileId));
-        mockMvc.perform(MockMvcRequestBuilders.get("/stories/" + story.getId())
-                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
-                .andExpect(MockMvcResultMatchers.status().isOk());
-        assertTrue(redisTemplate.hasKey("story::"+SHA256.generate(story.getId())));
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.CREATE_STORY_QUEUE).getMessageCount() == 0);
-        assertTrue(redisTemplate.hasKey("story-feed:" + SHA256.generate(dto.getId().toString())));
-    }
-
-
-    @Test
-    public void testThatGetSpecificStoryForOwnerReturnsHttp200OkIfExistsAndThenCacheWorks() throws Exception {
-        UUID profileId = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + profileId).willReturn(WireMock.ok()));
-        ProfileDto dto = getProfileDto(profileId);
-        StoryEntity story = service.createStory(profileId, TestDataUtil.createStoryEntity(), generateJwt(profileId));
-        mockMvc.perform(MockMvcRequestBuilders.get("/stories/" + story.getId())
-                        .header("Authorization", "Bearer " + generateJwt(profileId)))
-                .andExpect(MockMvcResultMatchers.status().isOk());
-        assertTrue(redisTemplate.hasKey("story::"+SHA256.generate(story.getId())));
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.CREATE_STORY_QUEUE).getMessageCount() == 0);
-        assertTrue(redisTemplate.hasKey("story-feed:" + SHA256.generate(dto.getId().toString())));
     }
 
     @Test

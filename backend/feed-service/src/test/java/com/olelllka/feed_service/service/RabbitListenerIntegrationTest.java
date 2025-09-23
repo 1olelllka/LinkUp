@@ -1,8 +1,6 @@
 package com.olelllka.feed_service.service;
 
 import com.olelllka.feed_service.RabbitMQConfiguration;
-import com.olelllka.feed_service.TestDataUtil;
-import com.olelllka.feed_service.domain.dto.NewPostEvent;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;

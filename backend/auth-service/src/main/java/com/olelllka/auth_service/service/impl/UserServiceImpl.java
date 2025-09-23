@@ -15,7 +15,6 @@ import com.olelllka.auth_service.service.MessagePublisher;
 import com.olelllka.auth_service.service.UserService;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,7 +25,6 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Log
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;

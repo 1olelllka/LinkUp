@@ -6,7 +6,6 @@ import com.olelllka.notification_service.domain.entity.NotificationEntity;
 import com.olelllka.notification_service.repository.NotificationRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import lombok.extern.java.Log;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -28,9 +27,7 @@ import org.testcontainers.utility.DockerImageName;
 import javax.crypto.SecretKey;
 import java.util.Base64;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
-
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)

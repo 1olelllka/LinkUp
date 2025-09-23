@@ -2,7 +2,6 @@ package com.olelllka.chat_service.repository;
 
 import com.olelllka.chat_service.TestDataUtil;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
-import lombok.extern.java.Log;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +16,6 @@ import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@Log
 @DataMongoTest
 public class MessageRepositoryMongoDataTest {
 
@@ -49,7 +47,6 @@ public class MessageRepositoryMongoDataTest {
         Pageable pageable = PageRequest.of(0, 2);
         // when
         Page<MessageEntity> result = repository.findByChatId("12345", pageable);
-        log.info(result.getContent() + "");
         // then
         assertAll(
                 () -> assertNotNull(result),

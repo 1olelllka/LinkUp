@@ -1,7 +1,7 @@
 package com.olelllka.profile_service.domain.dto;
 
 import com.olelllka.profile_service.domain.entity.Gender;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Past;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

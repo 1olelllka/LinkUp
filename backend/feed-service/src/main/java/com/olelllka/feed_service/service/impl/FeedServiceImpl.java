@@ -8,9 +8,7 @@ import com.olelllka.feed_service.service.JWTUtil;
 import com.olelllka.feed_service.service.SHA256;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.security.SignatureException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +22,6 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Log
 public class FeedServiceImpl implements FeedService {
 
     private final RedisTemplate<String, String> redisTemplate;
@@ -64,7 +61,6 @@ public class FeedServiceImpl implements FeedService {
     }
 
     private Page<PostDto> fallbackMethod(UUID profileId, Pageable pageable, String jwt, Throwable t) {
-        log.warning("Circuit Breaker triggered: " + t.getMessage());
         return Page.empty();
     }
 }

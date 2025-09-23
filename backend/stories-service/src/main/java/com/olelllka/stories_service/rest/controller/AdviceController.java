@@ -1,8 +1,8 @@
 package com.olelllka.stories_service.rest.controller;
 
+import com.olelllka.stories_service.domain.dto.ErrorDto;
 import com.olelllka.stories_service.rest.exception.AuthException;
 import com.olelllka.stories_service.rest.exception.NotFoundException;
-import com.olelllka.stories_service.domain.dto.ErrorDto;
 import com.olelllka.stories_service.rest.exception.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

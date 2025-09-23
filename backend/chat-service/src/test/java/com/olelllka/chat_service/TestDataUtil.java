@@ -7,7 +7,6 @@ import com.olelllka.chat_service.domain.entity.MessageEntity;
 import com.olelllka.chat_service.domain.entity.User;
 
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
 public class TestDataUtil {

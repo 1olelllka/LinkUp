@@ -20,6 +20,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.UUID;
 
 @Service
@@ -43,11 +44,9 @@ public class ChatServiceImpl implements ChatService {
         return repository.findChatsByUserId(userId, pageable);
     }
 
+    // This is being used only in tests
     @Override
     public ChatEntity createNewChat(@NotEmpty UUID userId1, @NotEmpty UUID userId2) {
-//        if (!jwtUtil.extractId(jwt).equals(userId1.toString()) && !jwtUtil.extractId(jwt).equals(userId2.toString())) {
-//            throw new AuthException("You're unauthorized to perform such operation");
-//        }
         ResponseEntity<User> req1 = profileService.getProfileById(userId1);
         ResponseEntity<User> req2 = profileService.getProfileById(userId2);
         if (!req1.getStatusCode().is2xxSuccessful() ||

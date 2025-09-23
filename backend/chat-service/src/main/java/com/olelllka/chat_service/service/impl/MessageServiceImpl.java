@@ -10,7 +10,6 @@ import com.olelllka.chat_service.service.JWTUtil;
 import com.olelllka.chat_service.service.MessageService;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
@@ -20,7 +19,6 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-@Log
 public class MessageServiceImpl implements MessageService {
 
     private final MessageRepository repository;

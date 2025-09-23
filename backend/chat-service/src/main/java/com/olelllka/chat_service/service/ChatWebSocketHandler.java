@@ -8,22 +8,20 @@ import com.olelllka.chat_service.domain.entity.MessageEntity;
 import com.olelllka.chat_service.domain.entity.User;
 import com.olelllka.chat_service.feign.ProfileFeign;
 import com.olelllka.chat_service.repository.ChatRepository;
-import com.olelllka.chat_service.repository.MessageRepository;
-import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import java.util.*;
+import java.util.Date;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-@Log
 public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     private ChatRepository chatRepository;

@@ -5,8 +5,6 @@ import com.olelllka.image_storage.exceptions.NotFoundException;
 import com.olelllka.image_storage.service.ImageService;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 

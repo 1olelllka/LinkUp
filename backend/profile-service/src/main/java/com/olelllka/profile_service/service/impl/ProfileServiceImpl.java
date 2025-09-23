@@ -15,7 +15,6 @@ import com.olelllka.profile_service.service.JWTUtil;
 import com.olelllka.profile_service.service.MessagePublisher;
 import com.olelllka.profile_service.service.ProfileService;
 import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.security.SignatureException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.actuate.elasticsearch.ElasticsearchRestClientHealthIndicator;
 import org.springframework.boot.actuate.health.Status;

@@ -13,12 +13,7 @@ import com.olelllka.stories_service.service.SHA256;
 import com.olelllka.stories_service.service.StoryService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.security.SignatureException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -32,7 +27,6 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Log
 public class StoryServiceImpl implements StoryService {
 
     private final StoryRepository repository;
@@ -46,20 +40,6 @@ public class StoryServiceImpl implements StoryService {
     public Page<StoryEntity> getArchiveForUser(UUID id, String jwt, Pageable pageable) {
         jwtCheck(jwt, id.toString());
         return repository.findStoryByUserId(id, pageable);
-    }
-
-    @Override
-    @Cacheable(value = "story", keyGenerator = "sha256KeyGenerator")
-    public StoryEntity getSpecificStory(String storyId, String jwt) {
-        StoryEntity entity = repository.findById(storyId).orElseThrow(() -> new NotFoundException("Story with such id was not found."));
-        try {
-            if (!entity.getUserId().toString().equals(jwtUtil.extractId(jwt))) {
-                if(!entity.getAvailable()) throw new AuthException("You're unauthorized to perform such operation.");
-            }
-        } catch (SignatureException ex) {
-            throw new AuthException(ex.getMessage());
-        }
-        return entity;
     }
 
     @Override
@@ -77,7 +57,6 @@ public class StoryServiceImpl implements StoryService {
     }
 
     @Override
-    @CachePut(value = "story", keyGenerator = "sha256KeyGenerator")
     public StoryEntity updateSpecificStory(String storyId, StoryEntity entity, String jwt) {
         return repository.findById(storyId).map(story -> {
             jwtCheck(jwt, story.getUserId().toString());
@@ -89,7 +68,6 @@ public class StoryServiceImpl implements StoryService {
     }
 
     @Override
-    @CacheEvict(value = "story", keyGenerator = "sha256KeyGenerator")
     public void deleteSpecificStory(String storyId, String jwt) {
         if (repository.existsById(storyId)) {
             StoryEntity entity = repository.findById(storyId).get();
@@ -127,7 +105,6 @@ public class StoryServiceImpl implements StoryService {
         } else if (t instanceof AuthException) {
             throw new AuthException(t.getMessage());
         }
-        log.warning("Circuit Breaker triggered: " + t.getMessage());
         return StoryEntity.builder()
                 .id("circuit-breaker.id")
                 .image("circuit-breaker.url")

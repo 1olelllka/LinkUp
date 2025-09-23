@@ -16,7 +16,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -33,7 +32,6 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Log
 public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
 
     private final JWTUtil jwtUtil;

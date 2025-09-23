@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
+
 import java.util.UUID;
 
 @Document(indexName = "profile")

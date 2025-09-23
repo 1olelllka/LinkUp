@@ -9,7 +9,6 @@ import com.olelllka.profile_service.repository.ProfileDocumentRepository;
 import com.olelllka.profile_service.repository.ProfileRepository;
 import com.olelllka.profile_service.rest.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

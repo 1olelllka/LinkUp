@@ -93,13 +93,13 @@ public class StoryController {
         return new ResponseEntity<>(mapper.toDto(saved), HttpStatus.CREATED);
     }
 
-    @Operation(summary = "---deprecated---")
-    @GetMapping("/{story_id}")
-    public ResponseEntity<StoryDto> getSpecificStory(@PathVariable String story_id,
-                                                     @RequestHeader(name = "Authorization") String header) {
-        StoryEntity entity = service.getSpecificStory(story_id, header.substring(7));
-        return new ResponseEntity<>(mapper.toDto(entity), HttpStatus.OK);
-    }
+//    @Operation(summary = "---deprecated---")
+//    @GetMapping("/{story_id}")
+//    public ResponseEntity<StoryDto> getSpecificStory(@PathVariable String story_id,
+//                                                     @RequestHeader(name = "Authorization") String header) {
+//        StoryEntity entity = service.getSpecificStory(story_id, header.substring(7));
+//        return new ResponseEntity<>(mapper.toDto(entity), HttpStatus.OK);
+//    }
 
     @Operation(summary = "Update story")
     @ApiResponses(value = {

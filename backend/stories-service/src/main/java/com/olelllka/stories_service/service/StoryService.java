@@ -9,8 +9,6 @@ import java.util.UUID;
 public interface StoryService {
     Page<StoryEntity> getArchiveForUser(UUID id, String jwt, Pageable pageable);
 
-    StoryEntity getSpecificStory(String storyId, String jwt);
-
     StoryEntity createStory(UUID userId, StoryEntity entity, String jwt);
 
     StoryEntity updateSpecificStory(String storyId, StoryEntity entity, String jwt);

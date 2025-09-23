@@ -2,8 +2,6 @@ package com.olelllka.auth_service.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.olelllka.auth_service.domain.dto.ErrorMessage;
-import com.olelllka.auth_service.repository.UserRepository;
-import com.olelllka.auth_service.rest.exception.NotFoundException;
 import com.olelllka.auth_service.service.JWTFilter;
 import com.olelllka.auth_service.service.impl.OAuthSuccessHandler;
 import jakarta.servlet.http.Cookie;
@@ -13,7 +11,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;

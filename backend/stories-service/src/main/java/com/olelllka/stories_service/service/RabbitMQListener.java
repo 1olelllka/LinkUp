@@ -6,13 +6,11 @@ import com.olelllka.stories_service.domain.dto.StoryDto;
 import com.olelllka.stories_service.feign.ProfileFeign;
 import com.olelllka.stories_service.repository.StoryRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +22,6 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 @RequiredArgsConstructor
-@Log
 public class RabbitMQListener {
 
     private final String deleteProfileQueue = "delete_profile_queue_story";

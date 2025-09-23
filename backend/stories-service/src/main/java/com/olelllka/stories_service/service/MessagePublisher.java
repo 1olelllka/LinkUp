@@ -6,7 +6,6 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
 import static com.olelllka.stories_service.configuration.RabbitMQConfig.CREATE_QUEUE_EXCHANGE;
-import static com.olelllka.stories_service.configuration.RabbitMQConfig.CREATE_STORY_QUEUE;
 
 @Component
 @RequiredArgsConstructor

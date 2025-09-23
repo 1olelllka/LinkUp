@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 public class RedisRateLimitingService {
     private final RedisTemplate<String, Integer> redisTemplate;
     private final int TIME_WINDOW = 60;
-    // I set 60 requests per minute for every service for now. In future this will be adjusted
     private final Map<String, Integer> rateLimits = Map.of(
             "/api/auth", 60,
             "/api/posts", 60,
@@ -29,7 +28,7 @@ public class RedisRateLimitingService {
         String key = "rate_limit:" + SHA256.hash(clientIp) + ":route:" + route;
 
         if (!redisTemplate.hasKey(key)) {
-            redisTemplate.opsForValue().set(key, 1, TIME_WINDOW, TimeUnit.SECONDS); // Initialize counter with expiration
+            redisTemplate.opsForValue().set(key, 1, TIME_WINDOW, TimeUnit.SECONDS);
             return true;
         }
         Integer count = redisTemplate.opsForValue().get(key);
