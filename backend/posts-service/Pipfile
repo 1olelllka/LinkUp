@@ -18,6 +18,7 @@ testcontainers = "*"
 pytest-django = "*"
 pyjwt = "*"
 redis = "*"
+drf-spectacular = "*"
 
 [dev-packages]
 
