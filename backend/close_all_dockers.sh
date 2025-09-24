@@ -4,8 +4,12 @@ echo "Running Script..."
 echo "Closing Global Docker..."
 docker compose down
 
+echo "Closing Discovery Server..."
+cd discovery-server
+docker compose down
+
 echo "Closing Gateway Docker..."
-cd gateway
+cd ../gateway
 docker compose down
 
 echo "Closing Profile Service Docker..."

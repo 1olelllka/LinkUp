@@ -5,9 +5,13 @@ echo "Running Script..."
 echo "Opening Global Docker..."
 docker compose up -d
 
+echo "Opening Discovery Server..."
+cd discovery-server
+docker compose up --build -d
+
 echo "Opening Gateway Docker..."
-cd gateway
-docker compose up -d
+cd ../gateway
+docker compose up --build -d
 
 echo "Opening Profile Service Docker..."
 cd ../profile-service

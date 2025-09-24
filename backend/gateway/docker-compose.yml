@@ -1,12 +1,28 @@
 
 services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    networks:
+      - linkup-net
+    environment:
+      - EUREKA_URI=http://eureka:8761/eureka
+      - REDIS_HOST=host.docker.internal
+      - REDIS_PORT=6374
+    depends_on:
+      - redis
   redis:
     container_name: gateway_redis
     image: redis:7.2.6
     ports:
-      - 6374:6379
+      - "6374:6379"
     volumes:
       - "redis_data:/data"
 
 volumes:
   redis_data:
+
+networks:
+  linkup-net:
+    external: true

@@ -1,0 +1,12 @@
+
+services:
+  eureka:
+    build: .
+    ports:
+      - "8761:8761"
+    networks:
+      - linkup-net
+
+networks:
+  linkup-net:
+    external: true
