@@ -1,6 +1,22 @@
 
 
 services:
+  app:
+    build: .
+    ports:
+      - "8002:8002"
+    networks:
+      - linkup-net
+    environment:
+      - EUREKA_URI=http://eureka:8761/eureka
+      - REDIS_HOST=host.docker.internal
+      - REDIS_PORT=6379
+      - RABBIT_HOST=rabbitmq
+      - RABBIT_PORT=5672
+      - RABBIT_USERNAME=myuser
+      - RABBIT_PASSWORD=secret
+      - PROFILE_HOST=host.docker.internal
+      - MONGO_URI=mongodb://admin:admin@host.docker.internal:27017/storiesDB?authSource=admin
   database:
     container_name: mongodb
     image: mongo:8.0
@@ -22,3 +38,7 @@ services:
 volumes:
   mongo_data:
   redis_data:
+
+networks:
+  linkup-net:
+    external: true

@@ -6,12 +6,12 @@ spring:
       enabled: false
   data:
     mongodb:
-      uri: mongodb://admin:admin@localhost:27016/notificationDB?authSource=admin
+      uri: ${MONGO_URI:mongodb://admin:admin@localhost:27016/notificationDB?authSource=admin}
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: myuser
-    password: secret
+    host: ${RABBIT_HOST:localhost}
+    port: ${RABBIT_PORT:5672}
+    username: ${RABBIT_USERNAME:myuser}
+    password: ${RABBIT_PASSWORD:secret}
 
 server:
   port: 8003

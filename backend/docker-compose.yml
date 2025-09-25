@@ -27,6 +27,12 @@ services:
     environment:
       - RABBITMQ_DEFAULT_PASS=secret
       - RABBITMQ_DEFAULT_USER=myuser
+    networks:
+      - linkup-net
 
 volumes:
   elasticsearch_data:
+
+networks:
+  linkup-net:
+     external: true

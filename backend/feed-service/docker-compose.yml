@@ -1,5 +1,21 @@
 
 services:
+  app:
+    build: .
+    ports:
+      - "8004:8004"
+    networks:
+      - linkup-net
+    environment:
+      - EUREKA_URI=http://eureka:8761/eureka
+      - REDIS_HOST=host.docker.internal
+      - REDIS_PORT=6377
+      - RABBIT_HOST=rabbitmq
+      - RABBIT_PORT=5672
+      - RABBIT_USERNAME=myuser
+      - RABBIT_PASSWORD=secret
+      - POSTS_HOST=host.docker.internal
+      - PROFILE_HOST=host.docker.internal
   redis:
     container_name: feed_redis
     image: redis:7.2.6
@@ -10,3 +26,7 @@ services:
 
 volumes:
   redis_data:
+
+networks:
+  linkup-net:
+    external: true

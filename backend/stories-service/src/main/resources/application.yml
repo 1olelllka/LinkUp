@@ -8,19 +8,17 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://admin:admin@localhost:27017/storiesDB?authSource=admin
+      uri: ${MONGO_URI:mongodb://admin:admin@localhost:27017/storiesDB?authSource=admin}
       uuid-representation: standard
-
-  cache:
-    type: redis
-    host: localhost
-    port: 6379
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
   rabbitmq:
-    host: localhost
-    port: 5672
-    password: secret
-    username: myuser
+    host: ${RABBIT_HOST:localhost}
+    port: ${RABBIT_PORT:5672}
+    username: ${RABBIT_USERNAME:myuser}
+    password: ${RABBIT_SECRET:secret}
 
 feign:
   circuitbreaker:

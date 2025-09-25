@@ -14,6 +14,7 @@ import com.olelllka.stories_service.service.StoryService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +28,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class StoryServiceImpl implements StoryService {
 
     private final StoryRepository repository;
@@ -105,6 +107,7 @@ public class StoryServiceImpl implements StoryService {
         } else if (t instanceof AuthException) {
             throw new AuthException(t.getMessage());
         }
+        log.info(t.getMessage());
         return StoryEntity.builder()
                 .id("circuit-breaker.id")
                 .image("circuit-breaker.url")

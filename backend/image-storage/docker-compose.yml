@@ -1,0 +1,19 @@
+
+services:
+  image-storage:
+    build: .
+    ports:
+      - "8888:8888"
+    networks:
+      - linkup-net
+    environment:
+      - EUREKA_URI=http://eureka:8761/eureka
+    volumes:
+      - "image-storage:/uploads"
+
+networks:
+  linkup-net:
+    external: true
+
+volumes:
+  image-storage:

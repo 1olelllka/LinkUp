@@ -1,6 +1,20 @@
 
 
 services:
+  app:
+    build: .
+    ports:
+      - "8005:8005"
+    networks:
+      - linkup-net
+    environment:
+      - MONGO_URI=mongodb://admin:admin@host.docker.internal:27015/chatDB?authSource=admin
+      - RABBIT_HOST=rabbitmq
+      - RABBIT_PORT=5672
+      - RABBIT_USERNAME=myuser
+      - RABBIT_PASSWORD=secret
+      - EUREKA_URI=http://eureka:8761/eureka
+      - PROFILE_HOST=host.docker.internal
   database:
     container_name: chat_mongo
     image: mongo:8.0
@@ -11,14 +25,11 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=admin
     volumes:
       - "mongo_data:/data/db"
-  cache:
-    container_name: chat_redis
-    image: redis:7.2.6
-    ports:
-      - "6378:6379"
-    volumes:
-      - "redis_data:/data"
 
 volumes:
   mongo_data:
   redis_data:
+
+networks:
+  linkup-net:
+    external: true

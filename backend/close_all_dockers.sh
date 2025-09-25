@@ -40,4 +40,9 @@ echo "Closing Notification Service Docker..."
 cd ../notification-service
 docker compose down
 
+echo "Closing Custom Image Storage Docker..."
+cd ../image-storage
+docker compose down
+
+
 echo "Completed..."

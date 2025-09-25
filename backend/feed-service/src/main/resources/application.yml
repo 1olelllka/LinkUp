@@ -8,15 +8,15 @@ spring:
     compatibility-verifier:
       enabled: false
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: myuser
-    password: secret
+    host: ${RABBIT_HOST:localhost}
+    port: ${RABBIT_PORT:5672}
+    username: ${RABBIT_USERNAME:myuser}
+    password: ${RABBIT_PASSWORD:secret}
 
   data:
     redis:
-      host: localhost
-      port: 6377
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6377}
 
 eureka:
   client:
