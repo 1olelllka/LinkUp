@@ -1,5 +1,6 @@
 package com.olelllka.profile_service.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.olelllka.profile_service.TestDataUtil;
 import com.olelllka.profile_service.domain.dto.ProfileDocumentDto;
 import com.olelllka.profile_service.domain.dto.UserMessageDto;
@@ -12,10 +13,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static org.mockito.Mockito.*;
 
@@ -26,6 +30,8 @@ public class MessageListenerUnitTest {
     private ProfileDocumentRepository documentRepository;
     @Mock
     private ProfileRepository profileRepository;
+    @Mock
+    private RedisTemplate<String, ProfileEntity> redisTemplate;
     @InjectMocks
     private MessageListener messageListener;
 
@@ -56,7 +62,7 @@ public class MessageListenerUnitTest {
     }
 
     @Test
-    public void testThatUpdateProfileFromAuthServiceWorks() {
+    public void testThatUpdateProfileFromAuthServiceWorks() throws JsonProcessingException {
         UUID profileId = UUID.randomUUID();
         UserMessageDto messageDto = TestDataUtil.createUserMessageDto();
         messageDto.setProfileId(profileId);
@@ -72,9 +78,14 @@ public class MessageListenerUnitTest {
         expectedEntity.setEmail(messageDto.getEmail());
         // when
         when(documentRepository.findById(profileId)).thenReturn(Optional.of(profileDocument));
+        when(redisTemplate.opsForValue()).thenReturn(mock(ValueOperations.class));
+        when(profileRepository.updateProfile(profileId, messageDto.getUsername(), null,
+                messageDto.getEmail(), null, null, null, null)).thenReturn(expectedEntity);
         messageListener.updateProfileFromAuthService(messageDto);
         verify(documentRepository, times(1)).save(expectedDocument);
         verify(profileRepository, times(1)).updateProfile(profileId, messageDto.getUsername(), null, messageDto.getEmail(), null, null, null, null);
+        verify(redisTemplate.opsForValue(), times(1))
+                .set("profile::" + SHA256.hash(messageDto.getProfileId().toString()), expectedEntity, 60, TimeUnit.MINUTES);
     }
 
     @Test

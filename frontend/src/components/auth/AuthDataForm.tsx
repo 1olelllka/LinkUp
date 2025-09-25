@@ -21,13 +21,14 @@ import { Input } from "@/components/ui/input"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { patchMe } from "@/services/authServices";
 import { deleteProfile } from "@/services/profileServices";
-import { useProfileStore } from "@/store/useProfileStore";
+import { useProfileStore, type ZustandProfile } from "@/store/useProfileStore";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
+import type { Profile } from "@/types/Profile";
 
 const formSchema = z.object({
     email: z.email("Invalid Email."),
@@ -37,11 +38,12 @@ const formSchema = z.object({
 type AuthDataFormProps = {
     email: string | undefined,
     alias: string | undefined,
-    authProvier: string | undefined
+    authProvier: string | undefined,
+    userId: string,
+    setProfile: React.Dispatch<React.SetStateAction<Profile>>
 }
 
 export const AuthDataForm = (data : AuthDataFormProps) => {
-
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -66,6 +68,17 @@ export const AuthDataForm = (data : AuthDataFormProps) => {
                     email: response.email,
                     alias: response.alias
                 })
+                const newProfile : ZustandProfile = {
+                    userId: data.userId,
+                    alias: response.alias,
+                    email: response.email
+                }
+                useProfileStore.getState().setProfile(newProfile)
+                data.setProfile((prev) => ({
+                    ...prev,
+                    username: response.alias,
+                    email: response.email
+                }))
                 toast.success("Successfully updated authentication data!");
             })
         } catch (err) {

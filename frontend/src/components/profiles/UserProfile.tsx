@@ -72,7 +72,7 @@ export const UserProfile = () => {
                 <Input value={profile?.authProvider || ""} disabled className="mt-1" />
               </div>
               
-              <AuthDataForm email={profile?.email} alias={profile?.username} authProvier={profile?.authProvider}/>
+              <AuthDataForm email={profile?.email} alias={profile?.username} authProvier={profile?.authProvider} userId={profile.id} setProfile={setProfile}/>
               
               <PersonalDataForm profile={profile} setProfile={setProfile}/>
             </div>

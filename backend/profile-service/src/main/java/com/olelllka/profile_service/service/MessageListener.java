@@ -1,5 +1,6 @@
 package com.olelllka.profile_service.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.olelllka.profile_service.configuration.RabbitMQConfig;
 import com.olelllka.profile_service.domain.dto.ProfileDocumentDto;
 import com.olelllka.profile_service.domain.dto.UserMessageDto;
@@ -10,11 +11,13 @@ import com.olelllka.profile_service.repository.ProfileRepository;
 import com.olelllka.profile_service.rest.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -22,6 +25,7 @@ public class MessageListener {
 
     private final ProfileDocumentRepository documentRepository;
     private final ProfileRepository profileRepository;
+    private final RedisTemplate<String, ProfileEntity> redisTemplate;
 
     @RabbitListener(queues = RabbitMQConfig.create_user_queue)
     @Transactional
@@ -48,8 +52,8 @@ public class MessageListener {
 
     @RabbitListener(queues = RabbitMQConfig.update_user_queue)
     @Transactional
-    public void updateProfileFromAuthService(UserMessageDto messageDto) {
-        profileRepository.updateProfile(messageDto.getProfileId(),
+    public void updateProfileFromAuthService(UserMessageDto messageDto) throws JsonProcessingException {
+        ProfileEntity newProfile = profileRepository.updateProfile(messageDto.getProfileId(),
                                         messageDto.getUsername(),
                                         null,
                                         messageDto.getEmail(),
@@ -61,6 +65,8 @@ public class MessageListener {
                 .orElseThrow(() -> new NotFoundException("Document was not found."));
         document.setUsername(messageDto.getUsername());
         document.setEmail(messageDto.getEmail());
+        redisTemplate.opsForValue().set("profile::" + SHA256.hash(messageDto.getProfileId().toString()),
+                newProfile, 60, TimeUnit.MINUTES);
         documentRepository.save(document);
     }
 

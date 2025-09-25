@@ -19,9 +19,11 @@ export const useMyProfileDetail = () => {
         getMe()
         .then((response) => {
             const user = response;
+            console.log(user)
             setProfile(user);
             getSpecificProfileInfo(user.userId)
             .then((response) => {
+                console.log("PROFILE SERVICE: ", response)
                 const combinedProfile = {
                     ...user,
                     ...response

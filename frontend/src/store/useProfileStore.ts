@@ -2,15 +2,15 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 
-type Profile = {
+export type ZustandProfile = {
   userId: string;
   alias: string;
   email: string;
 };
 
 type ProfileState = {
-  profile: Profile | null;
-  setProfile: (data: Profile) => void;
+  profile: ZustandProfile | null;
+  setProfile: (data: ZustandProfile) => void;
   clearProfile: () => void;
 };
 

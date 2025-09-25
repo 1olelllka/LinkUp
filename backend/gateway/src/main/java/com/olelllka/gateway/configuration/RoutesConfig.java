@@ -16,12 +16,12 @@ public class RoutesConfig {
     @Primary
     @Bean
     public RedisRateLimiter criticalServiceRateLimiter() {
-        return new RedisRateLimiter(8, 25, 1);
+        return new RedisRateLimiter(4, 25, 1);
     }
 
     @Bean
     public RedisRateLimiter simpleServiceRateLimiter() {
-        return new RedisRateLimiter(5, 10, 1);
+        return new RedisRateLimiter(4, 10, 1);
     }
 
     @Bean

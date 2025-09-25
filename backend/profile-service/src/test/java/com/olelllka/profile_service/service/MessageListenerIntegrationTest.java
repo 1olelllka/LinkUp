@@ -6,8 +6,10 @@ import com.olelllka.profile_service.configuration.RabbitMQConfig;
 import com.olelllka.profile_service.domain.dto.ProfileDocumentDto;
 import com.olelllka.profile_service.domain.dto.UserMessageDto;
 import com.olelllka.profile_service.domain.entity.ProfileDocument;
+import com.olelllka.profile_service.domain.entity.ProfileEntity;
 import com.olelllka.profile_service.repository.ProfileDocumentRepository;
 import com.olelllka.profile_service.repository.ProfileRepository;
+import com.redis.testcontainers.RedisContainer;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -18,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.testcontainers.containers.Neo4jContainer;
 import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
@@ -40,11 +43,14 @@ public class MessageListenerIntegrationTest {
     static ElasticsearchContainer elasticsearchContainer = new ElasticsearchContainer(DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:7.17.23"));
     @ServiceConnection
     static Neo4jContainer<?> neo4jContainer = new Neo4jContainer<>(DockerImageName.parse("neo4j:latest"));
+    @ServiceConnection
+    static RedisContainer redisContainer = new RedisContainer(DockerImageName.parse("redis:7.2.6"));
 
     static {
         rabbitContainer.start();
         elasticsearchContainer.start();
         neo4jContainer.start();
+        redisContainer.start();
     }
 
     private final RabbitAdmin admin;
@@ -52,18 +58,21 @@ public class MessageListenerIntegrationTest {
     private final ProfileDocumentRepository repository;
     private final ProfileRepository profileRepository;
     private final RabbitTemplate rabbitTemplate;
+    private final RedisTemplate<String, ProfileEntity> redisTemplate;
 
     @Autowired
     public MessageListenerIntegrationTest(RabbitAdmin admin,
                                           MessagePublisher messagePublisher,
                                           RabbitTemplate rabbitTemplate,
                                           ProfileRepository profileRepository,
-                                          ProfileDocumentRepository repository) {
+                                          ProfileDocumentRepository repository,
+                                          RedisTemplate<String, ProfileEntity> redisTemplate) {
         this.messagePublisher = messagePublisher;
         this.admin = admin;
         this.repository = repository;
         this.profileRepository = profileRepository;
         this.rabbitTemplate = rabbitTemplate;
+        this.redisTemplate = redisTemplate;
     }
 
     @AfterEach
@@ -80,6 +89,8 @@ public class MessageListenerIntegrationTest {
         rabbitContainer.close();
         neo4jContainer.stop();
         neo4jContainer.close();
+        redisContainer.stop();
+        redisContainer.close();
     }
 
     @Test
@@ -116,6 +127,7 @@ public class MessageListenerIntegrationTest {
         assertEquals(profileRepository.findById(profileId).get().getUsername(), "UPDATED");
         assertEquals(repository.findById(profileId).get().getName(), userMessageDto.getName());
         assertEquals(repository.findById(profileId).get().getUsername(), "UPDATED");
+        assertTrue(redisTemplate.hasKey("profile::" + SHA256.hash(profileId.toString())));
     }
 
     @Test
