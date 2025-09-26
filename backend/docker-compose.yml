@@ -1,9 +1,11 @@
 # Global Docker Compose File
 name: LinkUp_Backend
 services:
-  elasticsearch:
+  elastic:
     container_name: linkup_elasticsearch
     image: elasticsearch:7.17.23
+    networks:
+      - linkup-net
     ports:
       - "9200:9200"
       - "9300:9300"

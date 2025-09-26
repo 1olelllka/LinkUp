@@ -10,6 +10,7 @@ services:
       - EUREKA_URI=http://eureka:8761/eureka
       - REDIS_HOST=host.docker.internal
       - REDIS_PORT=6374
+      - POSTS_SERVICE_HOST=host.docker.internal
     depends_on:
       - redis
   redis:

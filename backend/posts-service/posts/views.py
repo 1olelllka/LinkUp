@@ -19,6 +19,9 @@ from drf_spectacular.utils import (
     extend_schema, extend_schema_view, OpenApiResponse, OpenApiExample
 )
 from drf_spectacular.types import OpenApiTypes
+import os
+
+profile_uri = os.environ.get("PROFILE_URI") or "http://localhost:8001/profiles"
 
 @extend_schema(tags=['Posts management'])
 @extend_schema_view(
@@ -69,7 +72,7 @@ class UserPostViewSet(viewsets.ModelViewSet):
     authentication_classes = [JWTAuthentication]
 
     def create(self, request, user_id):
-        profile_response = requests.get(f"http://localhost:8001/profiles/{user_id}")
+        profile_response = requests.get(f"{profile_uri}/{user_id}")
         if profile_response.status_code == 404:
             return Response(data={"error": "User with such id does not exist"}, status=404)
         elif profile_response.status_code >= 500:
@@ -248,7 +251,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     def create(self, request, post_id):
         post = get_object_or_404(Post, pk=post_id)
         if request.user.id is not None:
-            profile_response = requests.get(f"http://localhost:8001/profiles/{request.user.id}")
+            profile_response = requests.get(f"{profile_uri}/{request.user.id}")
         else:
             return Response(data={"error": "Profile id is required"}, status=400)
         if profile_response.status_code == 404:

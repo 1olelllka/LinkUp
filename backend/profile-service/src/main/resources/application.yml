@@ -2,24 +2,22 @@ spring:
   application:
     name: profile-service
   neo4j:
-    uri: bolt://localhost:7687
+    uri: ${NEO4J_URI:bolt://localhost:7687}
     authentication:
-      username: neo4j
-      password: product_admin
+      username: ${NEO4J_USERNAME:neo4j}
+      password: ${NEO4J_PASSWORD:product_admin}
   data:
     elasticsearch:
-      cluster-name: elasticsearch
-      cluster-nodes: localhost:9200
       repositories:
         enabled: true
     redis:
-      host: localhost
-      port: 6376
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6376}
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: myuser
-    password: secret
+    host: ${RABBIT_HOST:localhost}
+    port: ${RABBIT_PORT:5672}
+    username: ${RABBIT_USERNAME:myuser}
+    password: ${RABBIT_PASSWORD:secret}
   cloud:
     compatibility-verifier:
       enabled: false

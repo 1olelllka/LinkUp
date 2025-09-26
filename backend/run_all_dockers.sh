@@ -5,6 +5,9 @@ echo "Running Script..."
 echo "Opening Global Docker..."
 docker compose up -d
 
+echo "Waiting for Global Services to start up..."
+sleep 7
+
 echo "Opening Discovery Server..."
 cd discovery-server
 docker compose up --build -d
@@ -15,15 +18,15 @@ docker compose up --build -d
 
 echo "Opening Profile Service Docker..."
 cd ../profile-service
-docker compose up -d
+docker compose up --build -d
 
 echo "Opening Auth Service Docker..."
 cd ../auth-service
-docker compose up -d
+docker compose up --build -d
 
 echo "Opening Posts Service Docker..."
 cd ../posts-service
-docker compose up -d
+docker compose up --build -d
 
 echo "Opening Feed Service Docker..."
 cd ../feed-service

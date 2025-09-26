@@ -16,9 +16,9 @@ export const ServerErrorPage = () => {
         const profile = await checkProfileHealth();
         if (gateway.data.status != 'UP' || auth.data.status != "UP" || profile.data.status != 'UP') {
           setDown(true);
-          toast.success("The issues were resolved!")
         } else if (gateway.data.status == 'UP' && auth.data.status == 'UP' && profile.data.status == 'UP') {
           setDown(false);
+          toast.success("The issues were resolved!")
       }
     } catch {
       toast.error("The error persists")

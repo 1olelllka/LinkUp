@@ -2,6 +2,7 @@ package com.olelllka.gateway.configuration;
 
 import com.olelllka.gateway.service.SimpleClientAddressResolver;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
@@ -24,6 +25,9 @@ public class RoutesConfig {
         return new RedisRateLimiter(4, 10, 1);
     }
 
+    @Value("${POSTS_SERVICE_HOST:localhost}")
+    private String posts_host;
+
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
@@ -34,7 +38,7 @@ public class RoutesConfig {
                                                 .setDenyEmptyKey(false)
                                                 .setKeyResolver(new SimpleClientAddressResolver()))
                                         .circuitBreaker(c -> c.setName("posts-service").setFallbackUri("forward:/fallback")))
-                                .uri("http://localhost:8000")) // here localhost, bc it's django, I'll fix it later
+                                .uri("http://" + posts_host + ":8000")) // here localhost, bc it's django, I'll fix it later
                 .route("profile-service",
                         r -> r.path("/api/profiles/**")
                                 .filters(f -> f.stripPrefix(1)

@@ -1,4 +1,40 @@
 services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    networks:
+      - linkup-net
+    environment:
+      - EUREKA_URI=http://eureka:8761/eureka
+      - POSTGRES_HOST=host.docker.internal
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=posts
+      - REDIS_URI=redis://host.docker.internal:6373/0
+      - RABBIT_HOST=rabbitmq
+      - RABBIT_PORT=5672
+      - RABBIT_USERNAME=myuser
+      - RABBIT_PASSWORD=secret
+      - PROFILE_URI=http://host.docker.internal:8001/profiles
+    command: python manage.py runserver 0.0.0.0:8000
+  consumer:
+    build: .
+    networks:
+      - linkup-net
+    environment:
+      - EUREKA_URI=http://eureka:8761/eureka
+      - POSTGRES_HOST=host.docker.internal
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=posts
+      - RABBIT_HOST=rabbitmq
+      - RABBIT_PORT=5672
+      - RABBIT_USERNAME=myuser
+      - RABBIT_PASSWORD=secret
+    command: python3 manage.py start_consumer
   database:
     container_name: postgres
     image: postgres:16.4
@@ -21,3 +57,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+
+networks:
+  linkup-net:
+    external: true

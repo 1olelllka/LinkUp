@@ -65,7 +65,7 @@ public class OAuthSuccessHandlerUnitTest {
         when(redisTemplate.opsForValue()).thenReturn(mock(ValueOperations.class));
         oAuthSuccessHandler.onAuthenticationSuccess(request, response, authentication);
         // then
-        assertEquals(HttpServletResponse.SC_OK, response.getStatus());
+        assertEquals(HttpServletResponse.SC_FOUND, response.getStatus());
         assertEquals("REFRESH_TOKEN", response.getCookie("refresh_token").getValue());
         verify(userRepository, never()).save(any(UserEntity.class));
         verify(messagePublisher, never()).sendCreateUserMessage(any(UserMessageDto.class));
@@ -92,7 +92,7 @@ public class OAuthSuccessHandlerUnitTest {
         when(redisTemplate.opsForValue()).thenReturn(mock(ValueOperations.class));
         oAuthSuccessHandler.onAuthenticationSuccess(request, response, authentication);
         // then
-        assertEquals(HttpServletResponse.SC_OK, response.getStatus());
+        assertEquals(HttpServletResponse.SC_FOUND, response.getStatus());
         assertEquals("REFRESH_TOKEN", response.getCookie("refresh_token").getValue());
         verify(userRepository, times(1)).save(any(UserEntity.class));
         verify(messagePublisher, times(1)).sendCreateUserMessage(any(UserMessageDto.class));

@@ -54,11 +54,11 @@ TEMPLATES = [
         },
     },
 ]
-
+import os
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://localhost:6373/0',
+        'LOCATION': os.environ.get("REDIS_URI") or 'redis://localhost:6373/0',
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
@@ -73,11 +73,11 @@ WSGI_APPLICATION = 'postsservice.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'posts',
-        'USER': 'postgres',
-        'PASSWORD':'postgres',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.environ.get("POSTGRES_DB") or 'posts',
+        'USER': os.environ.get("POSTGRES_USER") or 'postgres',
+        'PASSWORD':os.environ.get("POSTGRES_PASSWORD") or 'postgres',
+        'HOST': os.environ.get("POSTGRES_HOST") or 'localhost',
+        'PORT': os.environ.get("POSTGRES_PORT") or '5432',
     }
 }
 
@@ -123,7 +123,7 @@ ALLOWED_HOSTS = ['*']
 
 JWT_SECRET='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
-RABBIT_PORT = 5672
+RABBIT_PORT = os.environ.get("RABBIT_PORT") or 5672
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Posts Service API',
