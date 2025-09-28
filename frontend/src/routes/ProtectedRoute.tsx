@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 
 export const ProtectedRoute = ({children} : {children: React.ReactNode}) => {
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
 
     useEffect(() => {
         let mounted = true;

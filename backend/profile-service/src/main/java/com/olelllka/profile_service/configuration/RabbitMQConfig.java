@@ -21,6 +21,7 @@ public class RabbitMQConfig {
     public static final String delete_queue_story = "delete_profile_queue_story";
     public static final String delete_queue_feed = "delete_profile_queue_feed";
     public static final String delete_queue_notification = "delete_profile_queue_notification";
+    public static final String delete_queue_chat = "delete_profile_queue_chat";
     public static final String delete_queue_auth = "delete_profile_queue_auth";
     public static final String notification_queue = "notification_queue";
     public static final String notification_exchange = "notification_exchange";
@@ -58,6 +59,11 @@ public class RabbitMQConfig {
     @Bean
     public Queue deleteQueueAuth() {
         return new Queue(delete_queue_auth, true);
+    }
+
+    @Bean
+    public Queue deleteQueueChat() {
+        return new Queue(delete_queue_chat, true);
     }
 
     @Bean
@@ -113,6 +119,11 @@ public class RabbitMQConfig {
     @Bean
     public Binding deleteProfileAuthBinding(Queue deleteQueueAuth, FanoutExchange fanoutExchange) {
         return BindingBuilder.bind(deleteQueueAuth).to(fanoutExchange);
+    }
+
+    @Bean
+    public Binding deleteProfileChatBinding(Queue deleteQueueChat, FanoutExchange fanoutExchange) {
+        return BindingBuilder.bind(deleteQueueChat).to(fanoutExchange);
     }
 
     @Bean

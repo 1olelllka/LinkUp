@@ -208,6 +208,7 @@ public class ProfileControllerIntegrationTest {
         assertTrue(rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_feed).getMessageCount() == 1);
         assertTrue(rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_story).getMessageCount() == 1);
         assertTrue(rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_notification).getMessageCount() == 1);
+        assertTrue(rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_chat).getMessageCount() == 1);
     }
 
     @Test
