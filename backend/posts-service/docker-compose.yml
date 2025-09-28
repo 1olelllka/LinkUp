@@ -1,6 +1,8 @@
 services:
   app:
     build: .
+    image: 1olelllka/linkup-postsservice
+    container_name: posts_server
     ports:
       - "8000:8000"
     networks:
@@ -21,6 +23,8 @@ services:
     command: python manage.py runserver 0.0.0.0:8000
   consumer:
     build: .
+    image: 1olelllka/linkup-postsconsumer
+    container_name: posts_consumer
     networks:
       - linkup-net
     environment:
@@ -36,7 +40,7 @@ services:
       - RABBIT_PASSWORD=secret
     command: python3 manage.py start_consumer
   database:
-    container_name: postgres
+    container_name: posts_postgres
     image: postgres:16.4
     ports:
       - "5432:5432"

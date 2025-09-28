@@ -3,6 +3,8 @@
 services:
   app:
     build: .
+    image: 1olelllka/linkup-storiesservice
+    container_name: stories_server
     ports:
       - "8002:8002"
     networks:

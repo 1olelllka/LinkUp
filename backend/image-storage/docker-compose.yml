@@ -2,6 +2,8 @@
 services:
   image-storage:
     build: .
+    image: 1olelllka/linkup-imagestorage
+    container_name: imagestorage_server
     ports:
       - "8888:8888"
     networks:

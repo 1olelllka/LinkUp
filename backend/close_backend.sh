@@ -45,4 +45,4 @@ cd ../image-storage
 docker compose down
 
 
-echo "Completed..."
+echo "Completed!"

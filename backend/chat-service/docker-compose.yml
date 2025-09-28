@@ -1,8 +1,9 @@
 
-
 services:
   app:
     build: .
+    image: 1olelllka/linkup-chatservice
+    container_name: chat_server
     ports:
       - "8005:8005"
     networks:
@@ -28,7 +29,6 @@ services:
 
 volumes:
   mongo_data:
-  redis_data:
 
 networks:
   linkup-net:

@@ -2,6 +2,8 @@
 services:
   app:
     build: .
+    image: 1olelllka/linkup-gateway
+    container_name: gateway_server
     ports:
       - "8080:8080"
     networks:

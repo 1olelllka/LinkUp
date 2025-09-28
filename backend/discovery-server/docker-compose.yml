@@ -2,6 +2,8 @@
 services:
   eureka:
     build: .
+    image: 1olelllka/linkup-discoveryserver
+    container_name: discovery_server
     ports:
       - "8761:8761"
     networks:

@@ -14,12 +14,12 @@ services:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - http.cors.enabled=true
-      - ESJAVAOPTS=-Xmx3g
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
       - http.cors.allow-origin=http://localhost:8080
       - http.cors.allow-headers=X-Requested-With,Content-Type,Content-Length,Authorization
     volumes:
       - "elasticsearch_data:/usr/share/elasticsearch/data"
-    mem_limit: 4g
+    mem_limit: 1g
   rabbitmq:
     container_name: linkup_rabbimtq
     image: rabbitmq:3.13-management

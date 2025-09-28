@@ -2,6 +2,8 @@
 services:
   app:
     build: .
+    image: 1olelllka/linkup-profileservice
+    container_name: profile_server
     networks:
       - linkup-net
     ports:

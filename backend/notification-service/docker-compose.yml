@@ -2,6 +2,8 @@
 services:
   app:
     build: .
+    image: 1olelllka/linkup-notificationservice
+    container_name: notification_server
     networks:
       - linkup-net
     ports:
