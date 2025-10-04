@@ -45,8 +45,7 @@ export const SignUpForm = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
     try {
-      const data = await register(values);
-      console.log("Registered:", data);
+      await register(values);
       toast.success(`Successfully registered, ${values.alias}! Proceeding to login page...`);
       navigate("/login");
     } catch (err) {

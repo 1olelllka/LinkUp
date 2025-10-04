@@ -31,7 +31,6 @@ function App() {
           setDown(false);
         }
       } catch (err) {
-        console.log(err);
         const error = err as AxiosError;
         if (error.status == 429) {
           setTooMany(true);

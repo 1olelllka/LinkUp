@@ -121,7 +121,6 @@ export const ChatWindow = ({
       };
       try {
         const res = await updateMessageById(updateId, messageToSend);
-        console.log(res);
         setMessages((prev) =>
           prev.map((obj) => (obj.id === updateId ? { ...obj, ...res } : obj))
         );
@@ -230,7 +229,6 @@ export const ChatWindow = ({
                                   setMessages((prev) =>
                                     prev.filter((m) => m.id != msg.id)
                                   );
-                                  console.log(messages);
                                 } else {
                                   toast.warning(
                                     "Unexpected response from server received: " +

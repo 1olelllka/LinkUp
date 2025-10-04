@@ -107,7 +107,6 @@ export const UserPosts = ({ userId } : {userId : string | undefined}) => {
                                   setLoading(false);
                                   toast.success("Successfully deleted post!");
                                 } else {
-                                  // console.log("Unexpected status code --> " + response);
                                   toast.warning("Unexpected server response. Please try again");
                                 }
                               }).catch(err => toast.error((err as AxiosError).message));

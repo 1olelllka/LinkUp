@@ -72,7 +72,7 @@ export const AvatarDialog = ({children, setProfile} : {children: React.ReactNode
 
     return (
        <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger onClick={() => console.log('sdfa')}>
+        <DialogTrigger>
             {children}
         </DialogTrigger>
         <DialogContent>

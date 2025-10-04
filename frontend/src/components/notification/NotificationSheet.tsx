@@ -70,7 +70,6 @@ export const NotificationSheet = ({trigger} : {trigger: React.ReactNode}) => {
                             if (currentUser) {
                                 deleteAllNotificationsForUser(currentUser)
                                 .then(response => {
-                                    console.log(response)
                                     if (response.status == 204) {
                                         setNotifications([]);
                                         setNotificationPage(null);
@@ -115,8 +114,6 @@ export const NotificationSheet = ({trigger} : {trigger: React.ReactNode}) => {
                                     if (response.status == 204) {
                                         setNotifications((prev) => prev.filter(a => a.id != item.id));
                                         toast.success("Successfully deleted notification!");
-                                    } else {
-                                        console.log("Unexpected response status - " + response);
                                     }
                                 }).catch(err => toast.error("Error while deleting the notification. " + (err as AxiosError).message));
                             }}/>
