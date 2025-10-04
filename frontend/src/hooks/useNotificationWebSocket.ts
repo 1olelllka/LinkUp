@@ -8,7 +8,6 @@ export const useNotificationWebSocket = (userId: string | null) => {
     if (!userId) return;
 
     const ws = new WebSocket(`ws://localhost:8080/notifications?userId=${userId}`);
-    console.log("Connecting WS...");
 
     ws.onopen = () => {
       ws.send(JSON.stringify({token: token}))
@@ -25,7 +24,6 @@ export const useNotificationWebSocket = (userId: string | null) => {
 
     return () => {
       ws.close();
-      console.log("WS cleanup");
     };
   }, [userId, token]);
 

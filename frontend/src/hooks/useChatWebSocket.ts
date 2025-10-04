@@ -21,7 +21,6 @@ export const useChatWebSocket = (sender: string | undefined, receiver: string | 
     };
 
     ws.onmessage = (event) => {
-      console.log('Message received:', event.data);
       try {
         const message: Message = JSON.parse(event.data);
         setLastMessage(message);
@@ -39,7 +38,6 @@ export const useChatWebSocket = (sender: string | undefined, receiver: string | 
     };
 
     ws.onclose = () => {
-      console.log('WebSocket disconnected');
       setConnectionStatus('Closed');
     };
 

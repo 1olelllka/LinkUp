@@ -14,7 +14,6 @@ export const useChatList = (userId: string | undefined, initialPage: number = 0)
   
   useEffect(() => {
     if (!userId) return;
-    console.log('triggered');
     setLoading(true);
     // setTimeout(() => {
       fetchChatList(userId, pageNumber)

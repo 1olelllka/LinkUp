@@ -36,7 +36,6 @@ export const useUserPosts = (userId: string | undefined) => {
             setPostPage(res);
             setPageNumber(pageNumber + 1)
         } catch (err) {
-            console.log(err);
             setError(err as AxiosError);
         } finally {
             setLoading(false);

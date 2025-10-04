@@ -21,7 +21,6 @@ export const useMyProfileDetail = () => {
   const [error, setError] = useState<AxiosError>();
   const [loading, setLoading] = useState(false);
   const [pendingParam, setPendingParam] = useSearchParams();
-  console.log(pendingParam.get("pending"));
   const [pending, setPending] = useState(pendingParam.get("pending") === "true");
 
   useEffect(() => {

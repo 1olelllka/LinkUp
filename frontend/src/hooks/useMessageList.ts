@@ -38,7 +38,6 @@ export const useMessageList = (chatId: string) => {
         );
         setMessages((prev) => [...sortedNewMessages, ...prev]);
         setPage(pageNumber);
-        console.log('success');
       } catch (err) {
         setError(err as AxiosError);
       } finally {
