@@ -23,6 +23,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -84,6 +85,6 @@ public class OAuthSuccessHandler implements AuthenticationSuccessHandler {
         response.setStatus(HttpServletResponse.SC_OK);
 //        response.getWriter().write(objectMapper.writeValueAsString(jwt));
 //        response.setContentType("application/json");
-        response.sendRedirect("http://localhost:5173/profile");
+        response.sendRedirect("http://localhost:5173/profile?pending=true");
     }
 }
