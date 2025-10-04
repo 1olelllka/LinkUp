@@ -1,4 +1,4 @@
-import type { UserList } from "./UserList";
+import type { UserList } from "./Profile"
 
 type Pageable = {
     pageNumber: number,

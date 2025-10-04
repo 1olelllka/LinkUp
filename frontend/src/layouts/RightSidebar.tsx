@@ -82,6 +82,7 @@ export function RightSidebar() {
             open={open}
             setOpen={setOpen}
             selectedIndex={selectedIndex}
+            handleLoadingMoreStories={loadMoreStories}
           />
           {loading && <PageLoader />}
         </>

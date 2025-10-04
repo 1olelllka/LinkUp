@@ -5,8 +5,8 @@ import { DialogTitle } from "@radix-ui/react-dialog";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Keyboard } from "swiper/modules";
 import "swiper/css";
-// import "swiper/css/navigation";
-// import "swiper/css/pagination";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 import type { Swiper as Sw } from "swiper/types";
 
 export const StoryDetailLightbox = ({

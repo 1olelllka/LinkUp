@@ -1,0 +1,7 @@
+
+services:
+  frontend:
+    container_name: linkup_frontend
+    build: .
+    ports:
+      - "5173:5173"
