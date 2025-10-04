@@ -12,11 +12,12 @@ import { CreatePostPage } from "@/pages/CreatePostPage";
 import { UpdatePostPage } from "@/pages/UpdatePostPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { ProtectedRoute } from "./ProtectedRoute";
+import { LinkUpLanding } from "@/pages/LinkUpLanding";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <div>Hello World</div>,
+    element: <LinkUpLanding />
   },
   {
     path: "/login",
