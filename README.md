@@ -79,6 +79,12 @@ unzip linkup_0.98-beta_frontend_and_readme.zip
    ./close_backend.sh
 ```
 
+8. In order to stop frontend run this command inside of **frontend folder**
+```bash
+  # Given you're inside of frontend folder
+  docker compose down
+```
+
 **Note: if you encounter permission errors while running bash scripts, run this command**
 ```bash
    chmod +x <name_of_bash_script>.sh
