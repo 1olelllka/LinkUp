@@ -4,10 +4,75 @@
 *LinkUp! is a social networking platform designed to connect users through posts, stories, chat, and real-time notifications. Built with a microservices architecture, it emphasizes scalability, resilience, and modern frontend design.*
 
 ## Table of Contents
+ - [Releases](#releases)
+    - [0.98-BETA](#-098-beta)
+ - [Current Status](#current-status)
  - [Tech Stack](#tech-stack)
  - [Project Structure](#project-structure)
- - [Current Status](#current-status)
+    - [Backend Architecture](#backend-architecture)
  - [License](#license)
+
+## Releases
+
+### 🚀 0.98-BETA
+#### Release Notes
+- Most Viable Product (MVP) — feature-complete
+- Dockerized for easy deployment
+- Backend start-up automated with bash scripts
+- Full and demo versions available:
+  - **Full Version**: Requires at least 5.5GB dedicated Docker RAM
+  - **Demo Version**: Requires at least 3.4GB dedicated Docker RAM
+- Frontend bugs may occur in some components
+- Backend uses microservices architecture for scalability and resilience
+- Custom image storage uses localtunnel, emulating CDN
+
+#### Highlights
+- Fully working MVP with posts, feeds, chat, stories, and notifications
+- Automated start-up script for all services
+- Frontend-ready with React, TailwindCSS, and ShadCN
+
+### How to Run 0.98-BETA
+**Prerequisites:**  
+- Docker & Docker Compose installed  
+- Sufficient RAM for chosen version (5.5GB full / 3.4GB demo)
+
+**Steps**
+1. Download the 0.98-BETA Release from *Releases Tab* and unzip it
+2. **Start backend services** using the bash script:  
+```bash
+  cd backend
+  ./run_full_backend   # OR ./run_demo_backend
+```
+*Note: First launches may take longer if services like MongoDB, Redis, etc., are not preinstalled.*
+
+3. Verify services are running in **Docker Desktop** (all containers should be up).
+4. **Start frontend**
+```bash
+  cd ../frontend # given you're on ./backend folder
+  docker compose up --build -d
+```
+5. Access the website in your browser by url http://localhost:5173 *(Only accessible on your machine)*
+6. Next, configure LocalTunnel (used as a custom CDN emulator)
+```bash
+    # Install Node (if not preinstalled)
+    brew install node # MacOS via Homebrew
+    sudo apt install -y nodejs npm # Ubuntu/Debian
+    # Run localtunnel
+    npx localtunnel --port 8888 --subdomain linkup
+```
+
+
+#### ⚠️ Known issues
+  - Bad responsiveness on small screens
+  - At the beginning the '500 Error' may occur
+      - *Reason #1: some of the critical services (profile/auth) weren't registered by gateway*
+      - *Fix #1: Wait for a short period of time (approx. 2 minutes) and then try again*
+      - *Reason #2: some critical services (gateway/profile/auth) have problems with health*
+      - *Fix #2: Check if all of the containers are up and running, afterwards rerun the server container*
+
+## Current Status
+
+#### 🚧 Development in Progress 🚧
 
 ## Tech Stack
 - **Client**: React.js, ShadCN, TailwindCSS
@@ -31,9 +96,7 @@
 ## Project Structure 
 *The system follows a microservices architecture, where each core functionality (profiles, posts, chat, etc.) is isolated into its own service.*
 
-*(it will be updated if changes occur)*
-
-### Architecture
+### Backend Architecture
   - [Simplified Project Structure](#simplified-project-structure)
   - [Profile Service](#profile-service)
   - [Posts Service](#posts-service)
@@ -75,9 +138,6 @@
 
 *[Excalidraw](https://excalidraw.com/) was used for illustrations*
 
-## Current Status
-
-#### 🚧 Development in Progress 🚧
 
 ## License
 [Apache License 2.0](./LICENSE)
