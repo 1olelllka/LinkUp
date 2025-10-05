@@ -38,6 +38,15 @@
 
 **Steps**
 1. Download the 0.98-BETA Release from *Releases Tab* and unzip it
+   - Create folder where you want to download all zip archives
+   - Unzip frontend archive
+```bash
+unzip linkup_0.98-beta_frontend_and_readme.zip
+```
+   - Then, run a bash script to unarchive backend
+```bash
+   ./unzip_backend.sh
+```
 2. **Start backend services** using the bash script:  
 ```bash
   cd backend
@@ -61,6 +70,10 @@
     npx localtunnel --port 8888 --subdomain linkup
 ```
 
+**Note: if you encounter permission errors while running bash scripts, run this command**
+```bash
+   chmod +x <name_of_bash_script>.sh
+```
 
 #### ⚠️ Known issues
   - Bad responsiveness on small screens
