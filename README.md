@@ -37,7 +37,7 @@
 - Sufficient RAM for chosen version (5.5GB full / 3.4GB demo)
 
 **Steps**
-1. Download the 0.98-BETA Release from *Releases Tab* and unzip it
+1. Download the 0.98-BETA Release archives (they should start with *linkup_0.98-beta_...*) from *Releases Tab* and unzip it
    - Create folder where you want to download all zip archives
    - Unzip frontend archive
 ```bash
@@ -50,7 +50,7 @@ unzip linkup_0.98-beta_frontend_and_readme.zip
 2. **Start backend services** using the bash script:  
 ```bash
   cd backend
-  ./run_full_backend   # OR ./run_demo_backend
+  ./run_full_backend.sh   # OR ./run_demo_backend
 ```
 *Note: First launches may take longer if services like MongoDB, Redis, etc., are not preinstalled.*
 
