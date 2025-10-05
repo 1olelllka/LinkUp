@@ -69,6 +69,11 @@ unzip linkup_0.98-beta_frontend_and_readme.zip
     # Run localtunnel
     npx localtunnel --port 8888 --subdomain linkup
 ```
+7. Instead of custom stopping & removal of backend containers, run this command inside of **backend folder**
+```bash
+   # Given you're inside of backend folder
+   ./close_backend.sh
+```
 
 **Note: if you encounter permission errors while running bash scripts, run this command**
 ```bash
