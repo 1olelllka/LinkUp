@@ -61,13 +61,17 @@ unzip linkup_0.98-beta_frontend_and_readme.zip
   docker compose up --build -d
 ```
 5. Access the website in your browser by url http://localhost:5173 *(Only accessible on your machine)*
-6. Next, configure LocalTunnel (used as a custom CDN emulator)
+6. Next, configure LocalTunnel (used as a custom CDN emulator for images)
 ```bash
     # Install Node (if not preinstalled)
     brew install node # MacOS via Homebrew
     sudo apt install -y nodejs npm # Ubuntu/Debian
     # Run localtunnel
     npx localtunnel --port 8888 --subdomain linkup
+    # On another terminal run following to get localtunnel password
+    curl https://loca.lt/mytunnelpassword
+    # Afterwards rerun the localtunnel and go to https://linkup.loca.lt and pass the localtunnel password
+    # retreived from previous command (it should look like IPv4 address)
 ```
 7. Instead of custom stopping & removal of backend containers, run this command inside of **backend folder**
 ```bash
