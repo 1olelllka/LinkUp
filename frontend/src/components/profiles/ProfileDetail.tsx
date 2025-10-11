@@ -64,13 +64,13 @@ export function ProfileDetail() {
             <div className="flex justify-center md:justify-start gap-8 pt-2">
               <div className="text-center">
                 <NavLink to={`/profile/${userId}/followers`}>
-                  <p className="text-lg font-bold">{followers.followListPage?.totalElements}</p>
+                  <p className="text-lg font-bold">{followers.followerNumber}</p>
                   <p className="text-sm text-muted-foreground">Followers</p>
                 </NavLink>
               </div>
               <div className="text-center">
                 <NavLink to={`/profile/${userId}/followees`}>
-                  <p className="text-lg font-bold">{followee.followListPage?.totalElements}</p>
+                  <p className="text-lg font-bold">{followee.followeeNumber}</p>
                   <p className="text-sm text-muted-foreground">Following</p>
                 </NavLink>
               </div>
@@ -87,6 +87,7 @@ export function ProfileDetail() {
                         .then(response => {
                           if (response.status == 200) {
                             setIsFollowing(false);
+                            followers.setFollowerNumber(prev => prev - 1);
                           } else {
                             toast.warning("Unknown error occured. Please try again later. The request failed with status " + response.status);
                           }
@@ -111,6 +112,7 @@ export function ProfileDetail() {
                       .then(response => {
                         if (response.status == 200) {
                           setIsFollowing(true);
+                          followers.setFollowerNumber(prev => prev + 1);
                         } else {
                           toast.warning("Unknown error occured. Please try again later. The request failed with status " + response.status);
                         }

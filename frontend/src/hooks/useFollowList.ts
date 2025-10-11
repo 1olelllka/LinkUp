@@ -11,23 +11,31 @@ export const useFollowList = (data: {userId: string | undefined, type: "followee
     const pageNumber = searchParams[0].get("page");
     const [error, setError] = useState<AxiosError | null>(null);
     const [loading, setLoading] = useState(false);
+    const [followerNumber, setFollowerNumber] = useState(0);
+    const [followeeNumber, setFolloweeNumber] = useState(0);
 
     useEffect(() => {
         if (data.userId) {
             setLoading(true);
             if (data.type === "followee") {
                 getFolloweesForSpecificProfile(data.userId, pageNumber)
-                .then(setFollowListPage)
+                .then((response) => {
+                    setFollowListPage(response);
+                    setFolloweeNumber(response.totalElements)
+            })
                 .catch(setError)
                 .finally(() => setLoading(false));
             } else {
                 getFollowersForSpecificProfile(data.userId, pageNumber)
-                .then(setFollowListPage)
+                .then((response) => {
+                    setFollowListPage(response);
+                    setFollowerNumber(response.totalElements)
+                })
                 .catch(setError)
                 .finally(() => setLoading(false));
             }
         }
     }, [data.userId, pageNumber, data.type]);
 
-    return {followListPage, error, loading}
+    return {followListPage, error, loading, followeeNumber, setFolloweeNumber, followerNumber, setFollowerNumber}
 }
