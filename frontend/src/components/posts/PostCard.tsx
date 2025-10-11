@@ -2,8 +2,9 @@ import type { Post } from "@/types/Post";
 import { useProfileDetail } from "@/hooks/useProfileDetail";
 import { CustomAvatar } from "../profiles/CustomAvatar";
 import { NavLink } from "react-router";
-import { FeedCommentForm } from "../feed/FeedCommentForm";
+// import { FeedCommentForm } from "../feed/FeedCommentForm";
 import { toast } from "sonner";
+import { FeedCommentSheet } from "../feed/FeedCommentSheet";
 
 
 export const PostCard = ({ id, user_id, desc, image, created_at }: Post) => {
@@ -36,7 +37,12 @@ export const PostCard = ({ id, user_id, desc, image, created_at }: Post) => {
               />
           </div>
         )}
-        <FeedCommentForm postId={id}/>
+        {/* <FeedCommentForm postId={id}/> */}
+        <div className="flex space-x-4 text-sm text-gray-500 pt-2">
+            <FeedCommentSheet children={
+              <span className="cursor-pointer">💬 Comment</span>
+            } postId={id}/>
+        </div>
       </div>
       }
     </>

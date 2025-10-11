@@ -6,6 +6,7 @@ import { useProfileStore } from "@/store/useProfileStore";
 import { Trash } from "lucide-react";
 import type { AxiosError } from "axios";
 import { toast } from "sonner";
+import { Link } from "react-router";
 
 export function Comments({
   postId,
@@ -49,7 +50,9 @@ export function Comments({
           <CustomAvatar name={comment?.name} photo={comment?.photo} size={32} />
           <div>
             <p className="font-medium text-sm">{comment?.name}</p>
-            <p className="text-xs text-muted-foreground">@{comment?.username}</p>
+            <Link to={"/profile/" + comment.user_id}>
+              <p className="text-xs text-muted-foreground hover:underline">@{comment?.username}</p>
+            </Link>
           </div>
         </div>
         
