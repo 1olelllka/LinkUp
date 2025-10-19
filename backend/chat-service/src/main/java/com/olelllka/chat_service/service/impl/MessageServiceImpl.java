@@ -6,13 +6,13 @@ import com.olelllka.chat_service.repository.ChatRepository;
 import com.olelllka.chat_service.repository.MessageRepository;
 import com.olelllka.chat_service.rest.exception.AuthException;
 import com.olelllka.chat_service.rest.exception.NotFoundException;
+import com.olelllka.chat_service.service.AsyncMessageHandlingService;
 import com.olelllka.chat_service.service.JWTUtil;
 import com.olelllka.chat_service.service.MessageService;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -24,6 +24,7 @@ public class MessageServiceImpl implements MessageService {
     private final MessageRepository repository;
     private final ChatRepository chatRepository;
     private final JWTUtil jwtUtil;
+    private final AsyncMessageHandlingService messageHandlingService;
 
     @Override
     public Page<MessageEntity> getMessagesForChat(String chatId, Pageable pageable, String jwt) {
@@ -52,20 +53,9 @@ public class MessageServiceImpl implements MessageService {
                 throw new AuthException(ex.getMessage());
             }
             Optional.of(updatedMsg.getContent()).ifPresent(msg::setContent);
+            messageHandlingService.updateChatsLastMessageInDatabase(msg);
             return repository.save(msg);
         }).orElseThrow(() -> new NotFoundException("Message with such id was not found."));
-    }
-
-    @Override
-    @Async
-    public void saveMessageToDatabase(MessageEntity entity) {
-        repository.save(entity);
-        chatRepository.findById(entity.getChatId()).map((chat) -> {
-            chat.setLastMessage(entity.getContent());
-            chat.setTime(entity.getCreatedAt());
-            chatRepository.save(chat);
-            return chat;
-        }).orElseThrow(() -> new NotFoundException("Chat with such id does not exist."));
     }
 
     @Override
@@ -79,7 +69,7 @@ public class MessageServiceImpl implements MessageService {
             } catch (JwtException | IllegalArgumentException ex) {
                 throw new AuthException(ex.getMessage());
             }
-        }
-        repository.deleteById(msgId);
+            messageHandlingService.deleteMessageFromDatabase(entity);
+        } else repository.deleteById(msgId);
     }
 }

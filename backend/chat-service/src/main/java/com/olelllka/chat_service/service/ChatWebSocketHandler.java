@@ -25,7 +25,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     private ChatRepository chatRepository;
-    private MessageService messageService;
     private MessagePublisher messagePublisher;
     private JWTUtil jwtUtil;
     private ProfileFeign profileService;
@@ -33,18 +32,19 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private static final ConcurrentHashMap<String, UUID> authenticatedSessions = new ConcurrentHashMap<>();
     private ResponseEntity<User> req1;
     private ResponseEntity<User> req2;
+    private AsyncMessageHandlingService messageHandlingService;
 
     @Autowired
     public ChatWebSocketHandler(ChatRepository chatRepository,
                                 ProfileFeign profileService,
                                 MessagePublisher messagePublisher,
-                                MessageService messageService,
+                                AsyncMessageHandlingService messageHandlingService,
                                 JWTUtil jwtUtil) {
         this.chatRepository = chatRepository;
         this.messagePublisher = messagePublisher;
         this.profileService = profileService;
         this.jwtUtil = jwtUtil;
-        this.messageService = messageService;
+        this.messageHandlingService = messageHandlingService;
     }
 
     @Override
@@ -122,7 +122,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 .createdAt(new Date())
                 .content(chatMessage)
                 .build();
-        messageService.saveMessageToDatabase(msgToSave);
+        messageHandlingService.saveMessageToDatabase(msgToSave);
+//        messageService.saveMessageToDatabase(msgToSave);
     }
 
     @Override

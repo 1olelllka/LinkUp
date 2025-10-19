@@ -2,9 +2,7 @@ package com.olelllka.chat_service.service;
 
 import com.olelllka.chat_service.TestDataUtil;
 import com.olelllka.chat_service.domain.dto.MessageDto;
-import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
-import com.olelllka.chat_service.repository.ChatRepository;
 import com.olelllka.chat_service.repository.MessageRepository;
 import com.olelllka.chat_service.rest.exception.AuthException;
 import com.olelllka.chat_service.rest.exception.NotFoundException;
@@ -34,7 +32,7 @@ public class MessageServiceUnitTest {
     @Mock
     private JWTUtil jwtUtil;
     @Mock
-    private ChatRepository chatRepository;
+    private AsyncMessageHandlingService asyncMessageHandlingService;
     @InjectMocks
     private MessageServiceImpl messageService;
 
@@ -143,7 +141,7 @@ public class MessageServiceUnitTest {
         when(jwtUtil.extractId(jwt)).thenReturn(msg.getFrom().toString());
         messageService.deleteSpecificMessage(id, jwt);
         // then
-        verify(messageRepository, times(1)).deleteById(id);
+        verify(asyncMessageHandlingService, times(1)).deleteMessageFromDatabase(msg);
         verify(messageRepository, times(1)).findById(id);
         verify(jwtUtil, times(1)).extractId(jwt);
     }
@@ -163,20 +161,4 @@ public class MessageServiceUnitTest {
         verify(messageRepository, times(1)).findById(id);
         verify(jwtUtil, times(1)).extractId(jwt);
     }
-
-    @Test
-    public void testThatAsyncMessageSavingWorksFine() {
-        String chatId = "1234";
-        MessageEntity msg = TestDataUtil.createMessageEntity(chatId);
-        msg.setContent("Test-Content");
-        ChatEntity chat = TestDataUtil.createChatEntity();
-        // when
-        when(chatRepository.findById(chatId)).thenReturn(Optional.of(chat));
-        // then
-        messageService.saveMessageToDatabase(msg);
-        assertEquals(msg.getContent(), chat.getLastMessage());
-        assertEquals(msg.getCreatedAt(), chat.getTime());
-        verify(messageRepository, times(1)).save(msg);
-    }
-
 }

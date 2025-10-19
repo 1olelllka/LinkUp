@@ -24,7 +24,8 @@ type ChatWindowProps = {
   receiverId: string | undefined;
   receiverName: string;
   setRefresh: (page: number) => void;
-  allChats: ChatListResponse[]
+  allChats: ChatListResponse[];
+  setAllChats: React.Dispatch<React.SetStateAction<ChatListResponse[]>>
 };
 
 export const ChatWindow = ({
@@ -33,7 +34,8 @@ export const ChatWindow = ({
   receiverName,
   receiverId,
   setRefresh,
-  allChats
+  allChats,
+  setAllChats
 }: ChatWindowProps) => {
   const { connectionStatus, lastMessage, sendMessage } = useChatWebSocket(
     senderId,
@@ -104,11 +106,15 @@ export const ChatWindow = ({
       };
       setMessages((prev) => [...prev, messageToSend]);
       sendMessage(JSON.stringify(messageToSend));
-      if (!allChats.find((chat) => chat.id == chatId)) {
+      const foundChat = allChats.find((chat) => chat.id == chatId);
+      if (!foundChat) {
         // trigger update list of chats if such chat does not exist
         // if chat exists on another page which wasn't fetched yet, it'll
         // be moved to the top of list by backend
         setRefresh(Math.random() * 1000);
+      } else {
+        const newChat = {...foundChat, lastMessage: messageToSend.content}
+        setAllChats((prev) => [newChat, ...(prev.filter(c => c != foundChat))])
       }
       setMessage("");
     }
@@ -124,6 +130,14 @@ export const ChatWindow = ({
         setMessages((prev) =>
           prev.map((obj) => (obj.id === updateId ? { ...obj, ...res } : obj))
         );
+        const foundChat = allChats.find(chat => chat.id == chatId);
+        const lastMsg = messages[messages.length - 1].id == updateId;
+        if (!foundChat) {
+          setRefresh(Math.random() * 1000);
+        } else if (foundChat && lastMsg){
+          const newChat = {...foundChat, lastMessage: messageToSend.content}
+          setAllChats((prev) => [newChat, ...(prev.filter(c => c != foundChat))])
+        }
         setUpdateId(null);
       } catch (err) {
         const error = err as AxiosError;
@@ -226,9 +240,15 @@ export const ChatWindow = ({
                             deleteSpecificMessageById(msg.id)
                               .then((response) => {
                                 if (response.status == 204) {
+                                  const lastMsg = messages[messages.length - 1] == msg
                                   setMessages((prev) =>
                                     prev.filter((m) => m.id != msg.id)
                                   );
+                                  const foundChat = allChats.find(obj => obj.id == msg.chatId);
+                                  if (foundChat && lastMsg) {
+                                    const newChat = {...foundChat, lastMessage: "*The message was deleted*"};
+                                    setAllChats((prev) => [newChat, ...(prev.filter(chat => chat != foundChat))])
+                                  }
                                 } else {
                                   toast.warning(
                                     "Unexpected response from server received: " +

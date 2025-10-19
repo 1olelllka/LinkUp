@@ -169,6 +169,7 @@ export const ChatList = () => {
                     receiverId={selectedChat.receiverId}
                     setRefresh={setRefresh}
                     allChats={allChats}
+                    setAllChats={setAllChats}
                   />
                 ) : (
                   <div className="flex items-center justify-self-center h-[90%] fixed">

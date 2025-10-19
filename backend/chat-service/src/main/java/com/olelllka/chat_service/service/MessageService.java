@@ -10,7 +10,5 @@ public interface MessageService {
 
     MessageEntity updateMessage(String msgId, MessageDto updatedMsg, String jwt);
 
-    void saveMessageToDatabase(MessageEntity entity);
-
     void deleteSpecificMessage(String msgId, String jwt);
 }
