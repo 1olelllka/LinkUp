@@ -172,9 +172,7 @@ public class StoryControllerIntegrationTests {
                         .header("Authorization", "Bearer " + generateJwt(profileId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(MockMvcResultMatchers.status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.available").value(false))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.image").value("circuit-breaker.url"));
+                .andExpect(MockMvcResultMatchers.status().isServiceUnavailable());
     }
 
     @Test

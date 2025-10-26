@@ -3,6 +3,7 @@ package com.olelllka.stories_service.rest.controller;
 import com.olelllka.stories_service.domain.dto.ErrorDto;
 import com.olelllka.stories_service.rest.exception.AuthException;
 import com.olelllka.stories_service.rest.exception.NotFoundException;
+import com.olelllka.stories_service.rest.exception.ServiceUnavailableException;
 import com.olelllka.stories_service.rest.exception.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,11 @@ public class AdviceController {
     @ExceptionHandler(AuthException.class)
     public ResponseEntity<ErrorDto> authException(AuthException ex) {
         return new ResponseEntity<>(ErrorDto.builder().message(ex.getMessage()).build(), HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<ErrorDto> serviceUnavailableException(ServiceUnavailableException ex) {
+        return new ResponseEntity<>(ErrorDto.builder().message(ex.getMessage()).build(), HttpStatus.SERVICE_UNAVAILABLE);
     }
 
 }

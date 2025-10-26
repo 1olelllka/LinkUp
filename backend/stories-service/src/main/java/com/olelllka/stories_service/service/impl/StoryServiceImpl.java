@@ -7,6 +7,7 @@ import com.olelllka.stories_service.mapper.StoryMapper;
 import com.olelllka.stories_service.repository.StoryRepository;
 import com.olelllka.stories_service.rest.exception.AuthException;
 import com.olelllka.stories_service.rest.exception.NotFoundException;
+import com.olelllka.stories_service.rest.exception.ServiceUnavailableException;
 import com.olelllka.stories_service.service.JWTUtil;
 import com.olelllka.stories_service.service.MessagePublisher;
 import com.olelllka.stories_service.service.SHA256;
@@ -107,13 +108,7 @@ public class StoryServiceImpl implements StoryService {
         } else if (t instanceof AuthException) {
             throw new AuthException(t.getMessage());
         }
-        log.info(t.getMessage());
-        return StoryEntity.builder()
-                .id("circuit-breaker.id")
-                .image("circuit-breaker.url")
-                .available(false)
-                .userId(UUID.randomUUID())
-                .createdAt(new Date())
-                .build();
+//        log.info(t.getMessage());
+        throw new ServiceUnavailableException("Service is temporarily not available.");
     }
 }

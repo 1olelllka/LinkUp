@@ -91,8 +91,7 @@ public class FeedControllerIntegrationTest {
         POSTS_SERVICE.stubFor(WireMock.get("/posts/123").willReturn(WireMock.serverError()));
         mockMvc.perform(MockMvcRequestBuilders.get("/feeds/" + profileId)
                         .header("Authorization", "Bearer " + generateJwt(profileId)))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.totalElements").value(0));
+                .andExpect(MockMvcResultMatchers.status().isServiceUnavailable());
     }
 
     private String generateJwt(UUID id) {

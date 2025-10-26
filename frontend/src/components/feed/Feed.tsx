@@ -19,9 +19,15 @@ export const Feed = ({userId}: {userId: string}) => {
         ? <ServiceError err={error} />
         : 
         <>
-          {posts?.map((item) => (
-            <PostCard key={item.id} {...item} />
-          ))}
+          {posts.length > 0
+            ? posts.map((item) => (
+              <PostCard key={item.id} {...item} />
+            ))
+            : 
+            <div className="flex justify-center">
+              <h1 className="text-lg font-bold">🏕️ No Feeds found</h1>
+            </div>
+          }
           {loading && <PageLoader />}
           {postPage && !postPage.last && 
             <div className="mt-2">

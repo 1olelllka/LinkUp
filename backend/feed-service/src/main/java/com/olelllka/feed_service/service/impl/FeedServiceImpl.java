@@ -3,6 +3,7 @@ package com.olelllka.feed_service.service.impl;
 import com.olelllka.feed_service.domain.dto.PostDto;
 import com.olelllka.feed_service.feign.PostsInterface;
 import com.olelllka.feed_service.rest.exception.AuthException;
+import com.olelllka.feed_service.rest.exception.ServiceUnavailableException;
 import com.olelllka.feed_service.service.FeedService;
 import com.olelllka.feed_service.service.JWTUtil;
 import com.olelllka.feed_service.service.SHA256;
@@ -61,6 +62,6 @@ public class FeedServiceImpl implements FeedService {
     }
 
     private Page<PostDto> fallbackMethod(UUID profileId, Pageable pageable, String jwt, Throwable t) {
-        return Page.empty();
+        throw new ServiceUnavailableException("Service is temporarily not available.");
     }
 }

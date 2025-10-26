@@ -3,6 +3,7 @@ package com.olelllka.feed_service.rest.controller;
 import com.olelllka.feed_service.domain.dto.ErrorMessage;
 import com.olelllka.feed_service.rest.exception.AuthException;
 import com.olelllka.feed_service.rest.exception.NotFoundException;
+import com.olelllka.feed_service.rest.exception.ServiceUnavailableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -19,5 +20,10 @@ public class AdviceController {
     @ExceptionHandler(AuthException.class)
     public ResponseEntity<ErrorMessage> authException(AuthException ex) {
         return new ResponseEntity<>(ErrorMessage.builder().message(ex.getMessage()).build(), HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<ErrorMessage> serviceUnavailableException(ServiceUnavailableException ex) {
+        return new ResponseEntity<>(ErrorMessage.builder().message(ex.getMessage()).build(), HttpStatus.SERVICE_UNAVAILABLE);
     }
 }
