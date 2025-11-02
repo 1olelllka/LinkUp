@@ -1,16 +1,29 @@
 # LinkUp!
 ![Status](https://img.shields.io/badge/status-in%20development-yellow)
 ![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)  
-*LinkUp! is a social networking platform designed to connect users through posts, stories, chat, and real-time notifications. Built with a microservices architecture, it emphasizes scalability, resilience, and modern frontend design.*
+> A modern social networking platform built with microservices architecture, emphasizing scalability and real-time interactions.
 
-## Table of Contents
+LinkUp! connects users through posts, stories, real-time chat, and live notifications. Built as a portfolio project to demonstrate full-stack development with modern cloud-native patterns.
+
+## Table of Contents 
+ - [Key Features](#key-features)
  - [Releases](#releases)
     - [0.98-BETA](#-098-beta)
+    - [1.0-STABLE](#-10-stable)
+ - [How to Run LinkUp!](#how-to-run-linkup)
  - [Current Status](#current-status)
  - [Tech Stack](#tech-stack)
  - [Project Structure](#project-structure)
     - [Backend Architecture](#backend-architecture)
  - [License](#license)
+
+## Key Features
+- 📱 Real-time chat and notifications via WebSocket
+- 🎨 Modern, responsive UI with React and TailwindCSS
+- 🏗️ Microservices architecture with 8+ independent services
+- 🔍 Advanced search with ElasticSearch
+- 🐳 Fully containerized with Docker
+- 🔐 OAuth2 authentication (Google)
 
 ## Releases
 
@@ -31,26 +44,42 @@
 - Automated start-up script for all services
 - Frontend-ready with React, TailwindCSS, and ShadCN
 
-### How to Run 0.98-BETA
+### 🔮 1.0-STABLE
+
+#### Release Notes
+- First stable version – fixed critical bugs from 0.98-BETA
+- Docker Compose files now preserve secrets correctly via .env
+- Added automated start-up script for Windows
+- Fixed chat service’s last message handling
+- Fixed circuit breaker behavior with service unavailable error for improved UX
+- Cosmetic and bug fixes in some frontend components
+  
+#### Highlights
+- Secure and configurable setup via .env for local or containerized environments
+- One-step automated start-up script for all services
+
+## How to Run LinkUp!
 **Prerequisites:**  
 - Docker & Docker Compose installed  
 - Sufficient RAM for chosen version (5.5GB full / 3.4GB demo)
 
-**Steps**
-1. Download the 0.98-BETA Release archives (they should start with *linkup_0.98-beta_...*) from *Releases Tab* and unzip it
+**Steps (released versions)**
+1. Download the Release archives (they should start with `linkup_<version>_...`) from *Releases Tab* and unzip it
    - Create folder where you want to download all zip archives
    - Unzip frontend archive
 ```bash
-unzip linkup_0.98-beta_frontend_and_readme.zip
+unzip linkup_<version>_frontend_and_readme.zip
 ```
    - Then, run a bash script to unarchive backend
 ```bash
    ./unzip_backend.sh
+   # Or run unzip_backend.cmd file if using Windows (available from 1.0-STABLE)
 ```
 2. **Start backend services** using the bash script:  
 ```bash
   cd backend
-  ./run_full_backend.sh   # OR ./run_demo_backend
+  ./run_full_backend.sh   # OR ./run_demo_backend.sh
+  # If you use Windows, run the same files with .cmd extension (available from 1.0-STABLE)
 ```
 *Note: First launches may take longer if services like MongoDB, Redis, etc., are not preinstalled.*
 
@@ -63,7 +92,7 @@ unzip linkup_0.98-beta_frontend_and_readme.zip
 5. Access the website in your browser by url http://localhost:5173 *(Only accessible on your machine)*
 6. Next, configure LocalTunnel (used as a custom CDN emulator for images)
 ```bash
-    # Install Node (if not preinstalled)
+    # Install Node (if not preinstalled) (for Windows visit https://nodejs.org/en/download)
     brew install node # MacOS via Homebrew
     sudo apt install -y nodejs npm # Ubuntu/Debian
     # Run localtunnel
@@ -77,6 +106,7 @@ unzip linkup_0.98-beta_frontend_and_readme.zip
 ```bash
    # Given you're inside of backend folder
    ./close_backend.sh
+   # If you use Windows, run the same files with .cmd extension (available from 1.0-STABLE)
 ```
 
 8. In order to stop frontend run this command inside of **frontend folder**
@@ -87,8 +117,61 @@ unzip linkup_0.98-beta_frontend_and_readme.zip
 
 **Note: if you encounter permission errors while running bash scripts, run this command**
 ```bash
-   chmod +x <name_of_bash_script>.sh
+   chmod +x <name_of_bash_script>.sh # on Linux/Unix-based systems
 ```
+<hr>
+
+**Steps (cloning repository)**
+
+*Note: stable updates are added to main branch*
+1. Clone the repository
+```bash
+   git clone https://github.com/1olelllka/LinkUp.git
+```
+2. Add your own **application.properties** file for auth service and paste this:
+```.env
+server.port=8010
+spring.application.name=auth-service
+
+eureka.client.serviceUrl.defaultZone=${EUREKA_URI:http://localhost:8761/eureka}
+eureka.client.fetchRegistry=true
+eureka.client.registerWithEureka=true
+eureka.instance.preferIpAddress=true
+eureka.instance.metadata-map.version=v0.8
+eureka.instance.metadata-map.region=eu-central
+
+management.endpoint.health.show-details=always
+management.endpoints.web.exposure.include=health, info
+management.endpoints.web.base-path=/auth/actuator
+management.endpoints.path-mapping.health=/health
+
+spring.data.redis.host=${REDIS_HOST:localhost}
+spring.data.redis.port=${REDIS_PORT:6375}
+
+spring.data.mongodb.uri=${MONGO_URI:mongodb://admin:admin@localhost:27014/auth?authSource=admin}
+spring.data.mongodb.uuid-representation=standard
+
+spring.rabbitmq.host=${RABBIT_HOST:localhost}
+spring.rabbitmq.port=${RABBIT_PORT:5672}
+spring.rabbitmq.username=${RABBIT_USERNAME:myuser}
+spring.rabbitmq.password=${RABBIT_PASSWORD:secret}
+
+spring.cloud.compatibility-verifier.enabled=false
+
+spring.security.oauth2.client.registration.google.client-id=<your-google-client-id>
+spring.security.oauth2.client.registration.google.client-secret=<your-google-client-secret>
+spring.security.oauth2.client.registration.google.redirect-uri=http://localhost:8010/login/oauth2/code/google
+
+springdoc.api-docs.path=/auth/v3/api-docs
+springdoc.swagger-ui.path=/auth/swagger-ui.html
+```
+*Add your google client id and google client secret key, otherwise contact me to get my own keys*
+
+
+3. Follow the steps on releases tab (from step 2)
+
+
+*Note: if you want to change environmental variables to docker compose files you should override* `.env.example` *files I added as example and rename them to* `.env` *. Do this with your own risk, because it can make cascade changes. By default all of the services have dummy values that are only for demo purposes.*
 
 #### ⚠️ Known issues
   - Bad responsiveness on small screens
@@ -100,7 +183,7 @@ unzip linkup_0.98-beta_frontend_and_readme.zip
 
 ## Current Status
 
-#### 🚧 Development in Progress 🚧
+#### 👨🏻‍💻 Stable version 1.0 released. Developing new functionality and improving old ones for future releases. Demo Videos/Photos will be added later
 
 ## Tech Stack
 - **Client**: React.js, ShadCN, TailwindCSS
@@ -116,8 +199,6 @@ unzip linkup_0.98-beta_frontend_and_readme.zip
 - **Search Engine**: ElasticSearch (primary), with Neo4J as fallback
 
 - **Web Server**: nginx (in plans)
-
-- **CDN**: Cloudflare (if public domain available)
 
 - **Logs**: ELK Stack (in plans)
 
