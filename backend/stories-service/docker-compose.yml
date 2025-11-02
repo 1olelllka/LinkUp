@@ -15,18 +15,19 @@ services:
       - REDIS_PORT=6379
       - RABBIT_HOST=rabbitmq
       - RABBIT_PORT=5672
-      - RABBIT_USERNAME=myuser
-      - RABBIT_PASSWORD=secret
+      - RABBIT_USERNAME=${RABBIT_USERNAME}
+      - RABBIT_PASSWORD=${RABBIT_PASSWORD}
       - PROFILE_HOST=host.docker.internal
-      - MONGO_URI=mongodb://admin:admin@host.docker.internal:27017/storiesDB?authSource=admin
+      - MONGO_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
   database:
     container_name: mongodb
     image: mongo:8.0
     ports:
     - "27017:27017"
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=admin
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-admin}
     volumes:
       - "mongo_data:/data/db"
   cache:

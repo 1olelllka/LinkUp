@@ -3,6 +3,7 @@ package com.olelllka.auth_service.service;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -14,7 +15,8 @@ import java.util.UUID;
 @Service
 public class JWTUtil {
 
-    private String key = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+    @Value("${JWT_SECRET:0d9aa86975f076cbb84ab112f361a4b254c6f553d41da0918b439300e592ed3f}")
+    private String key;
 
     public String generateAccessJWT(UUID userId) {
         return Jwts.builder()

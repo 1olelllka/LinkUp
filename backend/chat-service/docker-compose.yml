@@ -9,21 +9,22 @@ services:
     networks:
       - linkup-net
     environment:
-      - MONGO_URI=mongodb://admin:admin@host.docker.internal:27015/chatDB?authSource=admin
+      - MONGO_URI=${MONGO_URI}
       - RABBIT_HOST=rabbitmq
       - RABBIT_PORT=5672
-      - RABBIT_USERNAME=myuser
-      - RABBIT_PASSWORD=secret
+      - RABBIT_USERNAME=${RABBIT_USERNAME}
+      - RABBIT_PASSWORD=${RABBIT_PASSWORD}
       - EUREKA_URI=http://eureka:8761/eureka
       - PROFILE_HOST=host.docker.internal
+      - JWT_SECRET=${JWT_SECRET}
   database:
     container_name: chat_mongo
     image: mongo:8.0
     ports:
       - "27015:27017"
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=admin
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-admin}
     volumes:
       - "mongo_data:/data/db"
 

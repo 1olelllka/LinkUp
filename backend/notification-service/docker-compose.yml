@@ -12,18 +12,19 @@ services:
       - EUREKA_URI=http://eureka:8761/eureka
       - RABBIT_HOST=rabbitmq
       - RABBIT_PORT=5672
-      - RABBIT_USERNAME=myuser
-      - RABBIT_PASSWORD=secret
+      - RABBIT_USERNAME=${RABBIT_USERNAME}
+      - RABBIT_PASSWORD=${RABBIT_PASSWORD}
       - PROFILE_HOST=host.docker.internal
-      - MONGO_URI=mongodb://admin:admin@host.docker.internal:27016/notificationDB?authSource=admin
+      - MONGO_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
   mongo:
     container_name: notification_mongo
     image: mongo:8.0
     ports:
       - "27016:27017"
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=admin
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-admin}
     volumes:
       - "mongo_data:/data/db"
 

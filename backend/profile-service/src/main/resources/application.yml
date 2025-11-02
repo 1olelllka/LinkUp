@@ -5,7 +5,7 @@ spring:
     uri: ${NEO4J_URI:bolt://localhost:7687}
     authentication:
       username: ${NEO4J_USERNAME:neo4j}
-      password: ${NEO4J_PASSWORD:product_admin}
+      password: ${NEO4J_PASSWORD:neo4j-admin}
   data:
     elasticsearch:
       repositories:

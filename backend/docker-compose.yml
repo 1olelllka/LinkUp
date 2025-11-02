@@ -10,7 +10,7 @@ services:
       - "9200:9200"
       - "9300:9300"
     environment:
-      - ELASTIC_PASSWORD=secret
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-secret}
       - discovery.type=single-node
       - xpack.security.enabled=false
       - http.cors.enabled=true
@@ -27,8 +27,8 @@ services:
       - "5672:5672"
       - "15672:15672"
     environment:
-      - RABBITMQ_DEFAULT_PASS=secret
-      - RABBITMQ_DEFAULT_USER=myuser
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-secret}
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-myuser}
     networks:
       - linkup-net
 

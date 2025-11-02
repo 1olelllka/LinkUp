@@ -14,10 +14,11 @@ services:
       - REDIS_PORT=6377
       - RABBIT_HOST=rabbitmq
       - RABBIT_PORT=5672
-      - RABBIT_USERNAME=myuser
-      - RABBIT_PASSWORD=secret
+      - RABBIT_USERNAME=${RABBIT_USERNAME}
+      - RABBIT_PASSWORD=${RABBIT_PASSWORD}
       - POSTS_HOST=host.docker.internal
       - PROFILE_HOST=host.docker.internal
+      - JWT_SECRET=${JWT_SECRET}
   redis:
     container_name: feed_redis
     image: redis:7.2.6
