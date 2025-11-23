@@ -9,7 +9,10 @@ services:
     networks:
       - linkup-net
     environment:
-      - MONGO_URI=${MONGO_URI}
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_HOST=host.docker.internal
+      - MONGO_PORT=27015
       - RABBIT_HOST=rabbitmq
       - RABBIT_PORT=5672
       - RABBIT_USERNAME=${RABBIT_USERNAME}

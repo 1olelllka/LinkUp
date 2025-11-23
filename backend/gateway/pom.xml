@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.olelllka</groupId>
 	<artifactId>gateway</artifactId>
-	<version>0.98</version>
+	<version>1.0-STABLE</version>
 	<name>gateway</name>
 	<description>Gateway for microservices in LinkUp</description>
 	<url/>

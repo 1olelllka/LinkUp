@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.olelllka</groupId>
 	<artifactId>profile-service</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0-STABLE</version>
 	<name>profile-service</name>
 	<description>Profile service of LinkUp application</description>
 	<url/>

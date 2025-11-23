@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.olelllka</groupId>
 	<artifactId>image-storage</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0-STABLE</version>
 	<name>image-storage</name>
 	<description>Custom simple Image storage service</description>
 	<url/>

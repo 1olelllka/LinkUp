@@ -15,7 +15,10 @@ services:
       - RABBIT_USERNAME=${RABBIT_USERNAME}
       - RABBIT_PASSWORD=${RABBIT_PASSWORD}
       - PROFILE_HOST=host.docker.internal
-      - MONGO_URI=${MONGO_URI}
+      - MONGO_HOST=host.docker.internal
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_PORT=27016
       - JWT_SECRET=${JWT_SECRET}
   mongo:
     container_name: notification_mongo

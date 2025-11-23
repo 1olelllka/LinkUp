@@ -18,7 +18,10 @@ services:
       - RABBIT_USERNAME=${RABBIT_USERNAME}
       - RABBIT_PASSWORD=${RABBIT_PASSWORD}
       - PROFILE_HOST=host.docker.internal
-      - MONGO_URI=${MONGO_URI}
+      - MONGO_HOST=host.docker.internal
+      - MONGO_PORT=27017
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
   database:
     container_name: mongodb

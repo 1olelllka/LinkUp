@@ -11,15 +11,16 @@ services:
       - EUREKA_URI=http://eureka:8761/eureka
       - POSTGRES_HOST=host.docker.internal
       - POSTGRES_PORT=5432
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=posts
-      - REDIS_URI=redis://host.docker.internal:6373/0
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
       - RABBIT_HOST=rabbitmq
       - RABBIT_PORT=5672
-      - RABBIT_USERNAME=myuser
-      - RABBIT_PASSWORD=secret
+      - RABBIT_USERNAME=${RABBIT_USERNAME}
+      - RABBIT_PASSWORD=${RABBIT_PASSWORD}
+      - REDIS_URI=redis://host.docker.internal:6373/0
       - PROFILE_URI=http://host.docker.internal:8001/profiles
+      - JWT_SECRET=${JWT_SECRET}
     command: python manage.py runserver 0.0.0.0:8000
   consumer:
     build: .
