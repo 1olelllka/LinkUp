@@ -12,6 +12,7 @@ LinkUp! connects users through posts, stories, real-time chat, and live notifica
     - [1.0-STABLE](#-10-stable)
  - [How to Run LinkUp!](#how-to-run-linkup)
  - [Current Status](#current-status)
+ - [Demo Videos](#demo-videos)
  - [Tech Stack](#tech-stack)
  - [Project Structure](#project-structure)
     - [Backend Architecture](#backend-architecture)
@@ -183,7 +184,24 @@ springdoc.swagger-ui.path=/auth/swagger-ui.html
 
 ## Current Status
 
-#### 👨🏻‍💻 Stable version 1.0 released. Developing new functionality and improving old ones for future releases. Demo Videos/Photos will be added later
+#### 👨🏻‍💻 Stable version 1.0 released. Developing new functionality and improving old ones for future releases
+
+## Demo Videos
+### 1️⃣ Authentication, Profile & Social Interaction (1:55)
+<video src="https://github.com/user-attachments/assets/46cb272e-8198-4011-b64f-e99684463583" controls width="600"></video>
+
+
+### 2️⃣ Chatting and Notifications (1:22)
+<video src="https://github.com/user-attachments/assets/920913f0-12f9-42e0-9552-c1601e1e039b" controls width="600"></video>
+
+
+### 3️⃣ Managing Posts, Comments and Stories (2:46)
+<video src="https://github.com/user-attachments/assets/b67cc21e-a24d-4c80-8121-efba593004ee" controls width="600"></video>
+
+
+#### ⚠️ Note on image loading speed
+> Images in the demo load slowly due to LocalTunnel + custom S3-like storage (no CDN).
+In a production setup (e.g., AWS S3 + CloudFront), images load instantly.
 
 ## Tech Stack
 - **Client**: React.js, ShadCN, TailwindCSS
