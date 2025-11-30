@@ -109,7 +109,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                     .read(false)
                     .createdAt(new Date())
                     .userId(targetUserId.toString())
-                    .text("User @" + req2.getBody().getUsername() + " sent you a message: " + chatMessage)
+                    .text("User @" + req1.getBody().getUsername() + " sent you a message: " + chatMessage)
                     .build();
             messagePublisher.createChatNotification(notification);
         }
