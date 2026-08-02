@@ -18,7 +18,7 @@ services:
       - RABBIT_PORT=5672
       - RABBIT_USERNAME=${RABBIT_USERNAME}
       - RABBIT_PASSWORD=${RABBIT_PASSWORD}
-      - REDIS_URI=redis://host.docker.internal:6373/0
+      - REDIS_URI=redis://host.docker.internal:6379/0
       - PROFILE_URI=http://host.docker.internal:8001/profiles
       - JWT_SECRET=${JWT_SECRET}
     command: python manage.py runserver 0.0.0.0:8000
