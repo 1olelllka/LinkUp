@@ -4,9 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.olelllka.profile_service.domain.dto.NotificationDto;
 import com.olelllka.profile_service.domain.dto.PatchProfileDto;
 import com.olelllka.profile_service.domain.dto.ProfileDocumentDto;
-import com.olelllka.profile_service.domain.entity.ProfileDocument;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
-import com.olelllka.profile_service.repository.ProfileDocumentRepository;
 import com.olelllka.profile_service.repository.ProfileRepository;
 import com.olelllka.profile_service.rest.exception.AuthException;
 import com.olelllka.profile_service.rest.exception.NotFoundException;
@@ -16,8 +14,6 @@ import com.olelllka.profile_service.service.MessagePublisher;
 import com.olelllka.profile_service.service.ProfileService;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.actuate.elasticsearch.ElasticsearchRestClientHealthIndicator;
-import org.springframework.boot.actuate.health.Status;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -34,10 +30,8 @@ import java.util.UUID;
 public class ProfileServiceImpl implements ProfileService {
 
     private final ProfileRepository repository;
-    private final ProfileDocumentRepository elasticRepository;
     private final MessagePublisher messagePublisher;
     private final JWTUtil jwtUtil;
-    private final ElasticsearchRestClientHealthIndicator elasticHealth;
 
     @Override
     @Cacheable(value = "profile", keyGenerator = "sha256KeyGenerator")
@@ -163,14 +157,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public Page<ProfileEntity> searchForProfile(String search, Pageable pageable) {
-        // I'll create two options: elasticsearch search and neo4j search.
-        // Elasticsearch's will be main and neo4j's in case of failure of elasticsearch
-        if (elasticHealth.getHealth(false).getStatus().equals(Status.UP)) {
-            Page<ProfileDocument> documents = elasticRepository.findByParams(search, pageable);
-            return documents.map(this::documentToEntity);
-        } else {
-            return repository.findProfileByParam(search, pageable);
-        }
+        return repository.findProfileByParam(search, pageable);
     }
 
     @Override
@@ -178,13 +165,4 @@ public class ProfileServiceImpl implements ProfileService {
         return repository.isFollowing(from, to);
     }
 
-    private ProfileEntity documentToEntity(ProfileDocument document) {
-        return ProfileEntity.builder()
-                .id(document.getId())
-                .username(document.getUsername())
-                .photo(document.getPhoto())
-                .name(document.getName())
-                .email(document.getEmail())
-                .build();
-    }
 }

@@ -5,5 +5,7 @@ ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} /app.jar
 COPY entry.sh /entry.sh
 
+RUN chmod +x /entry.sh
+
 ENTRYPOINT [ "/entry.sh" ]
 CMD ["java", "-jar", "/app.jar"]

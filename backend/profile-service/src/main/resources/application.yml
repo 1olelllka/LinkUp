@@ -7,12 +7,9 @@ spring:
       username: ${NEO4J_USERNAME:neo4j}
       password: ${NEO4J_PASSWORD:neo4j-admin}
   data:
-    elasticsearch:
-      repositories:
-        enabled: true
     redis:
       host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6376}
+      port: ${REDIS_PORT:6379}
   rabbitmq:
     host: ${RABBIT_HOST:localhost}
     port: ${RABBIT_PORT:5672}

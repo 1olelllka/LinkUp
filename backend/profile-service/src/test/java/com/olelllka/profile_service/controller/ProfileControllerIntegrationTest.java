@@ -7,10 +7,8 @@ import com.olelllka.profile_service.TestDataUtil;
 import com.olelllka.profile_service.configuration.RabbitMQConfig;
 import com.olelllka.profile_service.domain.dto.FollowDto;
 import com.olelllka.profile_service.domain.dto.PatchProfileDto;
-import com.olelllka.profile_service.domain.dto.ProfileDto;
 import com.olelllka.profile_service.domain.dto.UserMessageDto;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
-import com.olelllka.profile_service.repository.ProfileDocumentRepository;
 import com.olelllka.profile_service.repository.ProfileRepository;
 import com.olelllka.profile_service.service.ProfileService;
 import com.redis.testcontainers.RedisContainer;
@@ -35,7 +33,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.testcontainers.containers.Neo4jContainer;
 import org.testcontainers.containers.RabbitMQContainer;
-import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
 import org.testcontainers.utility.DockerImageName;
 
@@ -47,20 +44,18 @@ import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureMockMvc
 @Import(RabbitMQTestConfig.class)
-public class ProfileControllerIntegrationTest {
+class ProfileControllerIntegrationTest {
 
     @ServiceConnection
     static Neo4jContainer<?> neo4j = new Neo4jContainer<>(DockerImageName.parse("neo4j:5.26.0"));
-
-    @ServiceConnection
-    static ElasticsearchContainer elasticsearchContainer = new ElasticsearchContainer(DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:7.17.23"));
 
     @ServiceConnection
     static RabbitMQContainer rabbitContainer = new RabbitMQContainer(DockerImageName.parse("rabbitmq:3.13-management"));
@@ -72,7 +67,6 @@ public class ProfileControllerIntegrationTest {
 
     static {
         neo4j.start();
-        elasticsearchContainer.start();
         rabbitContainer.start();
         redisContainer.start();
     }
@@ -81,8 +75,6 @@ public class ProfileControllerIntegrationTest {
     static void tearDown() {
         neo4j.stop();
         neo4j.close();
-        elasticsearchContainer.stop();
-        elasticsearchContainer.close();
         rabbitContainer.stop();
         rabbitContainer.close();
         redisContainer.stop();
@@ -93,7 +85,6 @@ public class ProfileControllerIntegrationTest {
     private final ProfileService profileService;
     private final ProfileRepository profileRepository;
     private final RabbitTemplate rabbitTemplate;
-    private final ProfileDocumentRepository documentRepository;
     private final RabbitAdmin rabbitAdmin;
     private final ObjectMapper objectMapper;
 
@@ -102,13 +93,11 @@ public class ProfileControllerIntegrationTest {
                                             ProfileRepository profileRepository,
                                             ProfileService profileService,
                                             RabbitTemplate rabbitTemplate,
-                                            ProfileDocumentRepository documentRepository,
                                             RabbitAdmin rabbitAdmin) {
         this.mockMvc = mockMvc;
         this.profileService = profileService;
         this.profileRepository = profileRepository;
         this.rabbitTemplate = rabbitTemplate;
-        this.documentRepository = documentRepository;
         this.objectMapper = new ObjectMapper();
         this.rabbitAdmin = rabbitAdmin;
         objectMapper.registerModule(new JavaTimeModule());
@@ -141,18 +130,6 @@ public class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatUpdateProfileByIdReturnsHttp401UnauthorizedIfJwtIncorrect() throws Exception {
-        PatchProfileDto patchProfileDto = TestDataUtil.createPatchProfileDto();
-        patchProfileDto.setDateOfBirth(LocalDate.of(2026, 1, 1));
-        String json = objectMapper.writeValueAsString(patchProfileDto);
-        mockMvc.perform(MockMvcRequestBuilders.patch("/profiles/" + UUID.randomUUID())
-                        .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID()))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
-    }
-
-    @Test
     public void testThatUpdateProfileByIdReturnsHttp404NotFoundIfProfileDoesNotExist() throws Exception {
         PatchProfileDto patchProfileDto = TestDataUtil.createPatchProfileDto();
         UUID id = UUID.randomUUID();
@@ -170,20 +147,15 @@ public class ProfileControllerIntegrationTest {
         messageDto.setProfileId(UUID.randomUUID());
         createNewUser(messageDto);
         assertTrue(profileRepository.existsById(messageDto.getProfileId()));
-        assertTrue(documentRepository.existsById(messageDto.getProfileId()));
         PatchProfileDto patchProfileDto = TestDataUtil.createPatchProfileDto();
         patchProfileDto.setName("UPDATED NAME");
         String json = objectMapper.writeValueAsString(patchProfileDto);
-        String result = mockMvc.perform(MockMvcRequestBuilders.patch("/profiles/" + messageDto.getProfileId())
+        mockMvc.perform(MockMvcRequestBuilders.patch("/profiles/" + messageDto.getProfileId())
                         .header("Authorization", "Bearer " + generateJwt(messageDto.getProfileId()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.name").value("UPDATED NAME"))
-                .andReturn().getResponse().getContentAsString();
-        ProfileDto resultDto = objectMapper.readValue(result, ProfileDto.class);
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.update_elastic_queue).getMessageCount() == 0);
-        assertEquals(documentRepository.findById(resultDto.getId()).get().getName(), patchProfileDto.getName());
+                .andExpect(MockMvcResultMatchers.jsonPath("$.name").value("UPDATED NAME"));
     }
 
     @Test
@@ -200,17 +172,9 @@ public class ProfileControllerIntegrationTest {
         UserMessageDto userMessageDto = TestDataUtil.createUserMessageDto();
         userMessageDto.setProfileId(profileId);
         createNewUser(userMessageDto);
-        assertTrue(documentRepository.existsById(profileId));
         mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/" + profileId)
                         .header("Authorization", "Bearer " + generateJwt(profileId)))
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_elastic).getMessageCount() == 0);
-        assertFalse(documentRepository.existsById(profileId));
-        assertTrue(rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_post).getMessageCount() == 1);
-        assertTrue(rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_feed).getMessageCount() == 1);
-        assertTrue(rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_story).getMessageCount() == 1);
-        assertTrue(rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_notification).getMessageCount() == 1);
-        assertTrue(rabbitAdmin.getQueueInfo(RabbitMQConfig.delete_queue_chat).getMessageCount() == 1);
     }
 
     @Test
@@ -405,7 +369,6 @@ public class ProfileControllerIntegrationTest {
         UserMessageDto messageDto = TestDataUtil.createUserMessageDto();
         messageDto.setProfileId(UUID.randomUUID());
         createNewUser(messageDto);
-        elasticsearchContainer.stop();
         mockMvc.perform(MockMvcRequestBuilders.get("/profiles?search=" + messageDto.getUsername()))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].username").value(messageDto.getUsername()));

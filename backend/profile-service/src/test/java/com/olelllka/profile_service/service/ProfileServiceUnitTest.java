@@ -6,9 +6,7 @@ import com.olelllka.profile_service.domain.dto.NotificationDto;
 import com.olelllka.profile_service.domain.dto.PatchProfileDto;
 import com.olelllka.profile_service.domain.dto.ProfileDocumentDto;
 import com.olelllka.profile_service.domain.entity.Gender;
-import com.olelllka.profile_service.domain.entity.ProfileDocument;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
-import com.olelllka.profile_service.repository.ProfileDocumentRepository;
 import com.olelllka.profile_service.repository.ProfileRepository;
 import com.olelllka.profile_service.rest.exception.AuthException;
 import com.olelllka.profile_service.rest.exception.NotFoundException;
@@ -39,10 +37,6 @@ public class ProfileServiceUnitTest {
 
     @Mock
     private ProfileRepository repository;
-    @Mock
-    private ProfileDocumentRepository elasticRepository;
-    @Mock
-    private ElasticsearchRestClientHealthIndicator elasticHealth;
     @Mock
     private MessagePublisher messagePublisher;
     @Mock
@@ -259,7 +253,6 @@ public class ProfileServiceUnitTest {
         Page<ProfileEntity> profiles = new PageImpl<>(List.of());
         String query = "search";
         // when
-        when(elasticHealth.getHealth(false)).thenReturn(Health.down().build());
         when(repository.findProfileByParam(query, pageable)).thenReturn(profiles);
         Page<ProfileEntity> result = service.searchForProfile(query, pageable);
         // then
@@ -267,26 +260,6 @@ public class ProfileServiceUnitTest {
                 () -> assertNotNull(result),
                 () -> assertEquals(result.getTotalElements(), profiles.getTotalElements())
         );
-        verify(elasticRepository, never()).findByParams(query, pageable);
-    }
-
-    @Test
-    public void testThatSearchUserByElasticsearchWorks() {
-        // given
-        Pageable pageable = PageRequest.of(0, 1);
-        Page<ProfileEntity> profiles = new PageImpl<>(List.of());
-        Page<ProfileDocument> elasticProfiles = new PageImpl<>(List.of());
-        String query = "search";
-        // when
-        when(elasticHealth.getHealth(false)).thenReturn(Health.up().build());
-        when(elasticRepository.findByParams(query, pageable)).thenReturn(elasticProfiles);
-        Page<ProfileEntity> result = service.searchForProfile(query, pageable);
-        // then
-        assertAll(
-                () -> assertNotNull(result),
-                () -> assertEquals(result.getTotalElements(), profiles.getTotalElements())
-        );
-        verify(repository, never()).findProfileByParam(query, pageable);
     }
 
     @Test

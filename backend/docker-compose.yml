@@ -1,25 +1,6 @@
 # Global Docker Compose File
 name: LinkUp_Backend
 services:
-  elastic:
-    container_name: linkup_elasticsearch
-    image: elasticsearch:7.17.23
-    networks:
-      - linkup-net
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    environment:
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-secret}
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - http.cors.enabled=true
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-      - http.cors.allow-origin=http://localhost:8080
-      - http.cors.allow-headers=X-Requested-With,Content-Type,Content-Length,Authorization
-    volumes:
-      - "elasticsearch_data:/usr/share/elasticsearch/data"
-    mem_limit: 1g
   rabbitmq:
     container_name: linkup_rabbimtq
     image: rabbitmq:3.13-management
@@ -31,9 +12,28 @@ services:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-myuser}
     networks:
       - linkup-net
+  global_cache:
+    container_name: redis_global_cache
+    image: redis:7.2.6
+    ports:
+      - 6379:6379
+    volumes:
+      - "redis_data:/data"
+  global_mongo:
+    container_name: mongo_global_db
+    image: mongo:8.0
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-admin}
+    volumes:
+      - "mongo_data:/data/db"
 
 volumes:
   elasticsearch_data:
+  redis_data:
+  mongo_data:
 
 networks:
   linkup-net:
