@@ -11,6 +11,7 @@ import com.olelllka.profile_service.domain.entity.ProfileEntity;
 import com.olelllka.profile_service.repository.ProfileDocumentRepository;
 import com.olelllka.profile_service.repository.ProfileRepository;
 import com.olelllka.profile_service.rest.exception.AuthException;
+import com.olelllka.profile_service.rest.exception.DuplicateException;
 import com.olelllka.profile_service.rest.exception.NotFoundException;
 import com.olelllka.profile_service.rest.exception.ValidationException;
 import com.olelllka.profile_service.service.impl.ProfileServiceImpl;
@@ -35,23 +36,21 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ProfileServiceUnitTest {
+class ProfileServiceUnitTest {
 
     @Mock
     private ProfileRepository repository;
     @Mock
-    private ProfileDocumentRepository elasticRepository;
-    @Mock
-    private ElasticsearchRestClientHealthIndicator elasticHealth;
-    @Mock
     private MessagePublisher messagePublisher;
     @Mock
     private JWTUtil jwtUtil;
+    @Mock
+    private ProfileDocumentRepository documentRepository;
     @InjectMocks
     private ProfileServiceImpl service;
 
     @Test
-    public void testThatGetProfileByIdThrowsException() {
+    void testThatGetProfileByIdThrowsException() {
         // given
         UUID id = UUID.randomUUID();
         // when
@@ -61,7 +60,7 @@ public class ProfileServiceUnitTest {
     }
 
     @Test
-    public void testThatGetProfileByIdReturnsProfile() {
+    void testThatGetProfileByIdReturnsProfile() {
         // given
         UUID id = UUID.randomUUID();
         ProfileEntity profile = TestDataUtil.createNewProfileEntity();
@@ -76,7 +75,7 @@ public class ProfileServiceUnitTest {
     }
 
     @Test
-    public void testThatUpdateProfileThrowsException() {
+    void testThatUpdateProfileThrowsException() {
         UUID id = UUID.randomUUID();
         PatchProfileDto patchProfileDto = TestDataUtil.createPatchProfileDto();
         String jwt = "jwt";
@@ -86,22 +85,28 @@ public class ProfileServiceUnitTest {
         when(repository.existsById(id)).thenReturn(true);
         when(jwtUtil.extractId(jwt)).thenReturn("incorrect");
         assertThrows(AuthException.class, () -> service.updateProfile(id, patchProfileDto, jwt));
+        when(repository.existsById(id)).thenReturn(true);
+        when(jwtUtil.extractId(jwt)).thenReturn(id.toString());
+        when(repository.existsByUsernameIgnoreCase(patchProfileDto.getUsername())).thenReturn(true);
+        assertThrows(DuplicateException.class, () -> service.updateProfile(id, patchProfileDto, jwt));
 
         verify(repository, never()).save(any(ProfileEntity.class));
     }
 
     @Test
-    public void testThatUpdateProfileUpdatesTheProfile() {
+    void testThatUpdateProfileUpdatesTheProfile() {
         // given
         UUID id = UUID.randomUUID();
         PatchProfileDto patchProfileDto = TestDataUtil.createPatchProfileDto();
         patchProfileDto.setName("UPDATED NAME");
+        patchProfileDto.setUsername("UPDATED USERNAME");
         patchProfileDto.setDateOfBirth(LocalDate.of(2021, 1, 1));
         patchProfileDto.setGender(Gender.FEMALE);
         patchProfileDto.setAboutMe("UPDATED");
         patchProfileDto.setPhoto("UPDATED PHOTO");
         ProfileEntity expected = TestDataUtil.createNewProfileEntity();
         expected.setName("UPDATED NAME");
+        expected.setUsername("UPDATED USERNAME");
         expected.setDateOfBirth(LocalDate.of(2021, 1, 1));
         expected.setGender(Gender.FEMALE);
         expected.setPhoto("UPDATED PHOTO");
@@ -111,9 +116,8 @@ public class ProfileServiceUnitTest {
         when(repository.existsById(id)).thenReturn(true);
         when(jwtUtil.extractId(jwt)).thenReturn(id.toString());
         when(repository.updateProfile(id,
-                null,
+                expected.getUsername(),
                 expected.getName(),
-                null,
                 expected.getGender().toString(),
                 expected.getPhoto(),
                 expected.getAboutMe(),
@@ -129,25 +133,17 @@ public class ProfileServiceUnitTest {
                 () -> assertEquals(result.getPhoto(), patchProfileDto.getPhoto()),
                 () -> assertEquals(result.getPhoto(), patchProfileDto.getPhoto()));
         verify(repository, times(1)).updateProfile(id,
-                null,
+                expected.getUsername(),
                 expected.getName(),
-                null,
                 expected.getGender().toString(),
                 expected.getPhoto(),
                 expected.getAboutMe(),
                 expected.getDateOfBirth());
-        ProfileDocumentDto documentDto = ProfileDocumentDto.builder()
-                .id(result.getId())
-                .name(result.getName())
-                .photo(result.getPhoto())
-                .username(result.getUsername())
-                .email(result.getEmail())
-                .build();
-        verify(messagePublisher, times(1)).updateProfile(documentDto);
+        verify(documentRepository, times(1)).save(any(ProfileDocument.class));
     }
 
     @Test
-    public void testThatServicePerformsDeleteCorrectly() {
+    void testThatServicePerformsDeleteCorrectly() {
         // given
         UUID uid = UUID.randomUUID();
         String jwt = "jwt";
@@ -157,10 +153,11 @@ public class ProfileServiceUnitTest {
         // then
         verify(repository, times(1)).deleteById(uid);
         verify(messagePublisher, times(1)).deleteProfile(uid);
+        verify(documentRepository, times(1)).deleteById(uid);
     }
 
     @Test
-    public void testThatFollowNewProfileThrowsExceptions() {
+    void testThatFollowNewProfileThrowsExceptions() {
         UUID id = UUID.randomUUID();
         String jwt = "jwt";
         assertThrows(ValidationException.class, () -> service.followNewProfile(id, id, jwt));
@@ -176,7 +173,7 @@ public class ProfileServiceUnitTest {
     }
 
     @Test
-    public void testThatFollowNewProfileWorks() throws JsonProcessingException {
+    void testThatFollowNewProfileWorks() throws JsonProcessingException {
         UUID id1 = UUID.randomUUID();
         UUID id2 = UUID.randomUUID();
         String jwt = "jwt";
@@ -192,7 +189,7 @@ public class ProfileServiceUnitTest {
     }
 
     @Test
-    public void testThatUnfollowProfileThrowsException() {
+    void testThatUnfollowProfileThrowsException() {
         UUID id = UUID.randomUUID();
         String jwt = "jwt";
         assertThrows(ValidationException.class, () -> service.unfollowProfile(id, id, jwt));
@@ -208,7 +205,7 @@ public class ProfileServiceUnitTest {
     }
 
     @Test
-    public void testThatUnfollowProfileWorks() {
+    void testThatUnfollowProfileWorks() {
         UUID id1 = UUID.randomUUID();
         UUID id2 = UUID.randomUUID();
         String jwt = "jwt";
@@ -221,7 +218,7 @@ public class ProfileServiceUnitTest {
     }
 
     @Test
-    public void testThatGetFollowersByIdReturnsPageOfResults() {
+    void testThatGetFollowersByIdReturnsPageOfResults() {
         // given
         Pageable pageable = PageRequest.of(0, 1);
         Page<ProfileEntity> profiles = new PageImpl<>(List.of());
@@ -237,7 +234,7 @@ public class ProfileServiceUnitTest {
     }
 
     @Test
-    public void testThatGetFolloweesByIdReturnsPageOfResults() {
+    void testThatGetFolloweesByIdReturnsPageOfResults() {
         // given
         Pageable pageable = PageRequest.of(0, 1);
         Page<ProfileEntity> profiles = new PageImpl<>(List.of());
@@ -253,13 +250,12 @@ public class ProfileServiceUnitTest {
     }
 
     @Test
-    public void testThatSearchUserByNeo4jWorks() {
+    void testThatSearchUserByNeo4jWorks() {
         // given
         Pageable pageable = PageRequest.of(0, 1);
         Page<ProfileEntity> profiles = new PageImpl<>(List.of());
         String query = "search";
         // when
-        when(elasticHealth.getHealth(false)).thenReturn(Health.down().build());
         when(repository.findProfileByParam(query, pageable)).thenReturn(profiles);
         Page<ProfileEntity> result = service.searchForProfile(query, pageable);
         // then
@@ -267,30 +263,10 @@ public class ProfileServiceUnitTest {
                 () -> assertNotNull(result),
                 () -> assertEquals(result.getTotalElements(), profiles.getTotalElements())
         );
-        verify(elasticRepository, never()).findByParams(query, pageable);
     }
 
     @Test
-    public void testThatSearchUserByElasticsearchWorks() {
-        // given
-        Pageable pageable = PageRequest.of(0, 1);
-        Page<ProfileEntity> profiles = new PageImpl<>(List.of());
-        Page<ProfileDocument> elasticProfiles = new PageImpl<>(List.of());
-        String query = "search";
-        // when
-        when(elasticHealth.getHealth(false)).thenReturn(Health.up().build());
-        when(elasticRepository.findByParams(query, pageable)).thenReturn(elasticProfiles);
-        Page<ProfileEntity> result = service.searchForProfile(query, pageable);
-        // then
-        assertAll(
-                () -> assertNotNull(result),
-                () -> assertEquals(result.getTotalElements(), profiles.getTotalElements())
-        );
-        verify(repository, never()).findProfileByParam(query, pageable);
-    }
-
-    @Test
-    public void testThatFollowStatusWorks() {
+    void testThatFollowStatusWorks() {
         // given
         UUID id1 = UUID.randomUUID();
         UUID id2 = UUID.randomUUID();

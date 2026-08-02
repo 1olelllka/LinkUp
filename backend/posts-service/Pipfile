@@ -20,6 +20,8 @@ pyjwt = "*"
 redis = "*"
 drf-spectacular = "*"
 httpx = "*"
+pymongo = "*"
+gunicorn = "*"
 
 [dev-packages]
 

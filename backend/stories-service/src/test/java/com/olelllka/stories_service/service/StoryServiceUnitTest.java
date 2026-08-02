@@ -3,8 +3,8 @@ package com.olelllka.stories_service.service;
 import com.olelllka.stories_service.TestDataUtil;
 import com.olelllka.stories_service.domain.dto.StoryDto;
 import com.olelllka.stories_service.domain.entity.StoryEntity;
-import com.olelllka.stories_service.feign.ProfileFeign;
 import com.olelllka.stories_service.mapper.StoryMapper;
+import com.olelllka.stories_service.repository.ProfileDocumentRepository;
 import com.olelllka.stories_service.repository.StoryRepository;
 import com.olelllka.stories_service.rest.exception.AuthException;
 import com.olelllka.stories_service.rest.exception.NotFoundException;
@@ -20,7 +20,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,12 +29,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class StoryServiceUnitTest {
+class StoryServiceUnitTest {
 
     @Mock
     private StoryRepository repository;
     @Mock
-    private ProfileFeign profileFeign;
+    private ProfileDocumentRepository documentRepository;
     @Mock
     private JWTUtil jwtUtil;
     @Mock
@@ -48,7 +47,7 @@ public class StoryServiceUnitTest {
     private StoryServiceImpl service;
 
     @Test
-    public void testThatGetArchiveForUserReturnsPageOfResults() {
+    void testThatGetArchiveForUserReturnsPageOfResults() {
         // given
         UUID id = UUID.randomUUID();
         String jwt = "jwt";
@@ -68,7 +67,7 @@ public class StoryServiceUnitTest {
     }
 
     @Test
-    public void testThatGetArchiveForUserThrowsAuthException() {
+    void testThatGetArchiveForUserThrowsAuthException() {
         // given
         UUID id = UUID.randomUUID();
         String jwt = "jwt";
@@ -81,7 +80,7 @@ public class StoryServiceUnitTest {
     }
 
     @Test
-    public void testThatCreateStoryWorksWell() {
+    void testThatCreateStoryWorksWell() {
         // given
         UUID userId = UUID.randomUUID();
         StoryEntity expected = TestDataUtil.createStoryEntity();
@@ -95,7 +94,7 @@ public class StoryServiceUnitTest {
         when(repository.save(expected)).thenReturn(story);
         when(jwtUtil.extractId(jwt)).thenReturn(userId.toString());
         when(mapper.toDto(story)).thenReturn(mappedDto);
-        when(profileFeign.getProfileById(userId)).thenReturn(ResponseEntity.ok().build());
+        when(documentRepository.existsById(userId)).thenReturn(true);
         StoryEntity result = service.createStory(userId, story, jwt);
         // then
         assertAll(
@@ -149,7 +148,8 @@ public class StoryServiceUnitTest {
         UUID userId = UUID.randomUUID();
         StoryEntity story = TestDataUtil.createStoryEntity();
         String jwt = "jwt";
-        when(profileFeign.getProfileById(userId)).thenReturn(ResponseEntity.notFound().build());
+        when(documentRepository.existsById(userId)).thenReturn(false);
+        when(documentRepository.existsById(userId)).thenReturn(false);
         when(jwtUtil.extractId(jwt)).thenReturn(userId.toString());
         assertThrows(NotFoundException.class, () -> service.createStory(userId, story, jwt));
         verify(repository, never()).save(any(StoryEntity.class));

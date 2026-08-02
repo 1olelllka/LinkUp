@@ -9,6 +9,7 @@ import { Comments } from "./Comments";
 import { CommentForm } from "./CommentForm";
 import type { AxiosError } from "axios";
 import { toast } from "sonner";
+import { Pin } from "lucide-react";
 
 export function PostModal({ postId, trigger }: { postId: number, trigger: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -129,11 +130,16 @@ const handleDeleteComment = async (id: number) => {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
 
-      <DialogContent className="min-w-[90%] h-[90vh] p-0 rounded-2xl overflow-hidden">
-      <div className="flex flex-col md:flex-row w-full h-full min-h-0">
+      <DialogContent className="min-w-[90%] h-[90vh] p-0 rounded-sm border border-[#C9A063] bg-[#E8DFC8]">
+      <Pin
+        className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 z-20 drop-shadow rotate-[-8deg]"
+        style={{ color: "#D9A441" }}
+        fill="#D9A441"
+      />
+      <div className="flex flex-col md:flex-row w-full h-full min-h-0 rounded-sm overflow-hidden">
         {/* Left */}
         {post?.image && (
-          <div className="md:w-1/2 w-full h-[40vh] md:h-full bg-black flex-shrink-0">
+          <div className="md:w-1/2 w-full h-[40vh] md:h-full bg-[#1E1A16] flex-shrink-0">
             <img
               src={post.image}
               className="w-full h-full object-cover"
@@ -144,15 +150,15 @@ const handleDeleteComment = async (id: number) => {
           <div className="md:w-1/2 w-full p-6 flex flex-col h-full min-h-0 overflow-y-auto">
             <div className="flex flex-col gap-4 flex-none">
               <div className="flex items-center gap-4">
-                <CustomAvatar name={profile?.name} photo={profile?.photo} size={48} />
+                <CustomAvatar name={profile?.username} photo={profile?.photo} size={48} />
                 <div>
-                  <p className="font-bold">{profile?.name}</p>
-                  <p className="text-muted-foreground text-sm">@{profile?.username}</p>
+                  <p className="font-display font-bold text-[#241F1A]">{profile?.name}</p>
+                  <p className="text-[#8A7F6C] text-sm">@{profile?.username}</p>
                 </div>
               </div>
 
               <div>
-                <p className="text-gray-700">{post?.desc}</p>
+                <p className="text-[#4A4136]">{post?.desc}</p>
               </div>
 
               <CommentForm postId={post?.id || 0} onSubmit={handleAddTopLevelComment} />
@@ -160,7 +166,7 @@ const handleDeleteComment = async (id: number) => {
 
             <div className="mt-4 flex-1 min-h-0 pr-2">
               {comments?.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No comments yet.</p>
+                <p className="font-hand text-lg text-[#8A7F6C]">💬 no comments yet</p>
               ) : (
                 comments?.map((comment) => (
                   <Comments
@@ -177,10 +183,10 @@ const handleDeleteComment = async (id: number) => {
                 <div className="mt-2">
                   {loading 
                   ? <p 
-                  className="text-center font-semibold text-sm hover:underline cursor-pointer text-slate-400">
+                  className="text-center font-semibold text-sm text-[#8A7F6C]">
                     🔄 Loading...</p>
                   : <p 
-                  className="text-center font-semibold text-sm hover:underline cursor-pointer text-slate-400"
+                  className="text-center font-semibold text-sm hover:underline cursor-pointer text-[#B23A2E]"
                   onClick={loadMoreComments}
                   >🚀 Load More</p>
                   }

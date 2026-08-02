@@ -25,4 +25,6 @@ public interface ProfileService {
     Page<ProfileEntity> searchForProfile(String search, Pageable pageable);
 
     boolean checkFollowStatus(UUID from, UUID to);
+
+    boolean checkUsernameExistence(String username);
 }

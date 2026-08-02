@@ -34,11 +34,12 @@ export function CommentForm({postId, onSubmit, autoFocus = false, placeholder = 
         {...register("text")}
         placeholder={placeholder}
         autoFocus={autoFocus}
+        className="bg-[#F3EBD9] border-[#C9A063] text-[#241F1A] placeholder:text-[#8A7F6C] rounded-sm focus-visible:ring-[#D9A441] focus-visible:border-[#B23A2E]"
       />
       {errors.text && (
-        <span className="text-xs text-red-500">{errors.text.message}</span>
+        <span className="text-xs text-[#B23A2E]">{errors.text.message}</span>
       )}
-      <Button type="submit" size="sm" className="self-end">
+      <Button type="submit" size="sm" className="self-end bg-[#B23A2E] hover:bg-[#9c3226] text-[#F3EBD9] rounded-sm">
         Post
       </Button>
     </form>

@@ -11,9 +11,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,25 +23,31 @@ public class RefreshTokenService implements AuthService {
 
     @Override
     public Optional<JWTTokenResponse> refreshToken(String token) {
-        if (redisTemplate.hasKey("refresh_token:" + token)) {
-                try {
-                    Claims claims = jwtUtil.getClaims(token);
-                    String sub = claims.getSubject();
-                    if (claims.getExpiration().after(Date.from(Instant.now()))) {
-                        String refreshToken = jwtUtil.generateRefreshJWT(UUID.fromString(sub));
-                        redisTemplate.delete("refresh_token:" + token);
-                        redisTemplate.opsForValue().set("refresh_token:" + refreshToken, "", Duration.of(1, ChronoUnit.DAYS));
-                        return Optional.of(
-                                JWTTokenResponse.builder()
-                                        .accessToken(jwtUtil.generateAccessJWT(UUID.fromString(sub)))
-                                        .refreshToken(refreshToken)
-                                        .build()
-                        );
-                    }
-            } catch(JwtException | IllegalArgumentException ex){
-                throw new UnauthorizedException(ex.getMessage());
-            }
+        if (!Boolean.TRUE.equals(redisTemplate.hasKey("refresh_token:" + token))) {
+            throw new UnauthorizedException("You are unauthorized to perform such action.");
         }
-        throw new UnauthorizedException("You are unauthorized to perform such action.");
+
+        try {
+            Claims claims = jwtUtil.getClaims(token);
+            UUID userId = UUID.fromString(claims.getSubject());
+
+            String refreshToken = jwtUtil.generateRefreshJWT(userId);
+
+            redisTemplate.delete("refresh_token:" + token);
+            redisTemplate.opsForValue().set(
+                    "refresh_token:" + refreshToken,
+                    "",
+                    Duration.ofDays(1)
+            );
+
+            return Optional.of(
+                    JWTTokenResponse.builder()
+                            .accessToken(jwtUtil.generateAccessJWT(userId))
+                            .refreshToken(refreshToken)
+                            .build()
+            );
+        } catch (JwtException | IllegalArgumentException ex) {
+            throw new UnauthorizedException(ex.getMessage());
+        }
     }
 }

@@ -3,11 +3,11 @@ package com.olelllka.auth_service.service;
 import com.olelllka.auth_service.RabbitMQTestConfig;
 import com.olelllka.auth_service.TestDataUtil;
 import com.olelllka.auth_service.domain.entity.UserEntity;
+import com.olelllka.auth_service.repository.OAuthIdentityRepository;
 import com.olelllka.auth_service.repository.UserRepository;
 import com.redis.testcontainers.RedisContainer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
-import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @Import(RabbitMQTestConfig.class)
-public class MessageListenerIntegrationTest {
+class MessageListenerIntegrationTest {
 
     @ServiceConnection
     static RabbitMQContainer rabbitMQContainer = new RabbitMQContainer(DockerImageName.parse("rabbitmq:3.13-management"));
@@ -60,23 +60,23 @@ public class MessageListenerIntegrationTest {
     }
 
     private final UserRepository userRepository;
+    private final OAuthIdentityRepository identityRepository;
     private final RabbitTemplate rabbitTemplate;
-    private final RabbitAdmin admin;
     private final RedisTemplate<String, String> redisTemplate;
 
     @Autowired
     public MessageListenerIntegrationTest(UserRepository userRepository,
                                           RabbitTemplate rabbitTemplate,
                                           RedisTemplate<String, String> redisTemplate,
-                                          RabbitAdmin admin) {
+                                          OAuthIdentityRepository identityRepository) {
         this.userRepository = userRepository;
         this.rabbitTemplate = rabbitTemplate;
-        this.admin = admin;
         this.redisTemplate = redisTemplate;
+        this.identityRepository = identityRepository;
     }
 
     @Test
-    public void testThatListenerHandlesDeleteProfileCorrectly() {
+    void testThatListenerHandlesDeleteProfileCorrectly() {
         UUID profileId = UUID.randomUUID();
         UserEntity user = TestDataUtil.createUserEntity();
         user.setUserId(profileId);
@@ -84,9 +84,15 @@ public class MessageListenerIntegrationTest {
         redisTemplate.opsForValue().set("auth::" + SHA256.hash(user.getEmail()), user.toString());
         assertTrue(userRepository.existsById(profileId));
         rabbitTemplate.convertAndSend(RabbitMQTestConfig.profile_fanout_exchange, "", profileId);
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> admin.getQueueInfo(RabbitMQTestConfig.delete_queue_auth).getMessageCount() == 0);
+        Awaitility.await()
+                .atMost(5, TimeUnit.SECONDS)
+                .untilAsserted(() -> {
+                    assertFalse(userRepository.existsById(profileId));
+                    assertFalse(redisTemplate.hasKey("auth::" + SHA256.hash(user.getEmail())));
+                });
         assertFalse(userRepository.existsById(profileId));
         assertFalse(redisTemplate.hasKey("auth::" + SHA256.hash(user.getEmail())));
+        assertFalse(identityRepository.existsById(profileId));
     }
 
 }

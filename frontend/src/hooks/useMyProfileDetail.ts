@@ -30,11 +30,8 @@ export const useMyProfileDetail = () => {
       try {
         setLoading(true);
         const user = await getMe();
-        setProfile(user);
-
-        const specific = await getSpecificProfileInfo(user.userId);
-        const combinedProfile = { ...user, ...specific };
-        setProfile(combinedProfile);
+        const profile = await getSpecificProfileInfo(user.userId);
+        setProfile({...profile, email: user.email});
 
         if (pending) {
             setPending(false);

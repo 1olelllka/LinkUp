@@ -57,7 +57,6 @@ public class ProfileRepositoryTest {
                 profileId,
                 null,
                 updatedProfile.getName(),
-                null,
                 updatedProfile.getGender().toString(),
                 updatedProfile.getPhoto(),
                 updatedProfile.getAboutMe(),

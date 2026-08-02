@@ -9,16 +9,16 @@ import { NotificationSheet } from "@/components/notification/NotificationSheet";
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   return (
-    <SidebarProvider>
+    <SidebarProvider className="bg-[#1E1A16]">
       <AppSidebar />
       <main className="transition-all flex-1">
         <div className="flex flex-row">
-          <SidebarTrigger className="mt-3"/>
+          <SidebarTrigger className="mt-3 text-[#F3EBD9] hover:bg-[#2A241E] hover:text-[#D9A441]"/>
           <NotificationSheet trigger={
             <Button
               variant={"ghost"}
               size="icon"
-              className="size-7 mt-3"
+              className="size-7 mt-3 text-[#F3EBD9] hover:bg-[#2A241E] hover:text-[#D9A441]"
             >
               <Bell />
             </Button>
@@ -26,7 +26,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           <Button
             variant="ghost"
             size="icon"
-            className="size-7 mt-3"
+            className="size-7 mt-3 text-[#F3EBD9] hover:bg-[#2A241E] hover:text-[#D9A441]"
             onClick={() => navigate(-1)}
           >
             <ArrowLeft />
@@ -34,7 +34,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           <Button
             variant="ghost"
             size="icon"
-            className="size-7 mt-3"
+            className="size-7 mt-3 text-[#F3EBD9] hover:bg-[#2A241E] hover:text-[#D9A441]"
             onClick={() => navigate(1)}
           >
             <ArrowRight />

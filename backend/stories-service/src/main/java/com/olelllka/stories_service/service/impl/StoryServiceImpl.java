@@ -4,6 +4,7 @@ import com.olelllka.stories_service.domain.dto.StoryDto;
 import com.olelllka.stories_service.domain.entity.StoryEntity;
 import com.olelllka.stories_service.feign.ProfileFeign;
 import com.olelllka.stories_service.mapper.StoryMapper;
+import com.olelllka.stories_service.repository.ProfileDocumentRepository;
 import com.olelllka.stories_service.repository.StoryRepository;
 import com.olelllka.stories_service.rest.exception.AuthException;
 import com.olelllka.stories_service.rest.exception.NotFoundException;
@@ -38,6 +39,7 @@ public class StoryServiceImpl implements StoryService {
     private final JWTUtil jwtUtil;
     private final RedisTemplate<String, String> redisTemplate;
     private final StoryMapper<StoryEntity, StoryDto> mapper;
+    private final ProfileDocumentRepository documentRepository;
 
     @Override
     public Page<StoryEntity> getArchiveForUser(UUID id, String jwt, Pageable pageable) {
@@ -49,7 +51,7 @@ public class StoryServiceImpl implements StoryService {
     @CircuitBreaker(name = "stories-service", fallbackMethod = "createFallback")
     public StoryEntity createStory(UUID userId, StoryEntity entity, String jwt) {
         jwtCheck(jwt, userId.toString());
-        if (!profileService.getProfileById(userId).getStatusCode().is2xxSuccessful()) {
+        if (!documentRepository.existsById(userId)) {
             throw new NotFoundException("User with such id does not exist.");
         }
         entity.setAvailable(true);

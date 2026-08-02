@@ -14,6 +14,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Data
 public class PatchProfileDto {
+    private String username;
     private String name;
     private String aboutMe;
     private String photo;

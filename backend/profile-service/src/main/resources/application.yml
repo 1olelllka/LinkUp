@@ -7,12 +7,12 @@ spring:
       username: ${NEO4J_USERNAME:neo4j}
       password: ${NEO4J_PASSWORD:neo4j-admin}
   data:
-    elasticsearch:
-      repositories:
-        enabled: true
     redis:
       host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6376}
+      port: ${REDIS_PORT:6379}
+    mongodb:
+      uri: mongodb://${MONGO_USERNAME:admin}:${MONGO_PASSWORD:admin}@${MONGO_HOST:localhost}:${MONGO_PORT:27017}/LinkUp?authSource=admin
+      uuid-representation: standard
   rabbitmq:
     host: ${RABBIT_HOST:localhost}
     port: ${RABBIT_PORT:5672}
@@ -29,11 +29,14 @@ eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+    registry-fetch-interval-seconds: 5
   instance:
     prefer-ip-address: true
     metadata-map:
       version: v0.9
       region: eu-central
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 10
 
 management:
   endpoint:

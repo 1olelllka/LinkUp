@@ -11,7 +11,6 @@ from .auth.authentication import JWTAuthentication
 from .auth.permissions import IsOwner
 from datetime import datetime, timedelta, timezone
 from django.core.cache import cache
-import requests
 from django.http import JsonResponse
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ValidationError
@@ -20,8 +19,19 @@ from drf_spectacular.utils import (
 )
 from drf_spectacular.types import OpenApiTypes
 import os
+from pymongo import MongoClient
+from uuid import UUID
 
-profile_uri = os.environ.get("PROFILE_URI") or "http://localhost:8001/profiles"
+mongo_user = os.environ.get("MONGO_USERNAME") or "admin"
+mongo_pass = os.environ.get("MONGO_PASSWORD")
+mongo_host = os.environ.get("MONGO_HOST") or "localhost"
+mongo_port = os.environ.get("MONGO_PORT") or "27017"
+
+client = MongoClient(
+    f'mongodb://{mongo_user}:{mongo_pass}@{mongo_host}:{mongo_port}',
+    uuidRepresentation='standard'
+)
+linkup_collection = client['LinkUp']['Profile']
 
 @extend_schema(tags=['Posts management'])
 @extend_schema_view(
@@ -72,13 +82,9 @@ class UserPostViewSet(viewsets.ModelViewSet):
     authentication_classes = [JWTAuthentication]
 
     def create(self, request, user_id):
-        profile_response = requests.get(f"{profile_uri}/{user_id}")
-        if profile_response.status_code == 404:
+        profile = linkup_collection.find_one({'_id':UUID(user_id)})
+        if profile == None:
             return Response(data={"error": "User with such id does not exist"}, status=404)
-        elif profile_response.status_code >= 500:
-            return Response(data={"error": "An error occurred while processing your request"}, status=500)
-        elif 400 <= profile_response.status_code < 404 and 404 < profile_response.status_code < 500:
-            return Response(data={"error":"Unexpected client error occurred. Please try again later"}, status=profile_response.status_code)
         mutable_data = request.data.copy()
         mutable_data['user_id'] = user_id
         serializer = self.get_serializer(data=mutable_data)
@@ -251,21 +257,17 @@ class CommentViewSet(viewsets.ModelViewSet):
     def create(self, request, post_id):
         post = get_object_or_404(Post, pk=post_id)
         if request.user.id is not None:
-            profile_response = requests.get(f"{profile_uri}/{request.user.id}")
+            profile = linkup_collection.find_one({"_id":UUID(request.user.id)})
         else:
             return Response(data={"error": "Profile id is required"}, status=400)
-        if profile_response.status_code == 404:
+        if profile == None:
             return Response(data={"error": "User with such id does not exist"}, status=404)
-        elif profile_response.status_code >= 500:
-            return Response(data={"error": "An error occurred while processing your request"}, status=500)
-        elif 400 <= profile_response.status_code < 404 and 404 < profile_response.status_code < 500:
-            return Response(data={"error":"Unexpected client error occurred. Please try again later"}, status=profile_response.status_code)
         data = request.data.copy()
         data['post'] = post.pk
         data['user_id'] = request.user.id
-        data['username'] = profile_response.json()['username']
-        data['name'] = profile_response.json()['name']
-        data['photo'] = profile_response.json()['photo']
+        data['username'] = profile['username']
+        data['name'] = profile['name']
+        data['photo'] = profile.get('photo', None)
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
             try:

@@ -16,17 +16,21 @@ spring:
   data:
     redis:
       host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6377}
+      port: ${REDIS_PORT:6379}
+      database: 2
 
 eureka:
   client:
-    serviceUrl:
+    service-url:
       defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+    registry-fetch-interval-seconds: 5
   instance:
-    preferIpAddress: true
+    prefer-ip-address: true
     metadata-map:
       version: v0.9
       region: eu-central
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 10
 
 feign:
   circuitbreaker:
