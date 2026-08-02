@@ -9,22 +9,38 @@ interface GenderSelectProps {
   onSelect: (val: "MALE" | "FEMALE" | "UNDEFINED") => void;
 }
 
+const GENDER_LABELS: Record<GenderSelectProps["value"], string> = {
+  MALE: "Male",
+  FEMALE: "Female",
+  UNDEFINED: "Prefer not to say",
+};
+
+const GENDER_OPTIONS: GenderSelectProps["value"][] = ["MALE", "FEMALE", "UNDEFINED"];
+
 export const GenderSelect = ({ value, onSelect }: GenderSelectProps) => (
   <div className="space-y-1">
-    <label className="block text-sm font-medium">Gender</label>
+    <label className="block font-display text-xs uppercase tracking-wide text-[#4A4136]">Gender</label>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline">{value}</Button>
+        <Button
+          variant="outline"
+          className="border-[#C9A063] bg-[#F3EBD9] text-[#241F1A] hover:bg-[#DDD0B0] rounded-sm w-full justify-start"
+        >
+          {GENDER_LABELS[value]}
+        </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56">
-        <DropdownMenuLabel>Choose your gender</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {["MALE", "FEMALE", "UNDEFINED"].map((option) => (
+      <DropdownMenuContent className="w-56 bg-[#F3EBD9] border-[#C9A063] rounded-sm">
+        <DropdownMenuLabel className="font-display text-xs uppercase tracking-wide text-[#4A4136]">
+          Choose your gender
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator className="bg-[#C9A063]" />
+        {GENDER_OPTIONS.map((option) => (
           <DropdownMenuItem
             key={option}
-            onSelect={() => onSelect(option as GenderSelectProps["value"])}
+            onSelect={() => onSelect(option)}
+            className="text-[#241F1A] focus:bg-[#B23A2E] focus:text-[#F3EBD9] rounded-sm"
           >
-            {option}
+            {GENDER_LABELS[option]}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

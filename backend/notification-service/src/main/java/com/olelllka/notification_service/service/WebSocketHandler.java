@@ -2,7 +2,7 @@ package com.olelllka.notification_service.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.olelllka.notification_service.domain.dto.JWTMessage;
-import com.olelllka.notification_service.feign.ProfileFeign;
+import com.olelllka.notification_service.repository.ProfileDocumentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -18,16 +18,14 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     private static final ConcurrentHashMap<UUID, WebSocketSession> sessions = new ConcurrentHashMap<>();
     private final JWTUtil jwtUtil;
-    private final ProfileFeign profileService;
+    private final ProfileDocumentRepository documentRepository;
 
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         UUID userId = getUserIdFromUri(session);
-        if (profileService.getProfileById(userId).getStatusCode().is4xxClientError()) {
-            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A client error occurred on external service."));
-        } else if (profileService.getProfileById(userId).getStatusCode().is5xxServerError()) {
-            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A server error occurred on external service."));
+        if (!documentRepository.existsById(userId)) {
+            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A notified user was not found."));
         }
         sessions.put(userId, session);
     }

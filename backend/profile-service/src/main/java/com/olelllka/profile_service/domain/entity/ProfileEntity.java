@@ -1,11 +1,6 @@
 package com.olelllka.profile_service.domain.entity;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
@@ -20,16 +15,13 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id"
-)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ProfileEntity {
     @Id
+    @EqualsAndHashCode.Include
     private UUID id;
     private String username;
     private String name;
-    private String email;
     private String aboutMe;
     private String photo;
     private Gender gender;

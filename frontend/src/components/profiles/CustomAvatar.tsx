@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface CustomAvatarProps {
   name?: string;
   photo?: string;
-  size?: number; // px
+  size?: number;
   className?: string;
 }
 
@@ -14,26 +14,56 @@ export const CustomAvatar = ({
   className = "",
 }: CustomAvatarProps) => {
   const [imgError, setImgError] = useState(false);
-  const firstLetter = name.trim().charAt(0).toUpperCase();
 
-  const fallback = (
+  useEffect(() => {
+    setImgError(false);
+  }, [photo]);
+
+  const firstLetter = name.trim().charAt(0).toUpperCase() || "?";
+
+  const baseClassName = `
+    rounded-full
+    border-2
+    border-[#C9A063]
+    shadow-md
+    ${className}
+  `;
+
+  if (photo && !imgError) {
+    return (
+      <img
+        src={photo}
+        alt={`${name}'s avatar`}
+        onError={() => setImgError(true)}
+        className={`${baseClassName} object-cover`}
+        style={{
+          width: size,
+          height: size,
+        }}
+      />
+    );
+  }
+
+  return (
     <div
-      className={`flex items-center justify-center bg-gray-300 text-gray-700 font-bold rounded-full ${className}`}
-      style={{ width: size, height: size, fontSize: size * 0.4 }}
+      className={`
+        ${baseClassName}
+        flex
+        items-center
+        justify-center
+        bg-[#1E1A16]
+        text-[#F3EBD9]
+        font-display
+        font-bold
+      `}
+      style={{
+        width: size,
+        height: size,
+        fontSize: size * 0.4,
+      }}
+      aria-label={`${name}'s avatar`}
     >
       {firstLetter}
     </div>
-  );
-
-  return photo && !imgError ? (
-    <img
-      src={photo}
-      alt="Avatar"
-      onError={() => setImgError(true)}
-      className={`rounded-full object-cover ${className}`}
-      style={{ width: size, height: size }}
-    />
-  ) : (
-    fallback
   );
 };

@@ -12,12 +12,16 @@ import { toast } from "sonner";
 import type { AxiosError } from "axios";
 import { ServiceError } from "../errors/ServiceUnavailable";
 import { PageLoader } from "../load/PageLoader";
+import { Pin } from "lucide-react";
+
+const ABOUT_ME_LIMIT = 150;
 
 export function ProfileDetail() {
   const { userId } = useParams();
-  const currentUserId = useProfileStore.getState().profile?.userId;
+  const currentUserId = useProfileStore.getState().profile?.id;
   const {profile, detailError, detailLoading} = useProfileDetail(userId);
   const [isFollowing, setIsFollowing] = useState<boolean>(false);
+  const [aboutMeExpanded, setAboutMeExpanded] = useState(false);
   const followers = useFollowList({
     userId,
     type: "follower",
@@ -26,7 +30,6 @@ export function ProfileDetail() {
     userId,
     type: "followee",
   });
-  
 
   useEffect(() => {
     const checkFollow = async () => {
@@ -40,6 +43,12 @@ export function ProfileDetail() {
     checkFollow();
   }, [userId, currentUserId])
 
+  const aboutMe = profile?.aboutMe ?? "";
+  const isAboutMeLong = aboutMe.length > ABOUT_ME_LIMIT;
+  const displayedAboutMe =
+    isAboutMeLong && !aboutMeExpanded
+      ? aboutMe.slice(0, ABOUT_ME_LIMIT).trimEnd()
+      : aboutMe;
 
   return (
     <div>
@@ -50,90 +59,137 @@ export function ProfileDetail() {
         {detailLoading
           ? <PageLoader />
           : 
-        <Card className="p-6 flex flex-row justify-between items-center md:items-start gap-10 w-[99%] border-0 shadow-lg bg-slate-50 transition-all">
-          <div className="flex-1 space-y-3 text-center md:text-left">
-            <div>
-              <h1 className="text-2xl font-bold">{profile?.name}</h1>
-              <p className="text-muted-foreground">@{profile?.username}</p>
+        <Card className="relative bg-[#E8DFC8] border border-[#C9A063] p-6 md:p-8 rounded-sm shadow-lg transition-all w-[99%]">
+          <Pin
+            className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 z-10 drop-shadow rotate-[-8deg]"
+            style={{ color: "#D9A441" }}
+            fill="#D9A441"
+          />
+
+          <div className="flex items-start gap-6 md:gap-12 pb-2">
+            {/* Avatar */}
+            <div className="shrink-0">
+              <CustomAvatar name={profile?.name} photo={profile?.photo} size={110} />
             </div>
 
-            {profile?.aboutMe && (
-              <p className="text-sm text-muted-foreground">{profile.aboutMe}</p>
-            )}
+            {/* Identity + stats + bio */}
+            <div className="flex-1 min-w-0 pt-2">
+              <div className="flex items-center flex-wrap gap-4 mb-1">
+                <h1 className="font-display text-xl font-bold text-[#241F1A] truncate">
+                  {profile?.username}
+                </h1>
 
-            <div className="flex justify-center md:justify-start gap-8 pt-2">
-              <div className="text-center">
-                <NavLink to={`/profile/${userId}/followers`}>
-                  <p className="text-lg font-bold">{followers.followerNumber}</p>
-                  <p className="text-sm text-muted-foreground">Followers</p>
-                </NavLink>
-              </div>
-              <div className="text-center">
-                <NavLink to={`/profile/${userId}/followees`}>
-                  <p className="text-lg font-bold">{followee.followeeNumber}</p>
-                  <p className="text-sm text-muted-foreground">Following</p>
-                </NavLink>
-              </div>
-            </div>
-
-            {/* Follow/unfollow button and status */}
-            {useProfileStore.getState().profile?.userId != userId && (
-              <div className="pt-4 space-y-2">
-                {isFollowing ? (
-                  <>
-                    <Button variant="outline" onClick={() => {
-                      if (useProfileStore.getState().profile?.userId && userId) {
-                        unfollowProfile(useProfileStore.getState().profile?.userId, userId)
-                        .then(response => {
-                          if (response.status == 200) {
-                            setIsFollowing(false);
-                            followers.setFollowerNumber(prev => prev - 1);
-                          } else {
-                            toast.warning("Unknown error occured. Please try again later. The request failed with status " + response.status);
-                          }
-                        }).catch(err => {
-                          const error = err as AxiosError;
-                          if (error.response && (error.response.status == 400 || error.response.status == 401)) {
-                            toast.error((error.response.data as {message : string}).message);
-                          } else {
-                            toast.error((err as AxiosError).message);
-                          }
-                        });
-                      }
-                    }}>Unfollow</Button>
-                    <p className="text-xs text-muted-foreground">
-                      You follow this user
-                    </p>
-                  </>
-                ) : (
-                  <Button onClick={() => {
-                    if (useProfileStore.getState().profile?.userId && userId) {
-                      followProfile(useProfileStore.getState().profile?.userId, userId)
-                      .then(response => {
-                        if (response.status == 200) {
-                          setIsFollowing(true);
-                          followers.setFollowerNumber(prev => prev + 1);
-                        } else {
-                          toast.warning("Unknown error occured. Please try again later. The request failed with status " + response.status);
+                {currentUserId != userId && (
+                  isFollowing ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-sm border-[#6B4A32] text-[#241F1A] bg-transparent hover:bg-[#DDD0B0]"
+                      onClick={() => {
+                        if (currentUserId && userId) {
+                          unfollowProfile(currentUserId, userId)
+                          .then(response => {
+                            if (response.status == 200) {
+                              setIsFollowing(false);
+                              followers.setFollowerNumber(prev => prev - 1);
+                            } else {
+                              toast.warning("Unknown error occured. Please try again later. The request failed with status " + response.status);
+                            }
+                          }).catch(err => {
+                            const error = err as AxiosError;
+                            if (error.response && (error.response.status == 400 || error.response.status == 401)) {
+                              toast.error((error.response.data as {message : string}).message);
+                            } else {
+                              toast.error((err as AxiosError).message);
+                            }
+                          });
                         }
-                      }).catch(err => {
-                        const error = err as AxiosError;
-                        if (error.response && (error.response.status == 400 || error.response.status == 401)) {
-                          toast.error((error.response.data as {message : string}).message);
-                        } else {
-                          toast.error((err as AxiosError).message);
+                      }}
+                    >
+                      Unfollow
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="rounded-sm bg-[#B23A2E] hover:bg-[#9c3226] text-[#F3EBD9]"
+                      onClick={() => {
+                        if (currentUserId && userId) {
+                          followProfile(currentUserId, userId)
+                          .then(response => {
+                            if (response.status == 200) {
+                              setIsFollowing(true);
+                              followers.setFollowerNumber(prev => prev + 1);
+                            } else {
+                              toast.warning("Unknown error occured. Please try again later. The request failed with status " + response.status);
+                            }
+                          }).catch(err => {
+                            const error = err as AxiosError;
+                            if (error.response && (error.response.status == 400 || error.response.status == 401)) {
+                              toast.error((error.response.data as {message : string}).message);
+                            } else {
+                              toast.error((err as AxiosError).message);
+                            }
+                          });
                         }
-                      });
-                    }
-                  }}>Follow</Button>
+                      }}
+                    >
+                      Follow
+                    </Button>
+                  )
                 )}
               </div>
-            )}
-          </div>
 
-          {/* Right side: avatar */}
-          <div className="shrink-0">
-            <CustomAvatar name={profile?.name} photo={profile?.photo} size={100} />
+              <p className="text-sm font-semibold text-[#241F1A] mb-2">
+                {profile?.name}
+              </p>
+
+              {aboutMe && (
+                <p className="text-sm text-[#4A4136] mb-2 whitespace-pre-wrap break-words">
+                  {displayedAboutMe}
+                  {isAboutMeLong && !aboutMeExpanded && "... "}
+                  {isAboutMeLong && (
+                    <button
+                      type="button"
+                      onClick={() => setAboutMeExpanded((prev) => !prev)}
+                      className="text-[#8A7F6C] hover:text-[#B23A2E] transition-colors"
+                    >
+                      {aboutMeExpanded ? " less" : "more"}
+                    </button>
+                  )}
+                </p>
+              )}
+
+              <div className="flex items-center gap-8 mb-2">
+                <NavLink
+                  to={`/profile/${userId}/followers`}
+                  className="flex items-baseline gap-1 hover:opacity-70 transition-opacity"
+                >
+                  <span className="text-sm font-semibold text-[#241F1A]">
+                    {followers.followerNumber}
+                  </span>
+                  <span className="text-sm text-[#8A7F6C]">followers</span>
+                </NavLink>
+                <NavLink
+                  to={`/profile/${userId}/followees`}
+                  className="flex items-baseline gap-1 hover:opacity-70 transition-opacity"
+                >
+                  <span className="text-sm font-semibold text-[#241F1A]">
+                    {followee.followeeNumber}
+                  </span>
+                  <span className="text-sm text-[#8A7F6C]">following</span>
+                </NavLink>
+              </div>
+
+              {isFollowing && (
+                <p className="font-hand text-base text-[#8A7F6C]">you follow this user</p>
+              )}
+
+              {profile?.createdAt && (
+                <p className="font-hand text-base text-[#8A7F6C]">
+                  joined {profile.createdAt}
+                </p>
+              )}
+            </div>
           </div>
         </Card>
         }

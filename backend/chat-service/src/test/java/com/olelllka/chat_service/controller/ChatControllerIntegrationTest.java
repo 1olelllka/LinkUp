@@ -1,21 +1,19 @@
 package com.olelllka.chat_service.controller;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.http.Body;
-import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.olelllka.chat_service.TestDataUtil;
 import com.olelllka.chat_service.domain.dto.MessageDto;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
+import com.olelllka.chat_service.repository.ChatRepository;
 import com.olelllka.chat_service.repository.MessageRepository;
+import com.olelllka.chat_service.repository.ProfileDocumentRepository;
 import com.olelllka.chat_service.service.ChatService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -23,6 +21,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -32,18 +31,17 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Base64;
 import java.util.Date;
+import java.util.Optional;
 import java.util.UUID;
+
+import static org.mockito.Mockito.when;
 
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @AutoConfigureMockMvc
-public class ChatControllerIntegrationTest {
-
-    @RegisterExtension
-    static WireMockExtension PROFILE_SERVICE = WireMockExtension.newInstance()
-            .options(WireMockConfiguration.options().port(8001)).build();
+class ChatControllerIntegrationTest {
 
     @ServiceConnection
     static MongoDBContainer mongo = new MongoDBContainer("mongo:8.0");
@@ -62,6 +60,9 @@ public class ChatControllerIntegrationTest {
     }
 
     private ChatService chatService;
+    @MockitoBean
+    private ProfileDocumentRepository documentRepository;
+    private ChatRepository chatRepository;
     private MessageRepository repository;
     private ObjectMapper objectMapper;
     private MockMvc mockMvc;
@@ -69,23 +70,26 @@ public class ChatControllerIntegrationTest {
     @Autowired
     public ChatControllerIntegrationTest(ChatService chatService,
                                          MessageRepository repository,
+                                         ChatRepository chatRepository,
                                          MockMvc mockMvc) {
         this.mockMvc = mockMvc;
         this.chatService = chatService;
         this.repository = repository;
+        this.chatRepository = chatRepository;
         this.objectMapper = new ObjectMapper();
     }
 
+    @AfterEach
+    void tearingDown() {
+        chatRepository.deleteAll();
+    }
+
     @Test
-    public void testThatGetChatsByUserReturnsHttp200Ok() throws Exception {
+    void testThatGetChatsByUserReturnsHttp200Ok() throws Exception {
         UUID user1 = UUID.randomUUID();
         UUID user2 = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok().withResponseBody(
-                new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user1))))
-                .withHeader("Content-Type", "application/json")));
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok().withResponseBody(
-                new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user2))))
-                .withHeader("Content-Type", "application/json")));
+        when(documentRepository.findById(user1)).thenReturn(Optional.of(TestDataUtil.createProfileDocument(user1)));
+        when(documentRepository.findById(user2)).thenReturn(Optional.of(TestDataUtil.createProfileDocument(user2)));
         ChatEntity saved = chatService.createNewChat(user1, user2);
         mockMvc.perform(MockMvcRequestBuilders.get("/chats/users/" + saved.getParticipants()[0].getId())
                         .header("Authorization", "Bearer " + generateJwt(user1)))
@@ -94,15 +98,11 @@ public class ChatControllerIntegrationTest {
     }
 
     @Test
-    public void testThatGetChatByTwoUsersReturnsHttp404NotFound() throws Exception {
+    void testThatGetChatByTwoUsersReturnsHttp404NotFound() throws Exception {
         UUID user1 = UUID.randomUUID();
         UUID user2 = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok().withResponseBody(
-                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user1))))
-                .withHeader("Content-Type", "application/json")));
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok().withResponseBody(
-                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user2))))
-                .withHeader("Content-Type", "application/json")));
+        when(documentRepository.findById(user1)).thenReturn(Optional.of(TestDataUtil.createProfileDocument(user1)));
+        when(documentRepository.findById(user2)).thenReturn(Optional.of(TestDataUtil.createProfileDocument(user2)));
         ChatEntity saved = chatService.createNewChat(user1, user2);
         mockMvc.perform(MockMvcRequestBuilders.get("/chats?user1=" + saved.getParticipants()[0].getId() + "&user2=" + UUID.randomUUID())
                         .header("Authorization", "Bearer " + generateJwt(user1)))
@@ -110,23 +110,19 @@ public class ChatControllerIntegrationTest {
     }
 
     @Test
-    public void testThatGetChatByTwoUsersReturnsHttp401UnauthorizedIfTokenInvalid() throws Exception {
+    void testThatGetChatByTwoUsersReturnsHttp401UnauthorizedIfTokenInvalid() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/chats?user1=" + UUID.randomUUID() + "&user2=" + UUID.randomUUID())
                         .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test
-    public void testThatGetChatByTwoUsersReturnsHttp200Ok() throws Exception {
+    void testThatGetChatByTwoUsersReturnsHttp200Ok() throws Exception {
         UUID user1 = UUID.randomUUID();
         UUID user2 = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok().withResponseBody(
-                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user1))))
-                .withHeader("Content-Type", "application/json")));
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok().withResponseBody(
-                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user2))))
-                .withHeader("Content-Type", "application/json")));
-        ChatEntity saved = chatService.createNewChat(user1, user2);
+        when(documentRepository.findById(user1)).thenReturn(Optional.of(TestDataUtil.createProfileDocument(user1)));
+        when(documentRepository.findById(user2)).thenReturn(Optional.of(TestDataUtil.createProfileDocument(user2)));
+        chatService.createNewChat(user1, user2);
         mockMvc.perform(MockMvcRequestBuilders.get("/chats?user1=" + user1 + "&user2=" + user2)
                         .header("Authorization", "Bearer " + generateJwt(user1)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -134,15 +130,11 @@ public class ChatControllerIntegrationTest {
     }
 
     @Test
-    public void testThatGetChatsByUserReturnsHttp401Unauthorized() throws Exception {
+    void testThatGetChatsByUserReturnsHttp401Unauthorized() throws Exception {
         UUID user1 = UUID.randomUUID();
         UUID user2 = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok().withResponseBody(
-                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user1))))
-                .withHeader("Content-Type", "application/json")));
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok().withResponseBody(
-                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user2))))
-                .withHeader("Content-Type", "application/json")));
+        when(documentRepository.findById(user1)).thenReturn(Optional.of(TestDataUtil.createProfileDocument(user1)));
+        when(documentRepository.findById(user2)).thenReturn(Optional.of(TestDataUtil.createProfileDocument(user2)));
         ChatEntity saved = chatService.createNewChat(user1, user2);
         mockMvc.perform(MockMvcRequestBuilders.get("/chats/users/" + saved.getParticipants()[0].getId())
                         .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
@@ -150,22 +142,18 @@ public class ChatControllerIntegrationTest {
     }
 
     @Test
-    public void testThatDeleteChatWorks() throws Exception {
+    void testThatDeleteChatWorks() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/chats/12345")
                         .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
     }
 
     @Test
-    public void testThatDeleteChatReturnsHttp401Unauthorized() throws Exception {
+    void testThatDeleteChatReturnsHttp401Unauthorized() throws Exception {
         UUID user1 = UUID.randomUUID();
         UUID user2 = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok().withResponseBody(
-                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user1))))
-                .withHeader("Content-Type", "application/json")));
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok().withResponseBody(
-                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user2))))
-                .withHeader("Content-Type", "application/json")));
+        when(documentRepository.findById(user1)).thenReturn(Optional.of(TestDataUtil.createProfileDocument(user1)));
+        when(documentRepository.findById(user2)).thenReturn(Optional.of(TestDataUtil.createProfileDocument(user2)));
         ChatEntity saved = chatService.createNewChat(user1, user2);
         mockMvc.perform(MockMvcRequestBuilders.delete("/chats/" + saved.getId())
                         .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
@@ -173,15 +161,11 @@ public class ChatControllerIntegrationTest {
     }
 
     @Test
-    public void testThatDeleteChatReturnsHttp204NoContent() throws Exception {
+    void testThatDeleteChatReturnsHttp204NoContent() throws Exception {
         UUID user1 = UUID.randomUUID();
         UUID user2 = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok().withResponseBody(
-                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user1))))
-                .withHeader("Content-Type", "application/json")));
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok().withResponseBody(
-                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user2))))
-                .withHeader("Content-Type", "application/json")));
+        when(documentRepository.findById(user1)).thenReturn(Optional.of(TestDataUtil.createProfileDocument(user1)));
+        when(documentRepository.findById(user2)).thenReturn(Optional.of(TestDataUtil.createProfileDocument(user2)));
         ChatEntity saved = chatService.createNewChat(user1, user2);
         mockMvc.perform(MockMvcRequestBuilders.delete("/chats/" + saved.getId())
                         .header("Authorization", "Bearer " + generateJwt(user1)))
@@ -192,12 +176,8 @@ public class ChatControllerIntegrationTest {
     public void testThatGetMessagesByChatIdReturnsHttp401Unauthorized() throws Exception {
         UUID user1 = UUID.randomUUID();
         UUID user2 = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok().withResponseBody(
-                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user1))))
-                .withHeader("Content-Type", "application/json")));
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok().withResponseBody(
-                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user2))))
-                .withHeader("Content-Type", "application/json")));
+        when(documentRepository.findById(user1)).thenReturn(Optional.of(TestDataUtil.createProfileDocument(user1)));
+        when(documentRepository.findById(user2)).thenReturn(Optional.of(TestDataUtil.createProfileDocument(user2)));
         ChatEntity chat = chatService.createNewChat(user1, user2);
         MessageEntity msg = TestDataUtil.createMessageEntity(chat.getId());
         repository.save(msg);
@@ -210,12 +190,8 @@ public class ChatControllerIntegrationTest {
     public void testThatGetMessagesByChatIdReturnsPageOfMessages() throws Exception {
         UUID user1 = UUID.randomUUID();
         UUID user2 = UUID.randomUUID();
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user1).willReturn(WireMock.ok().withResponseBody(
-                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user1))))
-                .withHeader("Content-Type", "application/json")));
-        PROFILE_SERVICE.stubFor(WireMock.get("/profiles/" + user2).willReturn(WireMock.ok().withResponseBody(
-                        new Body(objectMapper.writeValueAsString(TestDataUtil.createUser(user2))))
-                .withHeader("Content-Type", "application/json")));
+        when(documentRepository.findById(user1)).thenReturn(Optional.of(TestDataUtil.createProfileDocument(user1)));
+        when(documentRepository.findById(user2)).thenReturn(Optional.of(TestDataUtil.createProfileDocument(user2)));
         ChatEntity chat = chatService.createNewChat(user1, user2);
         mockMvc.perform(MockMvcRequestBuilders.get("/chats/" + chat.getId() + "/messages")
                         .header("Authorization", "Bearer " + generateJwt(user1)))
@@ -224,7 +200,7 @@ public class ChatControllerIntegrationTest {
     }
 
     @Test
-    public void testThatUpdateSpecificMessageReturnsHttp400BadRequest() throws Exception {
+    void testThatUpdateSpecificMessageReturnsHttp400BadRequest() throws Exception {
         MessageDto dto = TestDataUtil.createMessageDto("123456");
         dto.setContent("");
         String json = objectMapper.writeValueAsString(dto);
@@ -236,7 +212,7 @@ public class ChatControllerIntegrationTest {
     }
 
     @Test
-    public void testThatUpdateSpecificMessageReturnsHttp404IfMessageDoesNotExist() throws Exception {
+    void testThatUpdateSpecificMessageReturnsHttp404IfMessageDoesNotExist() throws Exception {
         MessageDto dto = TestDataUtil.createMessageDto("12345");
         String json = objectMapper.writeValueAsString(dto);
         mockMvc.perform(MockMvcRequestBuilders.patch("/chats/messages/12345")
@@ -247,7 +223,7 @@ public class ChatControllerIntegrationTest {
     }
 
     @Test
-    public void testThatUpdateSpecificMessageReturnsHttp401Unauthorized() throws Exception {
+    void testThatUpdateSpecificMessageReturnsHttp401Unauthorized() throws Exception {
         MessageDto dto = TestDataUtil.createMessageDto("123456");
         dto.setContent("UPDATED");
         MessageEntity original = repository.save(TestDataUtil.createMessageEntity("123456"));
@@ -260,7 +236,7 @@ public class ChatControllerIntegrationTest {
     }
 
     @Test
-    public void testThatUpdateSpecificMessageReturnsHttp200OkAndUpdatesMessage() throws Exception {
+    void testThatUpdateSpecificMessageReturnsHttp200OkAndUpdatesMessage() throws Exception {
         MessageDto dto = TestDataUtil.createMessageDto("123456");
         dto.setContent("UPDATED");
         MessageEntity original = repository.save(TestDataUtil.createMessageEntity("123456"));
@@ -274,14 +250,14 @@ public class ChatControllerIntegrationTest {
     }
 
     @Test
-    public void testThatDeleteSpecificMessageReturnsHttp204NoContentIfThereIsNoMessage() throws Exception {
+    void testThatDeleteSpecificMessageReturnsHttp204NoContentIfThereIsNoMessage() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/chats/messages/12345")
                         .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
     }
 
     @Test
-    public void testThatDeleteSpecificMessageReturnsHttp401UnauthorizedIfUnauthorized() throws Exception {
+    void testThatDeleteSpecificMessageReturnsHttp401UnauthorizedIfUnauthorized() throws Exception {
         MessageEntity msg = repository.save(TestDataUtil.createMessageEntity("123456"));
         mockMvc.perform(MockMvcRequestBuilders.delete("/chats/messages/" + msg.getId())
                         .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
@@ -289,7 +265,7 @@ public class ChatControllerIntegrationTest {
     }
 
     @Test
-    public void testThatDeleteSpecificMessageReturnsHttp204NoContentIfMessageExistsAndAuthorized() throws Exception {
+    void testThatDeleteSpecificMessageReturnsHttp204NoContentIfMessageExistsAndAuthorized() throws Exception {
         MessageEntity msg = repository.save(TestDataUtil.createMessageEntity("123456"));
         mockMvc.perform(MockMvcRequestBuilders.delete("/chats/messages/" + msg.getId())
                         .header("Authorization", "Bearer " + generateJwt(msg.getFrom())))

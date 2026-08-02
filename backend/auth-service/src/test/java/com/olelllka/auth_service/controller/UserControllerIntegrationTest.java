@@ -7,9 +7,9 @@ import com.olelllka.auth_service.TestDataUtil;
 import com.olelllka.auth_service.config.RabbitMQConfig;
 import com.olelllka.auth_service.domain.dto.JWTTokenResponse;
 import com.olelllka.auth_service.domain.dto.LoginUser;
-import com.olelllka.auth_service.domain.dto.PatchUserDto;
 import com.olelllka.auth_service.domain.dto.RegisterUserDto;
 import com.olelllka.auth_service.domain.entity.UserEntity;
+import com.olelllka.auth_service.feign.ProfileClient;
 import com.olelllka.auth_service.repository.UserRepository;
 import com.olelllka.auth_service.service.SHA256;
 import com.olelllka.auth_service.service.impl.UserServiceImpl;
@@ -26,10 +26,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -39,13 +41,14 @@ import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @AutoConfigureMockMvc
 @Import(RabbitMQTestConfig.class)
-public class UserControllerIntegrationTest {
+class UserControllerIntegrationTest {
 
     @ServiceConnection
     static RabbitMQContainer rabbitMQContainer = new RabbitMQContainer(DockerImageName.parse("rabbitmq:3.13-management"));
@@ -78,6 +81,7 @@ public class UserControllerIntegrationTest {
     @AfterEach
     void refreshDB() {
         userRepository.deleteAll();
+        admin.purgeQueue(RabbitMQConfig.create_user_queue);
     }
 
     private final UserServiceImpl userService;
@@ -86,6 +90,8 @@ public class UserControllerIntegrationTest {
     private final RabbitAdmin admin;
     private final UserRepository userRepository;
     private final RedisTemplate<String, String> redisTemplate;
+    @MockitoBean
+    private ProfileClient profileClient;
 
     @Autowired
     public UserControllerIntegrationTest(UserServiceImpl userService,
@@ -103,7 +109,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void testThatRegisterANewUserReturnsHttp400BadRequestIfValidationFails() throws Exception {
+    void testThatRegisterANewUserReturnsHttp400BadRequestIfValidationFails() throws Exception {
         RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
         dto.setAlias("");
         String json = objectMapper.writeValueAsString(dto);
@@ -114,7 +120,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void testThatRegisterANewUserReturnsHttp400BadRequestIfPasswordValidationFails() throws Exception {
+    void testThatRegisterANewUserReturnsHttp400BadRequestIfPasswordValidationFails() throws Exception {
         RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
         dto.setPassword("incorrect password");
         String json = objectMapper.writeValueAsString(dto);
@@ -125,8 +131,9 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void testThatRegisterANewUserReturnsHttp409ConflictIfDuplicateExists() throws Exception {
+    void testThatRegisterANewUserReturnsHttp409ConflictIfDuplicateEmailExists() throws Exception {
         RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
+        when(profileClient.getUsernameAvailability(dto.getAlias())).thenReturn(ResponseEntity.status(404).build());
         userService.registerUser(dto);
         String json = objectMapper.writeValueAsString(dto);
         mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
@@ -136,18 +143,35 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void testThatRegisterANewUserReturnsHttp201CreatedIfSuccessful() throws Exception {
+    void testThatRegisterANewUserReturnsHttp409ConflictIfDuplicateAliasExists() throws Exception {
         RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
+        when(profileClient.getUsernameAvailability(dto.getAlias())).thenReturn(ResponseEntity.status(404).build());
+        userService.registerUser(dto);
+        when(profileClient.getUsernameAvailability(dto.getAlias())).thenReturn(ResponseEntity.status(200).build());
+        dto.setEmail("other@email.com");
         String json = objectMapper.writeValueAsString(dto);
         mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
                         .contentType("application/json")
                         .content(json))
-                .andExpect(MockMvcResultMatchers.status().isCreated());
-        assertTrue(admin.getQueueInfo(RabbitMQConfig.create_user_queue).getMessageCount() > 0);
+                .andExpect(MockMvcResultMatchers.status().isConflict());
     }
 
     @Test
-    public void testThatLoginUserReturnsHttp400BadRequestIfValidationFails() throws Exception {
+    void testThatRegisterANewUserReturnsHttp201CreatedIfSuccessful() throws Exception {
+        RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
+        String json = objectMapper.writeValueAsString(dto);
+        when(profileClient.getUsernameAvailability(dto.getAlias())).thenReturn(ResponseEntity.status(404).build());
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
+                        .contentType("application/json")
+                        .content(json))
+                .andExpect(MockMvcResultMatchers.status().isCreated())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.email").value(dto.getEmail()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.password").exists());
+        assertEquals(1, admin.getQueueInfo(RabbitMQConfig.create_user_queue).getMessageCount());
+    }
+
+    @Test
+    void testThatLoginUserReturnsHttp400BadRequestIfValidationFails() throws Exception {
         LoginUser loginUser = TestDataUtil.createLoginUser();
         loginUser.setEmail("");
         String json = objectMapper.writeValueAsString(loginUser);
@@ -158,10 +182,11 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void testThatLoginUserReturnsHttp403ForbiddenIfPasswordIsIncorrect() throws Exception {
+    void testThatLoginUserReturnsHttp403ForbiddenIfPasswordIsIncorrect() throws Exception {
         LoginUser loginUser = TestDataUtil.createLoginUser();
         loginUser.setPassword("incorrectPassword");
         RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
+        when(profileClient.getUsernameAvailability(dto.getAlias())).thenReturn(ResponseEntity.status(404).build());
         userService.registerUser(dto);
         String json = objectMapper.writeValueAsString(loginUser);
         mockMvc.perform(MockMvcRequestBuilders.post("/auth/login")
@@ -171,9 +196,10 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void testThatLoginUserReturnsHttp200OkIfSuccessful() throws Exception {
+    void testThatLoginUserReturnsHttp200OkIfSuccessful() throws Exception {
         LoginUser loginUser = TestDataUtil.createLoginUser();
         RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
+        when(profileClient.getUsernameAvailability(dto.getAlias())).thenReturn(ResponseEntity.status(404).build());
         userService.registerUser(dto);
         String json = objectMapper.writeValueAsString(loginUser);
         Cookie response = mockMvc.perform(MockMvcRequestBuilders.post("/auth/login")
@@ -187,7 +213,7 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void testThatRefreshTokenReturnsHttp403ForbiddenIfInvalid() throws Exception {
+    void testThatRefreshTokenReturnsHttp403ForbiddenIfInvalid() throws Exception {
         Cookie cookie = new Cookie("refresh_token", "invalid_token");
         mockMvc.perform(MockMvcRequestBuilders.post("/auth/refresh")
                 .cookie(cookie))
@@ -195,8 +221,10 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void testThatRefreshTokenReturnsHttp200OkIfValid() throws Exception {
-        userService.registerUser(TestDataUtil.createRegisterUserDto());
+    void testThatRefreshTokenReturnsHttp200OkIfValid() throws Exception {
+        RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
+        when(profileClient.getUsernameAvailability(dto.getAlias())).thenReturn(ResponseEntity.status(404).build());
+        userService.registerUser(dto);
         Cookie cookie = new Cookie("refresh_token", getJwtToken(TestDataUtil.createLoginUser()).getRefreshToken());
         String prevToken = redisTemplate.opsForValue().get("refresh_token:" + cookie.getValue());
         Cookie response = mockMvc.perform(MockMvcRequestBuilders.post("/auth/refresh")
@@ -210,9 +238,10 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void testThatGetUserByJwtReturnsHttp200OkAndCacheWorks() throws Exception {
+    void testThatGetUserByJwtReturnsHttp200OkAndCacheWorks() throws Exception {
         LoginUser loginUser = TestDataUtil.createLoginUser();
         RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
+        when(profileClient.getUsernameAvailability(dto.getAlias())).thenReturn(ResponseEntity.status(404).build());
         UserEntity user = userService.registerUser(dto);
         JWTTokenResponse jwtTokenResponse = getJwtToken(loginUser);
         mockMvc.perform(MockMvcRequestBuilders.get("/auth/me")
@@ -222,27 +251,10 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    public void testThatPatchUserReturnsHttp200Ok() throws Exception {
+    void testThatLogoutUserReturnsHttp200OkAndLogsOut() throws Exception {
         LoginUser loginUser = TestDataUtil.createLoginUser();
         RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
-        UserEntity user = userService.registerUser(dto);
-        JWTTokenResponse jwtTokenResponse = getJwtToken(loginUser);
-        PatchUserDto patchUserDto = PatchUserDto.builder().email("newemail@email.com").build();
-        String patchJson = objectMapper.writeValueAsString(patchUserDto);
-        mockMvc.perform(MockMvcRequestBuilders.patch("/auth/me")
-                .header("Authorization", "Bearer " + jwtTokenResponse.getAccessToken())
-                .contentType("application/json")
-                .content(patchJson))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.email").value("newemail@email.com"));
-        assertEquals(1, admin.getQueueInfo(RabbitMQConfig.update_user_queue).getMessageCount());
-        assertTrue(redisTemplate.hasKey("auth::" + SHA256.hash(user.getUserId().toString())));
-    }
-
-    @Test
-    public void testThatLogoutUserReturnsHttp200OkAndLogsOut() throws Exception {
-        LoginUser loginUser = TestDataUtil.createLoginUser();
-        RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
+        when(profileClient.getUsernameAvailability(dto.getAlias())).thenReturn(ResponseEntity.status(404).build());
         userService.registerUser(dto);
         JWTTokenResponse token = getJwtToken(loginUser);
         mockMvc.perform(MockMvcRequestBuilders.post("/auth/logout")

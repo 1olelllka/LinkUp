@@ -1,11 +1,12 @@
 package com.olelllka.chat_service.rest.controller;
 
+import com.olelllka.chat_service.domain.dto.ChatDto;
 import com.olelllka.chat_service.domain.dto.ErrorMessage;
 import com.olelllka.chat_service.domain.dto.ListOfChatsDto;
 import com.olelllka.chat_service.domain.dto.MessageDto;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
-import com.olelllka.chat_service.mapper.impl.ChatMapperImpl;
+import com.olelllka.chat_service.mapper.Mapper;
 import com.olelllka.chat_service.mapper.impl.MessageMapperImpl;
 import com.olelllka.chat_service.rest.exception.ValidationException;
 import com.olelllka.chat_service.service.ChatService;
@@ -36,7 +37,7 @@ public class ChatController {
 
     private final ChatService chatService;
     private final MessageService messageService;
-    private final ChatMapperImpl chatMapper;
+    private final Mapper<ChatEntity, ChatDto> chatMapper;
     private final MessageMapperImpl messageMapper;
 
     @Operation(summary = "Get all chats for user")
@@ -66,11 +67,11 @@ public class ChatController {
             })
     })
     @GetMapping("")
-    public ResponseEntity<ChatEntity> getChatByTwoUsers(@RequestParam(name = "user1") UUID user1,
+    public ResponseEntity<ChatDto> getChatByTwoUsers(@RequestParam(name = "user1") UUID user1,
                                                         @RequestParam(name= "user2") UUID user2,
                                                         @RequestHeader(name="Authorization") String authHeader) {
         ChatEntity chat = chatService.getChatByTwoUsers(user1, user2, authHeader.substring(7));
-        return new ResponseEntity<>(chat, HttpStatus.OK);
+        return new ResponseEntity<>(chatMapper.toDto(chat), HttpStatus.OK);
     }
 
     @Operation(summary = "Delete chat for two users and all of the messages there")

@@ -4,9 +4,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-$9nx_pn$(hnvgku16+zt^zr%8-m6h1q9)fxu$_+iyb-9*zpdyj'
 
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "host.docker.internal"]
 
 INSTALLED_APPS = [
     'posts',
@@ -58,7 +58,7 @@ import os
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': os.environ.get("REDIS_URI") or 'redis://localhost:6373/0',
+        'LOCATION': os.environ.get("REDIS_URI") or 'redis://localhost:6379/0',
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
@@ -80,6 +80,14 @@ DATABASES = {
         'PORT': os.environ.get("POSTGRES_PORT") or '5432',
     }
 }
+
+import sys
+
+if 'test' in sys.argv:
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
+    }
 
 
 # Password validation
@@ -115,11 +123,11 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
 # Default primary key field type
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-ALLOWED_HOSTS = ['*']
 
 JWT_SECRET= os.environ.get("JWT_SECRET") or "0d9aa86975f076cbb84ab112f361a4b254c6f553d41da0918b439300e592ed3f"
 

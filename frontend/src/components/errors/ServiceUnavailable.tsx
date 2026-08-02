@@ -1,6 +1,7 @@
 import type { AxiosError } from "axios"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { AlertTriangle } from "lucide-react"
 import clsx from "clsx"
 
 type ServiceErrorProps = {
@@ -32,23 +33,29 @@ export const ServiceError = ({ err, variant = "default" }: ServiceErrorProps) =>
     <div className="flex flex-col justify-center items-center px-4 text-center">
       <Card
         className={clsx(
-          "w-full shadow-lg",
+          "shadow-lg bg-[#F3EBD9] border border-[#B23A2E]/40 rounded-sm",
           isCompact ? "max-w-md" : "max-w-lg"
         )}
       >
         <CardContent className={clsx(isCompact ? "p-4" : "p-6")}>
-          <h1
-            className={clsx(
-              "font-bold text-red-600 leading-tight mb-2",
-              isCompact ? "text-base" : "text-3xl"
-            )}
-          >
-            {status ? `${status} ${statusText}` : "Request Failed"}
-          </h1>
-          <Separator className="my-3" />
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <AlertTriangle
+              className={isCompact ? "w-4 h-4" : "w-6 h-6"}
+              style={{ color: "#B23A2E" }}
+            />
+            <h1
+              className={clsx(
+                "font-display font-bold text-[#B23A2E] leading-tight",
+                isCompact ? "text-base" : "text-2xl"
+              )}
+            >
+              {status ? `${status} ${statusText}` : "Request Failed"}
+            </h1>
+          </div>
+          <Separator className="my-3 bg-[#C9A063]" />
           <p
             className={clsx(
-              "text-slate-600 mb-2",
+              "text-[#4A4136] mb-2",
               isCompact ? "text-xs leading-tight" : "text-base"
             )}
           >
@@ -57,7 +64,7 @@ export const ServiceError = ({ err, variant = "default" }: ServiceErrorProps) =>
           {responseData && (
             <pre
               className={clsx(
-                "bg-slate-100 rounded-md overflow-x-auto text-left",
+                "bg-[#E8DFC8] border border-[#C9A063] text-[#241F1A] rounded-sm overflow-x-auto text-left",
                 isCompact ? "text-xs p-2 leading-tight" : "text-sm p-2"
               )}
             >

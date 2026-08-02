@@ -1,8 +1,10 @@
 package com.olelllka.auth_service.service;
 
-import com.olelllka.auth_service.TestDataUtil;
 import com.olelllka.auth_service.domain.dto.UserMessageDto;
+import com.olelllka.auth_service.domain.entity.AuthProvider;
+import com.olelllka.auth_service.domain.entity.OAuthIdentity;
 import com.olelllka.auth_service.domain.entity.UserEntity;
+import com.olelllka.auth_service.repository.OAuthIdentityRepository;
 import com.olelllka.auth_service.repository.UserRepository;
 import com.olelllka.auth_service.service.impl.OAuthSuccessHandler;
 import jakarta.servlet.ServletException;
@@ -29,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class OAuthSuccessHandlerUnitTest {
+class OAuthSuccessHandlerUnitTest {
 
     @Mock
     private JWTUtil jwtUtil;
@@ -43,24 +45,27 @@ public class OAuthSuccessHandlerUnitTest {
     private OAuth2User oAuth2User;
     @Mock
     private RedisTemplate<String, String> redisTemplate;
+    @Mock
+    private OAuthIdentityRepository oAuthIdentityRepository;
     @InjectMocks
     private OAuthSuccessHandler oAuthSuccessHandler;
 
     @Test
-    public void testThatItWorksIfUserAlreadyExists() throws ServletException, IOException {
+    void testThatItWorksIfUserAlreadyExists() throws ServletException, IOException {
         // given
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
-        UserEntity user = TestDataUtil.createUserEntity();
         UUID id = UUID.randomUUID();
-        user.setUserId(id);
+        OAuthIdentity identity = OAuthIdentity.builder()
+                .providerSubject("2345")
+                .id(id)
+                .authProvider(AuthProvider.GOOGLE).build();
         // when
         when(authentication.getPrincipal()).thenReturn(oAuth2User);
-        when(oAuth2User.getAttribute("email")).thenReturn(user.getEmail());
+        when(oAuth2User.getAttribute("email")).thenReturn("someEmail@gmail.com");
         when(oAuth2User.getAttribute("name")).thenReturn("name");
-        when(oAuth2User.getAttribute("sub")).thenReturn("2345");
-        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-        when(jwtUtil.generateAccessJWT(id)).thenReturn("ACCESS_TOKEN");
+        when(oAuth2User.getAttribute("sub")).thenReturn(identity.getProviderSubject());
+        when(oAuthIdentityRepository.findByAuthProviderAndProviderSubject(AuthProvider.GOOGLE, identity.getProviderSubject())).thenReturn(Optional.of(identity));
         when(jwtUtil.generateRefreshJWT(id)).thenReturn("REFRESH_TOKEN");
         when(redisTemplate.opsForValue()).thenReturn(mock(ValueOperations.class));
         oAuthSuccessHandler.onAuthenticationSuccess(request, response, authentication);
@@ -73,7 +78,7 @@ public class OAuthSuccessHandlerUnitTest {
     }
 
     @Test
-    public void testThatItWorksIfUserIsNew() throws ServletException, IOException {
+    void testThatItWorksIfUserIsNew() throws ServletException, IOException {
         // given
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -85,9 +90,8 @@ public class OAuthSuccessHandlerUnitTest {
         when(oAuth2User.getAttribute("email")).thenReturn(email);
         when(oAuth2User.getAttribute("name")).thenReturn(name);
         when(oAuth2User.getAttribute("sub")).thenReturn(sub);
-        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+        when(oAuthIdentityRepository.findByAuthProviderAndProviderSubject(AuthProvider.GOOGLE, sub)).thenReturn(Optional.empty());
         when(userRepository.save(any(UserEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(jwtUtil.generateAccessJWT(any(UUID.class))).thenReturn("ACCESS_TOKEN");
         when(jwtUtil.generateRefreshJWT(any(UUID.class))).thenReturn("REFRESH_TOKEN");
         when(redisTemplate.opsForValue()).thenReturn(mock(ValueOperations.class));
         oAuthSuccessHandler.onAuthenticationSuccess(request, response, authentication);

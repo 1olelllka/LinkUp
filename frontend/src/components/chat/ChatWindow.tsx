@@ -17,6 +17,7 @@ import type { AxiosError } from "axios";
 import { ServiceError } from "../errors/ServiceUnavailable";
 import { PageLoader } from "../load/PageLoader";
 import type { ChatListResponse } from "@/types/Chat";
+import { ArrowLeft, X, Send } from "lucide-react";
 
 type ChatWindowProps = {
   chatId: string;
@@ -25,7 +26,8 @@ type ChatWindowProps = {
   receiverName: string;
   setRefresh: (page: number) => void;
   allChats: ChatListResponse[];
-  setAllChats: React.Dispatch<React.SetStateAction<ChatListResponse[]>>
+  setAllChats: React.Dispatch<React.SetStateAction<ChatListResponse[]>>;
+  onBack?: () => void;
 };
 
 export const ChatWindow = ({
@@ -35,7 +37,8 @@ export const ChatWindow = ({
   receiverId,
   setRefresh,
   allChats,
-  setAllChats
+  setAllChats,
+  onBack,
 }: ChatWindowProps) => {
   const { connectionStatus, lastMessage, sendMessage } = useChatWebSocket(
     senderId,
@@ -167,20 +170,30 @@ export const ChatWindow = ({
     await loadMoreMessages(nextPage);
   }, [messagesPage, loadMoreMessages]);
 
+  const isConnected = connectionStatus === "Open";
+
   return (
     <div className="flex flex-col h-full max-h-[90vh]">
-      <div className="mb-4">
-        <h2 className="text-2xl font-bold">Chat with {receiverName}</h2>
-        <p className="text-sm text-gray-500">
-          Status:{" "}
-          <span
-            className={
-              connectionStatus === "Open" ? "text-green-500" : "text-red-500"
-            }
+      <div className="mb-4 flex items-center gap-3 pb-3 border-b border-[#C9A063]">
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="md:hidden text-[#8A7F6C] hover:text-[#B23A2E] transition-colors"
+            aria-label="Back to chats"
           >
-            {connectionStatus}
-          </span>
-        </p>
+            <ArrowLeft size={20} />
+          </button>
+        )}
+        <div>
+          <h2 className="font-display text-xl font-bold text-[#241F1A]">{receiverName}</h2>
+          <p className="text-xs text-[#8A7F6C] flex items-center gap-1.5 mt-0.5">
+            <span
+              className="inline-block w-1.5 h-1.5 rounded-full"
+              style={{ backgroundColor: isConnected ? "#6B7A5E" : "#B23A2E" }}
+            />
+            {isConnected ? "Connected" : "Reconnecting..."}
+          </p>
+        </div>
       </div>
 
       {error ? (
@@ -189,7 +202,7 @@ export const ChatWindow = ({
         <>
           <div
             ref={messagesContainerRef}
-            className="flex-1 space-y-4 overflow-y-auto p-2 mb-4"
+            className="flex-1 overflow-y-auto p-2 mb-4"
           >
             {loading && (
               <PageLoader />
@@ -201,93 +214,119 @@ export const ChatWindow = ({
                     messagesPage.totalPages - 1 &&
                   !loading && (
                     <p
-                      className="text-center text-xs text-slate-500 hover:underline cursor-pointer"
+                      className="text-center text-xs text-[#B23A2E] hover:underline cursor-pointer mb-3"
                       onClick={handleLoadMoreMessages}
                     >
                       🚀 Load more messages
                     </p>
                   )}
-                {messages.map((msg, idx) =>
-                  msg.from === senderId ? (
-                    <ContextMenu>
-                      <ContextMenuTrigger asChild>
-                        <div
-                          key={msg.id || idx}
-                          className={`max-w-[50%] px-4 py-2 rounded-xl shadow-sm bg-blue-100 ml-auto text-right
-                        ${updateId === msg.id && "shadow-xl"}
-                        `}
-                        >
-                          <p>{msg.content}</p>
-                          <span className="text-xs text-gray-500 block mt-1">
-                            {new Date(msg.createdAt).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                        </div>
-                      </ContextMenuTrigger>
-                      <ContextMenuContent>
-                        <ContextMenuItem
-                          onClick={() => {
-                            setUpdateId(msg.id);
-                            setMessage(msg.content);
-                          }}
-                        >
-                          Edit Message
-                        </ContextMenuItem>
-                        <ContextMenuItem
-                          onClick={() => {
-                            deleteSpecificMessageById(msg.id)
-                              .then((response) => {
-                                if (response.status == 204) {
-                                  const lastMsg = messages[messages.length - 1] == msg
-                                  setMessages((prev) =>
-                                    prev.filter((m) => m.id != msg.id)
-                                  );
-                                  const foundChat = allChats.find(obj => obj.id == msg.chatId);
-                                  if (foundChat && lastMsg) {
-                                    const newChat = {...foundChat, lastMessage: "*The message was deleted*"};
-                                    setAllChats((prev) => [newChat, ...(prev.filter(chat => chat != foundChat))])
-                                  }
-                                } else {
-                                  toast.warning(
-                                    "Unexpected response from server received: " +
-                                      response.data
-                                  );
-                                }
-                              })
-                              .catch((err) =>
-                                toast.error((err as AxiosError).message)
-                              );
-                          }}
-                        >
-                          Delete Message
-                        </ContextMenuItem>
-                      </ContextMenuContent>
-                    </ContextMenu>
-                  ) : (
+                {messages.map((msg, idx) => {
+                  const isOwn = msg.from === senderId;
+                  const isGroupedWithPrev = idx > 0 && messages[idx - 1].from === msg.from;
+                  const isLastInRun = idx === messages.length - 1 || messages[idx + 1].from !== msg.from;
+
+                  const bubble = (
                     <div
-                      key={msg.id || idx}
-                      className="max-w-[50%] px-4 py-2 rounded-xl shadow-sm bg-gray-100 text-left"
+                      className={`max-w-[70%] sm:max-w-[50%] px-4 py-2 shadow-sm border transition-shadow
+                        ${isOwn
+                          ? "ml-auto text-right bg-[#DDD0B0] border-[#C9A063] rounded-2xl rounded-br-sm"
+                          : "bg-[#F3EBD9] border-[#C9A063] rounded-2xl rounded-bl-sm"
+                        }
+                        ${updateId === msg.id ? "ring-2 ring-[#D9A441]" : ""}
+                      `}
                     >
-                      <p>{msg.content}</p>
-                      <span className="text-xs text-gray-500 block mt-1">
-                        {new Date(msg.createdAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
+                      <p className="text-[#241F1A] text-sm">{msg.content}</p>
+                      {isLastInRun && (
+                        <span className="text-[10px] text-[#8A7F6C] block mt-1">
+                          {new Date(msg.createdAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      )}
                     </div>
-                  )
-                )}
+                  );
+
+                  return (
+                    <div key={msg.id || idx} className={isGroupedWithPrev ? "mt-1" : "mt-4"}>
+                      {isOwn ? (
+                        <ContextMenu>
+                          <ContextMenuTrigger asChild>
+                            {bubble}
+                          </ContextMenuTrigger>
+                          <ContextMenuContent className="bg-[#F3EBD9] border-[#C9A063] rounded-sm">
+                            <ContextMenuItem
+                              className="text-[#241F1A] focus:bg-[#DDD0B0] focus:text-[#241F1A]"
+                              onClick={() => {
+                                setUpdateId(msg.id);
+                                setMessage(msg.content);
+                              }}
+                            >
+                              Edit Message
+                            </ContextMenuItem>
+                            <ContextMenuItem
+                              className="text-[#B23A2E] focus:bg-[#B23A2E] focus:text-[#F3EBD9]"
+                              onClick={() => {
+                                deleteSpecificMessageById(msg.id)
+                                  .then((response) => {
+                                    if (response.status == 204) {
+                                      const lastMsg = messages[messages.length - 1] == msg
+                                      setMessages((prev) =>
+                                        prev.filter((m) => m.id != msg.id)
+                                      );
+                                      const foundChat = allChats.find(obj => obj.id == msg.chatId);
+                                      if (foundChat && lastMsg) {
+                                        const newChat = {...foundChat, lastMessage: "*The message was deleted*"};
+                                        setAllChats((prev) => [newChat, ...(prev.filter(chat => chat != foundChat))])
+                                      }
+                                    } else {
+                                      toast.warning(
+                                        "Unexpected response from server received: " +
+                                          response.data
+                                      );
+                                    }
+                                  })
+                                  .catch((err) =>
+                                    toast.error((err as AxiosError).message)
+                                  );
+                              }}
+                            >
+                              Delete Message
+                            </ContextMenuItem>
+                          </ContextMenuContent>
+                        </ContextMenu>
+                      ) : (
+                        bubble
+                      )}
+                    </div>
+                  );
+                })}
                 <div ref={messagesEndRef} />
               </>
             ) : !loading && (
-              <div className="text-center text-gray-500 py-8">
-                🍪 No messages yet. Start the conversation!
+              <div className="flex flex-col items-center justify-center py-12">
+                <p className="font-hand text-xl text-[#8A7F6C]">no messages yet</p>
+                <p className="text-sm text-[#8A7F6C] mt-1">start the conversation</p>
               </div>
             )}
           </div>
+
+          {updateId != null && (
+            <div className="flex items-center justify-between px-3 py-1.5 mb-2 bg-[#DDD0B0] border border-[#C9A063] rounded-sm text-xs text-[#4A4136]">
+              <span>Editing message</span>
+              <button
+                onClick={() => {
+                  setUpdateId(null);
+                  setMessage("");
+                }}
+                className="text-[#8A7F6C] hover:text-[#B23A2E]"
+                aria-label="Cancel edit"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -297,15 +336,15 @@ export const ChatWindow = ({
                 handleSendMessage();
               }
             }}
-            className="flex items-center gap-2 border-t pt-4"
+            className="flex items-center gap-2 border-t border-[#C9A063] pt-4"
           >
             <input
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Type a message..."
-              className="flex-1 p-2.5 rounded-full bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-200 mb-1"
-              disabled={connectionStatus !== "Open"}
+              className="flex-1 p-2.5 rounded-full bg-[#F3EBD9] border border-[#C9A063] text-[#241F1A] placeholder:text-[#8A7F6C] focus:outline-none focus:ring-2 focus:ring-[#D9A441]"
+              disabled={!isConnected}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
@@ -317,23 +356,13 @@ export const ChatWindow = ({
                 }
               }}
             />
-            {updateId != null && (
-              <button
-                className="text-white px-4 py-2 rounded-full bg-red-500"
-                onClick={() => {
-                  setUpdateId(null);
-                  setMessage("");
-                }}
-              >
-                Cancel
-              </button>
-            )}
             <button
               type="submit"
-              disabled={!message.trim() || connectionStatus !== "Open"}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full disabled:bg-gray-300 disabled:cursor-not-allowed"
+              disabled={!message.trim() || !isConnected}
+              className="bg-[#B23A2E] hover:bg-[#9c3226] text-[#F3EBD9] p-2.5 rounded-full disabled:bg-[#C9A063] disabled:cursor-not-allowed transition-colors"
+              aria-label="Send message"
             >
-              Send
+              <Send size={18} />
             </button>
           </form>
         </>
