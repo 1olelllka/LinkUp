@@ -1,5 +1,6 @@
 import { API_BASE } from "@/constants/routes";
 import { getMe } from "@/services/authServices";
+import { getSpecificProfileInfo } from "@/services/profileServices";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useProfileStore } from "@/store/useProfileStore";
 import axios from "axios";
@@ -24,7 +25,8 @@ export async function ensureAccessToken(): Promise<string | null> {
     if (newToken) {
       setToken(newToken);
       const authData = await getMe();
-      useProfileStore.getState().setProfile(authData);
+      const profileData = await getSpecificProfileInfo(authData.userId);
+      useProfileStore.getState().setProfile(profileData);
       return newToken;
     }
   } catch (err) {

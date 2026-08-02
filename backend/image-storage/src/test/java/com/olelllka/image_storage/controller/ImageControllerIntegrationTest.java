@@ -19,10 +19,10 @@ import java.util.UUID;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @AutoConfigureMockMvc
 @Import(TestStorageConfig.class)
-public class ImageControllerIntegrationTest {
+class ImageControllerIntegrationTest {
     private final MockMvc mockMvc;
     private final ImageService imageService;
 
@@ -33,7 +33,7 @@ public class ImageControllerIntegrationTest {
     }
 
     @Test
-    public void testThatUploadImageReturnsHttp400BadRequestIfImageIsNotPNGOrJPED() throws Exception {
+    void testThatUploadImageReturnsHttp400BadRequestIfImageIsNotPNGOrJPED() throws Exception {
         MockMultipartFile wrongFile = new MockMultipartFile("file", "wrong-file.heic", "image/heic", "content".getBytes());
         mockMvc.perform(MockMvcRequestBuilders.multipart("/upload")
                         .file(wrongFile))
@@ -42,7 +42,7 @@ public class ImageControllerIntegrationTest {
     }
 
     @Test
-    public void testThatUploadImageReturnsHttp200OkIfImageSuccessfullyUploaded() throws Exception {
+    void testThatUploadImageReturnsHttp200OkIfImageSuccessfullyUploaded() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "correct-file.jpg", "image/jpeg", "jpeg content".getBytes());
         mockMvc.perform(MockMvcRequestBuilders.multipart("/upload")
                         .file(file))
@@ -51,13 +51,13 @@ public class ImageControllerIntegrationTest {
     }
 
     @Test
-    public void testThatGetImageReturnsHttp404NotFoundIfFileDoesNotExist() throws Exception {
+    void testThatGetImageReturnsHttp404NotFoundIfFileDoesNotExist() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/images/" + UUID.randomUUID()))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test
-    public void testThatGetImageReturnsHttp200OkIfEverythingOkay() throws Exception {
+    void testThatGetImageReturnsHttp200OkIfEverythingOkay() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "correct-file.jpg", "image/jpeg", "jpeg content".getBytes());
         String saved = imageService.save(file);
         mockMvc.perform(MockMvcRequestBuilders.get("/images/" + saved))

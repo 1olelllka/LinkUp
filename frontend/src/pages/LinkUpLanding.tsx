@@ -1,16 +1,80 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Menu, X, Link, Users, Mail, GalleryHorizontalEnd, MessageCircle, Newspaper } from "lucide-react";
+  Menu,
+  X,
+  Link as LinkIcon,
+  Pin,
+  MessageCircle,
+  Rss,
+  Image as ImageIcon,
+  Mail,
+} from "lucide-react";
+import { ensureAccessToken } from "@/utils/ensureAccessToken";
+
+const BOARD_W = 640;
+const BOARD_H = 460;
+
+const nodes = [
+  { id: "you", label: "you", x: 320, y: 248 },
+  { id: "roommates", label: "roommates", x: 118, y: 96 },
+  { id: "study", label: "study group", x: 508, y: 82 },
+  { id: "hometown", label: "hometown crew", x: 86, y: 344 },
+  { id: "team", label: "teammates", x: 546, y: 330 },
+];
+
+const strings = [
+  "M320,248 Q182,142 118,96",
+  "M320,248 Q462,128 508,82",
+  "M320,248 Q150,332 86,344",
+  "M320,248 Q482,320 546,330",
+  "M320,248 Q300,352 322,428",
+];
+
+const features = [
+  {
+    icon: ImageIcon,
+    title: "Stories",
+    body: "Post a photo, a rant, a win. Up for a day, seen by your circle — no filters required.",
+    rotate: "-rotate-2",
+  },
+  {
+    icon: MessageCircle,
+    title: "Live chatting",
+    body: "Jump straight into a conversation instead of waiting on a reply. Threads for the people you actually talk to.",
+    rotate: "rotate-1",
+  },
+  {
+    icon: Rss,
+    title: "Personalized feed",
+    body: "See what your friends are up to, sorted by who you care about — not by what keeps you scrolling.",
+    rotate: "-rotate-1",
+  },
+];
 
 export function LinkUpLanding() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+
+  useEffect(() => {
+      let mounted = true;
+      (async () => {
+      try {
+          const token = await ensureAccessToken();
+          if (mounted) {
+          setIsAuthenticated(!!token);
+          }
+      } catch {
+          if (mounted) {
+          setIsAuthenticated(false);
+          }
+      }
+      })();
+      return () => {
+      mounted = false;
+      };
+  })
 
   const scrollToSection = (sectionId: string) => {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth" });
@@ -18,227 +82,289 @@ export function LinkUpLanding() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 relative overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 -left-40 w-60 h-60 bg-primary/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-1/4 w-40 h-40 bg-primary/8 rounded-full blur-2xl"></div>
-      </div>
+    <div
+      className="min-h-screen bg-[#1E1A16] text-[#F3EBD9]"
+      style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Caveat:wght@500;600;700&display=swap');
+        .font-display { font-family: 'Space Mono', monospace; }
+        .font-hand { font-family: 'Caveat', cursive; }
+        .string-path {
+          stroke-dasharray: 700;
+          stroke-dashoffset: 700;
+          animation: draw-string 1.4s ease-out forwards;
+        }
+        .string-path:nth-child(1) { animation-delay: 0.1s; }
+        .string-path:nth-child(2) { animation-delay: 0.3s; }
+        .string-path:nth-child(3) { animation-delay: 0.5s; }
+        .string-path:nth-child(4) { animation-delay: 0.7s; }
+        .string-path:nth-child(5) { animation-delay: 0.9s; }
+        @keyframes draw-string { to { stroke-dashoffset: 0; } }
+        @media (prefers-reduced-motion: reduce) {
+          .string-path { animation: none; stroke-dashoffset: 0; }
+        }
+      `}</style>
+
       {/* Header */}
-      <header className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
+      <header className="border-b border-[#3A322A] bg-[#1E1A16]/90 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-              <Link className="w-5 h-5 text-primary-foreground" />
+            <div className="w-8 h-8 bg-[#C9A063] rounded-sm flex items-center justify-center rotate-3">
+              <LinkIcon className="w-4 h-4 text-[#1E1A16]" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">LinkUp!</h1>
+            <h1 className="text-2xl font-display font-bold tracking-tight">LinkUp!</h1>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center space-x-8 text-sm">
             <button
               onClick={() => scrollToSection("hero")}
-              className="text-foreground hover:text-primary transition-colors"
+              className="hover:text-[#D9A441] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#D9A441] rounded-sm"
             >
               Home
             </button>
             <button
               onClick={() => scrollToSection("about")}
-              className="text-foreground hover:text-primary transition-colors"
+              className="hover:text-[#D9A441] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#D9A441] rounded-sm"
             >
               About
             </button>
             <button
               onClick={() => scrollToSection("contact")}
-              className="text-foreground hover:text-primary transition-colors"
+              className="hover:text-[#D9A441] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#D9A441] rounded-sm"
             >
               Contact
             </button>
           </nav>
 
           <div className="flex items-center space-x-4">
-            <Button asChild className="rounded-md hidden sm:block">
-              <a href="/login">Login</a>
+            {isAuthenticated
+            ?
+            <Button
+              asChild
+              className="hidden sm:inline-flex rounded-sm bg-[#B23A2E] hover:bg-[#9c3226] text-[#F3EBD9] font-medium"
+            >
+              <a href="/profile">My Profile</a>
             </Button>
-
-            {/* Mobile menu button */}
+            :
+            <Button
+              asChild
+              className="hidden sm:inline-flex rounded-sm bg-[#B23A2E] hover:bg-[#9c3226] text-[#F3EBD9] font-medium"
+            >
+              <a href="/login">Log in</a>
+            </Button>
+            }
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 text-foreground"
+              className="md:hidden p-2"
+              aria-label="Toggle menu"
             >
-              {isMenuOpen ? (
-                <X className="w-5 h-5" />
-              ) : (
-                <Menu className="w-5 h-5" />
-              )}
+              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden border-t bg-background/95 backdrop-blur-md">
-            <nav className="container mx-auto px-4 py-4 space-y-4">
-              <button
-                onClick={() => scrollToSection("hero")}
-                className="block text-foreground hover:text-primary transition-colors"
-              >
+          <div className="md:hidden border-t border-[#3A322A] bg-[#1E1A16]">
+            <nav className="container mx-auto px-4 py-4 flex flex-col space-y-4 text-sm">
+              <button onClick={() => scrollToSection("hero")} className="text-left hover:text-[#D9A441]">
                 Home
               </button>
-              <button
-                onClick={() => scrollToSection("about")}
-                className="block text-foreground hover:text-primary transition-colors"
-              >
+              <button onClick={() => scrollToSection("about")} className="text-left hover:text-[#D9A441]">
                 About
               </button>
-              <button
-                onClick={() => scrollToSection("contact")}
-                className="block text-foreground hover:text-primary transition-colors"
-              >
+              <button onClick={() => scrollToSection("contact")} className="text-left hover:text-[#D9A441]">
                 Contact
               </button>
-              <Button asChild className="rounded-md w-full">
-                <a href="/login">Login</a>
+              <Button asChild className="rounded-sm bg-[#B23A2E] hover:bg-[#9c3226] w-full">
+                <a href="/login">Log in</a>
               </Button>
             </nav>
           </div>
         )}
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-12 relative">
-        {/* Hero Section */}
-        <section id="hero" className="text-center mb-16 relative">
-          <div className="relative z-10">
-            <div className="inline-flex items-center space-x-2 bg-primary/10 px-4 py-2 rounded-full mb-6 text-sm font-medium text-primary border border-primary/20">
-              <Users className="w-4 h-4" />
-              <span>Connect with purpose</span>
-            </div>
-            <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-4 leading-tight">
-              Welcome to <span className="text-primary">LinkUp!</span>
+      <main>
+        {/* Hero */}
+        <section id="hero" className="container mx-auto px-4 pt-14 pb-20">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <span className="font-hand text-2xl text-[#D9A441] block mb-1">
+              no cold feed, no strangers
+            </span>
+            <h2 className="font-display text-4xl md:text-6xl font-bold leading-tight mb-4">
+              Pin the people who matter.
             </h2>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-              Connect, collaborate, and build meaningful relationships in a
-              space designed for authentic connections
+            <p className="text-[#CBBFA0] text-lg leading-relaxed mb-8 max-w-xl mx-auto">
+              LinkUp turns your circle into a living board — stories, chats, and updates
+              from people you actually know, all mapped in one place.
             </p>
-            <div className="flex justify-center">
-              <Button asChild size="lg" className="rounded-md px-8">
-                <a href="/login">Get Started</a>
-              </Button>
+            <Button
+              asChild
+              size="lg"
+              className="rounded-sm bg-[#B23A2E] hover:bg-[#9c3226] text-[#F3EBD9] px-8 font-medium"
+            >
+            {isAuthenticated  
+            ?
+              <a href="/profile">Get started</a>
+            :
+              <a href="/login">Get started</a>
+            }
+            </Button>
+          </div>
+
+          {/* Corkboard */}
+          <div className="relative mx-auto max-w-[640px] p-3 sm:p-5 bg-[#6B4A32] rounded-md shadow-2xl">
+            <div
+              className="relative w-full rounded-sm overflow-hidden"
+              style={{
+                aspectRatio: `${BOARD_W} / ${BOARD_H}`,
+                backgroundColor: "#E8DFC8",
+                backgroundImage: "radial-gradient(rgba(107,74,50,0.14) 1px, transparent 1px)",
+                backgroundSize: "14px 14px",
+              }}
+            >
+              <svg
+                viewBox={`0 0 ${BOARD_W} ${BOARD_H}`}
+                className="absolute inset-0 w-full h-full"
+                preserveAspectRatio="none"
+              >
+                {strings.map((d, i) => (
+                  <path
+                    key={i}
+                    d={d}
+                    fill="none"
+                    stroke="#B23A2E"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    className="string-path"
+                  />
+                ))}
+              </svg>
+
+              {nodes.map((n) => (
+                <div
+                  key={n.id}
+                  className="absolute flex flex-col items-center"
+                  style={{
+                    left: `${(n.x / BOARD_W) * 100}%`,
+                    top: `${(n.y / BOARD_H) * 100}%`,
+                    transform: "translate(-50%, -50%)",
+                  }}
+                >
+                  <Pin
+                    className="w-4 h-4 -mb-1 z-10 drop-shadow-sm rotate-[-20deg]"
+                    style={{ color: "#D9A441" }}
+                    fill="#D9A441"
+                  />
+                  <div
+                    className={`${
+                      n.id === "you" ? "w-16 h-16 text-base" : "w-12 h-12 text-sm"
+                    } rounded-full bg-[#1E1A16] text-[#F3EBD9] flex items-center justify-center font-display font-bold shadow-md border-2 border-[#C9A063]`}
+                  >
+                    {n.id === "you" ? "you" : n.label.charAt(0).toUpperCase()}
+                  </div>
+                  {n.id !== "you" && (
+                    <span className="font-hand text-lg text-[#241F1A] mt-1 whitespace-nowrap">
+                      {n.label}
+                    </span>
+                  )}
+                </div>
+              ))}
+
+              {/* group chat note */}
+              <div
+                className="absolute bg-[#F3EBD9] border border-[#C9A063] rounded-sm px-3 py-2 shadow-md flex items-center gap-1.5"
+                style={{
+                  left: `${(320 / BOARD_W) * 100}%`,
+                  top: `${(432 / BOARD_H) * 100}%`,
+                  transform: "translate(-50%, -50%) rotate(-3deg)",
+                }}
+              >
+                <Pin
+                  className="w-3.5 h-3.5 absolute -top-2 left-1/2 -translate-x-1/2 rotate-[-15deg]"
+                  style={{ color: "#D9A441" }}
+                  fill="#D9A441"
+                />
+                <MessageCircle className="w-3.5 h-3.5 text-[#B23A2E]" />
+                <span className="font-hand text-base text-[#241F1A]">new dm 💬</span>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* About LinkUp Section */}
-        <section id="about" className="mb-16">
-          <Card className="rounded-md border-0 bg-card/50 backdrop-blur-sm shadow-lg">
-            <CardHeader className="text-center">
-              <div className="w-16 h-16 bg-primary rounded-md flex items-center justify-center mx-auto mb-4">
-                <Link className="w-8 h-8 text-primary-foreground" />
+        {/* About */}
+        <section id="about" className="container mx-auto px-4 py-16">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <span className="font-hand text-xl text-[#D9A441]">about</span>
+            <h3 className="font-display text-3xl md:text-4xl font-bold mt-1 mb-4">
+              Built for the people you already know.
+            </h3>
+            <p className="text-[#CBBFA0] leading-relaxed">
+              Most networks optimize for strangers. LinkUp does the opposite — a small,
+              personal board for your circle: old classmates, teammates, the group chat
+              that never sleeps. No algorithm chasing, no ads. Just your people.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto pt-4">
+            {features.map((f) => (
+              <div
+                key={f.title}
+                className={`relative bg-[#E8DFC8] text-[#241F1A] rounded-sm p-6 pt-8 shadow-lg ${f.rotate} hover:rotate-0 hover:-translate-y-1 transition-transform duration-300`}
+              >
+                <Pin
+                  className="w-5 h-5 absolute -top-2.5 left-1/2 -translate-x-1/2 rotate-[-10deg] drop-shadow"
+                  style={{ color: "#D9A441" }}
+                  fill="#D9A441"
+                />
+                <f.icon className="w-7 h-7 text-[#B23A2E] mb-3" />
+                <h4 className="font-display font-bold text-lg mb-2">{f.title}</h4>
+                <p className="text-sm text-[#4A4136] leading-relaxed">{f.body}</p>
               </div>
-              <CardTitle className="text-3xl">About LinkUp</CardTitle>
-              <CardDescription className="text-lg">
-                Discover what makes our platform special
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="prose prose-slate max-w-none">
-              <p className="text-muted-foreground text-center mb-8">
-                Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque
-                faucibus ex sapien vitae pellentesque sem placerat. In id cursus
-                mi pretium tellus duis convallis. Tempus leo eu aenean sed diam
-                urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum
-                egestas. Iaculis massa nisl malesuada lacinia integer nunc
-                posuere. Ut hendrerit semper vel class aptent taciti sociosqu.
-                Ad litora torquent per conubia nostra inceptos himenaeos. Lorem
-                ipsum dolor sit amet consectetur adipiscing elit. Quisque
-                faucibus ex sapien vitae pellentesque sem placerat. In id cursus
-                mi pretium tellus duis convallis. Tempus leo eu aenean sed diam
-                urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum
-                egestas. Iaculis massa nisl malesuada lacinia integer nunc
-                posuere. Ut hendrerit semper vel class aptent taciti sociosqu.
-                Ad litora torquent per conubia nostra inceptos himenaeos.{" "}
-              </p>
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center group hover:scale-105 transition-transform duration-200">
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-md flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg transition-shadow">
-                    <span className="text-primary-foreground font-bold text-xl">
-                      <GalleryHorizontalEnd />
-                    </span>
-                  </div>
-                  <h3 className="font-semibold mb-2 text-lg">Stories</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Post your own stories
-                  </p>
-                </div>
-                <div className="text-center group hover:scale-105 transition-transform duration-200">
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-md flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg transition-shadow">
-                    <span className="text-primary-foreground font-bold text-xl">
-                      <MessageCircle />
-                    </span>
-                  </div>
-                  <h3 className="font-semibold mb-2 text-lg">Live Chatting</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Connect with your friends anytime
-                  </p>
-                </div>
-                <div className="text-center group hover:scale-105 transition-transform duration-200">
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-md flex items-center justify-center mx-auto mb-4 group-hover:shadow-lg transition-shadow">
-                    <span className="text-primary-foreground font-bold text-xl">
-                      <Newspaper />
-                    </span>
-                  </div>
-                  <h3 className="font-semibold mb-2 text-lg">Personalized Feed</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Discover something new about your friends
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            ))}
+          </div>
         </section>
 
-        {/* Contact Section */}
-        <section id="contact">
-          <Card className="rounded-md border-0 bg-card/50 backdrop-blur-sm shadow-lg">
-            <CardHeader className="text-center">
-              <div className="w-16 h-16 bg-primary rounded-md flex items-center justify-center mx-auto mb-4">
-                <Mail className="w-8 h-8 text-primary-foreground" />
-              </div>
-              <CardTitle className="text-3xl">Contact Us</CardTitle>
-              <CardDescription className="text-lg">
-                Get in touch with the LinkUp team
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="w-[40%] mx-auto">
-                <h3 className="font-semibold mb-6 text-center text-xl">
-                  Get in Touch
-                </h3>
-                <div className="space-y-4">
-                  <div className="text-center p-4 bg-background/50 rounded-md border">
-                    <p className="font-medium text-primary">Email</p>
-                    <p className="text-muted-foreground">contact@linkup.com</p>
-                  </div>
-                  <div className="text-center p-4 bg-background/50 rounded-md border">
-                    <p className="font-medium text-primary">Support</p>
-                    <p className="text-muted-foreground">support@linkup.com</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Contact */}
+        <section id="contact" className="container mx-auto px-4 py-16">
+          <div className="text-center max-w-xl mx-auto mb-10">
+            <span className="font-hand text-xl text-[#D9A441]">leave a note</span>
+            <h3 className="font-display text-3xl md:text-4xl font-bold mt-1">Get in touch</h3>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-6 justify-center max-w-xl mx-auto">
+            <div className="relative flex-1 bg-[#E8DFC8] text-[#241F1A] rounded-sm p-6 pt-8 shadow-lg rotate-1 hover:rotate-0 transition-transform duration-300">
+              <Pin
+                className="w-5 h-5 absolute -top-2.5 left-1/2 -translate-x-1/2 rotate-[8deg]"
+                style={{ color: "#D9A441" }}
+                fill="#D9A441"
+              />
+              <Mail className="w-5 h-5 text-[#B23A2E] mb-2" />
+              <p className="font-display font-bold mb-1">Email</p>
+              <p className="text-sm text-[#4A4136]">contact@linkup.com</p>
+            </div>
+            <div className="relative flex-1 bg-[#E8DFC8] text-[#241F1A] rounded-sm p-6 pt-8 shadow-lg -rotate-1 hover:rotate-0 transition-transform duration-300">
+              <Pin
+                className="w-5 h-5 absolute -top-2.5 left-1/2 -translate-x-1/2 rotate-[-8deg]"
+                style={{ color: "#D9A441" }}
+                fill="#D9A441"
+              />
+              <Mail className="w-5 h-5 text-[#B23A2E] mb-2" />
+              <p className="font-display font-bold mb-1">Support</p>
+              <p className="text-sm text-[#4A4136]">support@linkup.com</p>
+            </div>
+          </div>
         </section>
       </main>
 
       {/* Footer */}
-      <footer className="border-t mt-16">
+      <footer className="border-t border-[#3A322A] mt-8">
         <div className="container mx-auto px-4 py-6 text-center">
-          <p className="text-muted-foreground">
-            © 2025 LinkUp! All rights reserved.
-          </p>
+          <p className="text-sm text-[#8A7F6C] font-display">© 2026 LinkUp!</p>
         </div>
       </footer>
     </div>
   );
 }
+
+export default LinkUpLanding;

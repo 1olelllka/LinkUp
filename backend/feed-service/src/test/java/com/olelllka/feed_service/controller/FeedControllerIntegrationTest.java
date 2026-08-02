@@ -9,6 +9,7 @@ import com.olelllka.feed_service.service.SHA256;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -35,9 +36,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @AutoConfigureMockMvc
-public class FeedControllerIntegrationTest {
+class FeedControllerIntegrationTest {
 
     @RegisterExtension
     static WireMockExtension POSTS_SERVICE = WireMockExtension.newInstance()
@@ -68,8 +69,13 @@ public class FeedControllerIntegrationTest {
         this.redisTemplate = redisTemplate;
     }
 
+    @AfterEach
+    void tearingDown() {
+        redisTemplate.getConnectionFactory().getConnection().serverCommands().flushAll();
+    }
+
     @Test
-    public void testThatGetFeedForSpecificUserReturnsHttp200OkAndSomeMockedData() throws Exception {
+    void testThatGetFeedForSpecificUserReturnsHttp200OkAndSomeMockedData() throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
         UUID profileId = UUID.randomUUID();
         PostDto postDto = TestDataUtil.createPostDto(UUID.randomUUID());
@@ -87,7 +93,7 @@ public class FeedControllerIntegrationTest {
     }
 
     @Test
-    public void testWhenGetFeedForSpecificUserReturnsActivatesCircuitBreaker() throws Exception {
+    void testWhenGetFeedForSpecificUserReturnsActivatesCircuitBreaker() throws Exception {
         UUID profileId = UUID.randomUUID();
         redisTemplate.opsForList().leftPush("feed:profile:"+SHA256.hash(profileId.toString()), "123");
         POSTS_SERVICE.stubFor(WireMock.get("/posts/123").willReturn(WireMock.serverError()));

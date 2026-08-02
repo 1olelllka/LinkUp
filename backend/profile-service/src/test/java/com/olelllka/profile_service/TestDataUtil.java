@@ -2,7 +2,6 @@ package com.olelllka.profile_service;
 
 import com.olelllka.profile_service.domain.dto.*;
 import com.olelllka.profile_service.domain.entity.Gender;
-import com.olelllka.profile_service.domain.entity.ProfileDocument;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
 
 import java.time.LocalDate;
@@ -12,7 +11,6 @@ public class TestDataUtil {
 
     public static ProfileEntity createNewProfileEntity() {
         return ProfileEntity.builder()
-                .email("email@email.com")
                 .name("Full Name")
                 .gender(Gender.MALE)
                 .dateOfBirth(LocalDate.of(2020, 1, 1))
@@ -36,16 +34,6 @@ public class TestDataUtil {
                 .dateOfBirth(LocalDate.of(2020, 1, 1))
                 .name("Full Name")
                 .gender(Gender.MALE)
-                .build();
-    }
-
-    public static ProfileDocument createNewProfileDocument() {
-        return ProfileDocument.builder()
-                .id(UUID.randomUUID())
-                .email("email@email.com")
-                .name("Full Name")
-                .photo("Photo url")
-                .username("username1234")
                 .build();
     }
 
@@ -74,6 +62,7 @@ public class TestDataUtil {
     public static PatchProfileDto createPatchProfileDto() {
         return PatchProfileDto.builder()
                 .name("Full Name")
+                .username("username123")
                 .gender(Gender.MALE)
                 .dateOfBirth(LocalDate.of(2020, 1, 1))
                 .photo("Photo url")

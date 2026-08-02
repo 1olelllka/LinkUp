@@ -19,13 +19,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { NavLink, useNavigate } from "react-router";
 import {
-  Archive,
+  BookMarked,
   ChevronUp,
-  Link,
-  MessageCircle,
+  ContactRound,
+  LogOut,
+  Mail,
+  Newspaper,
+  Paperclip,
   Search,
-  Signpost,
-  UserRoundPen,
 } from "lucide-react";
 import { useProfileStore } from "@/store/useProfileStore";
 import { logout } from "@/services/authServices";
@@ -39,12 +40,12 @@ const items = [
   {
     title: "Feed",
     url: "/feeds",
-    icon: Signpost,
+    icon: Newspaper,
   },
   {
     title: "Messages",
     url: "/chats",
-    icon: MessageCircle,
+    icon: Mail,
   },
   {
     title: "Search",
@@ -54,15 +55,14 @@ const items = [
   {
     title: "Archive",
     url: "/archive",
-    icon: Archive,
+    icon: BookMarked,
   },
   {
     title: "My Profile",
     url: "/profile",
-    icon: UserRoundPen,
+    icon: ContactRound,
   },
 ];
-
 export function AppSidebar() {
   const { profile, clearProfile } = useProfileStore();
   const navigate = useNavigate();
@@ -73,26 +73,51 @@ export function AppSidebar() {
       <SidebarHeader>
         <SidebarMenu className="ml-1">
           {open ? (
-            <SidebarMenuItem className="flex flex-row gap-2">
-              <Link className="border-1 rounded-md p-1" />
-              <Label>LinkUP!</Label>
+            <SidebarMenuItem className="flex flex-row items-center gap-2">
+              <Paperclip
+                className="
+                  border
+                  border-[#6B4A32]
+                  bg-[#C9A063]
+                  rounded-sm
+                  p-1
+                  text-[#241F1A]
+                "
+              />
+              <Label className="font-display font-bold text-[#241F1A]">LinkUP!</Label>
             </SidebarMenuItem>
           ) : (
             <SidebarMenuItem>
-              <Link className="border-1 rounded-md p-1" />
+            <Paperclip
+              className="
+                border
+                border-[#6B4A32]
+                bg-[#C9A063]
+                rounded-sm
+                p-1
+                text-[#241F1A]
+              "
+            />
             </SidebarMenuItem>
           )}
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel className="font-display text-xs uppercase tracking-wide text-[#8A7F6C]">
+            Navigation
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink to={item.url}>
+                  <SidebarMenuButton asChild className="hover:bg-[#DDD0B0]">
+                    <NavLink
+                      to={item.url}
+                      className={({ isActive }) =>
+                        isActive ? "text-[#B23A2E] font-semibold" : "text-[#241F1A]"
+                      }
+                    >
                       <item.icon />
                       <span>{item.title}</span>
                     </NavLink>
@@ -108,18 +133,19 @@ export function AppSidebar() {
             <SidebarMenuItem>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton>
+                  <SidebarMenuButton className="hover:bg-[#DDD0B0] text-[#241F1A]">
                     {/* Intentionally put avatar image to '' to get fallback of the first letter */}
                     <Avatar className="size-6">
                       <AvatarImage src=''/>
-                      <AvatarFallback className="mr-2 bg-white-200">{profile?.alias.at(0)}</AvatarFallback>
+                      <AvatarFallback className="bg-[#C9A063] text-[#241F1A] font-display font-bold">{profile?.username.at(0)}</AvatarFallback>
                     </Avatar>
-                    {profile?.alias || "Anonymous"}
+                    {profile?.username || "Anonymous"}
                     <ChevronUp className="ml-auto" />
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   side="top"
+                  className="bg-[#F3EBD9] border-[#C9A063] rounded-sm"
                 >
                   <DropdownMenuItem 
                     onClick={async () => {
@@ -137,8 +163,16 @@ export function AppSidebar() {
                         toast.error(`Unexpected error occured. ${error.message}`)
                       });
                   }}
-                  className="rounded"
+                    className="rounded-sm
+                    text-[#B23A2E]
+                    focus:bg-[#B23A2E]
+                    focus:text-[#F3EBD9]
+                    [&>svg]:text-[#B23A2E]
+                    focus:[&>svg]:text-[#F3EBD9]
+                    transition-colors
+                  "
                   >
+                    <LogOut/>
                     <span>Sign out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>

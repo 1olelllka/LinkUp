@@ -1,9 +1,20 @@
-FROM eclipse-temurin:21-jdk-alpine
+# Build stage
+FROM eclipse-temurin:21-jdk-alpine AS build
 
-ARG JAR_FILE=target/*.jar
+WORKDIR /app
 
-COPY ${JAR_FILE} /app.jar
-COPY entry.sh /entry.sh
+COPY .mvn/ .mvn/
+COPY mvnw pom.xml ./
+COPY src ./src
 
-ENTRYPOINT [ "/entry.sh" ]
-CMD ["java", "-jar", "/app.jar"]
+RUN chmod +x mvnw && ./mvnw package -Dmaven.test.skip=true
+
+
+# Runtime stage
+FROM eclipse-temurin:21-jre-alpine
+
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar app.jar
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

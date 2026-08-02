@@ -15,10 +15,9 @@ import java.util.UUID;
 @Data
 public class UserDto {
     private UUID userId;
-    private String alias;
     private String email;
     private String password;
-    private AuthProvider authProvider;
-    private String providerId;
+//    private AuthProvider authProvider;
+//    private String providerId;
     private Role role;
 }

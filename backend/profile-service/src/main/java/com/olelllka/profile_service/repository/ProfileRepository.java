@@ -53,7 +53,6 @@ public interface ProfileRepository extends Neo4jRepository<ProfileEntity, UUID> 
     MATCH (p:Profile {id: $profileId})
     SET p.username = COALESCE($username, p.username),
         p.name = COALESCE($name, p.name),
-        p.email = COALESCE($email, p.email),
         p.gender = COALESCE($gender, p.gender),
         p.photo = COALESCE($photo, p.photo),
         p.aboutMe = COALESCE($aboutMe, p.aboutMe),
@@ -64,7 +63,6 @@ public interface ProfileRepository extends Neo4jRepository<ProfileEntity, UUID> 
             UUID profileId,
             String username,
             String name,
-            String email,
             String gender,
             String photo,
             String aboutMe,
@@ -94,15 +92,27 @@ public interface ProfileRepository extends Neo4jRepository<ProfileEntity, UUID> 
     Page<ProfileEntity> findAllFolloweeByProfileId(UUID profileId, Pageable pageable);
 
     @Query(value = """
-            MATCH (p:Profile)
-            WHERE p.username CONTAINS $search OR p.name CONTAINS $search
-            RETURN p
-            SKIP $skip
-            LIMIT $limit
-            """, countQuery = """
-            MATCH (p:Profile)
-            WHERE p.username CONTAINS $search OR p.name CONTAINS $search
-            RETURN count(p)
-            """)
+        MATCH (p:Profile)
+        WHERE toLower(p.username) CONTAINS toLower($search)
+           OR toLower(p.name) CONTAINS toLower($search)
+        RETURN p
+        ORDER BY
+            CASE
+                WHEN toLower(p.username) = toLower($search) THEN 0
+                WHEN toLower(p.username) STARTS WITH toLower($search) THEN 1
+                WHEN toLower(p.name) STARTS WITH toLower($search) THEN 2
+                ELSE 3
+            END,
+            p.username
+        SKIP $skip
+        LIMIT $limit
+        """, countQuery = """
+        MATCH (p:Profile)
+        WHERE toLower(p.username) CONTAINS toLower($search)
+           OR toLower(p.name) CONTAINS toLower($search)
+        RETURN count(p)
+        """)
     Page<ProfileEntity> findProfileByParam(String search, Pageable pageable);
+
+    boolean existsByUsernameIgnoreCase(String username);
 }

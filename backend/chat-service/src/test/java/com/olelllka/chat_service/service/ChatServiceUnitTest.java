@@ -3,9 +3,10 @@ package com.olelllka.chat_service.service;
 import com.olelllka.chat_service.TestDataUtil;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
+import com.olelllka.chat_service.domain.entity.ProfileDocument;
 import com.olelllka.chat_service.domain.entity.User;
-import com.olelllka.chat_service.feign.ProfileFeign;
 import com.olelllka.chat_service.repository.ChatRepository;
+import com.olelllka.chat_service.repository.ProfileDocumentRepository;
 import com.olelllka.chat_service.rest.exception.AuthException;
 import com.olelllka.chat_service.rest.exception.NotFoundException;
 import com.olelllka.chat_service.service.impl.ChatServiceImpl;
@@ -21,7 +22,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,21 +31,21 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ChatServiceUnitTest {
+class ChatServiceUnitTest {
 
     @Mock
     private ChatRepository chatRepository;
     @Mock
     private MongoTemplate mongoTemplate;
     @Mock
-    private ProfileFeign profileFeign;
+    private ProfileDocumentRepository documentRepository;
     @Mock
     private JWTUtil jwtUtil;
     @InjectMocks
     private ChatServiceImpl chatService;
 
     @Test
-    public void testThatGetChatsByUserIdWorks() {
+    void testThatGetChatsByUserIdWorks() {
         // given
         Page<ChatEntity> expected = new PageImpl<>(List.of(TestDataUtil.createChatEntity()));
         Pageable pageable = PageRequest.of(0, 1);
@@ -65,7 +65,7 @@ public class ChatServiceUnitTest {
     }
 
     @Test
-    public void testThatGetChatsByUserIdThrowsAuthException() {
+    void testThatGetChatsByUserIdThrowsAuthException() {
         // given
         Pageable pageable = PageRequest.of(0, 1);
         UUID userId = UUID.randomUUID();
@@ -78,23 +78,25 @@ public class ChatServiceUnitTest {
     }
 
     @Test
-    public void testThatCreateNewChatWorks() {
+    void testThatCreateNewChatWorks() {
         // given
         UUID userId1 = UUID.randomUUID();
         UUID userId2 = UUID.randomUUID();
-        User user1 = User.builder().id(userId1).name("RandomUser1").username("randommmm1").build();
-        User user2 = User.builder().id(userId2).name("RandomUser2").username("randommmm2").build();
+        ProfileDocument doc1 = ProfileDocument.builder().id(userId1).username("randommmm1").name("RandomUser1").photo("random-photo.url").build();
+        ProfileDocument doc2 = ProfileDocument.builder().id(userId2).username("randommmm2").name("RandomUser2").photo("random-photo.url").build();
+        User user1 = User.builder().id(userId1).name("RandomUser1").username("randommmm1").photo("random-photo.url").build();
+        User user2 = User.builder().id(userId2).name("RandomUser2").username("randommmm2").photo("random-photo.url").build();
         ChatEntity expected = TestDataUtil.createChatEntity();
         expected.setLastMessage(null);
         expected.setTime(null);
-        User users[] = new User[2];
+        User[] users = new User[2];
         users[0] = user1;
         users[1] = user2;
         expected.setParticipants(users);
         // when
-        when(profileFeign.getProfileById(userId1)).thenReturn(ResponseEntity.ok().body(user1));
-        when(profileFeign.getProfileById(userId2)).thenReturn(ResponseEntity.ok().body(user2));
         when(chatRepository.save(expected)).thenReturn(expected);
+        when(documentRepository.findById(userId1)).thenReturn(Optional.of(doc1));
+        when(documentRepository.findById(userId2)).thenReturn(Optional.of(doc2));
         ChatEntity result = chatService.createNewChat(userId1, userId2);
         // then
         assertAll(
@@ -105,19 +107,19 @@ public class ChatServiceUnitTest {
     }
 
     @Test
-    public void testThatCreateNewChatThrowsExceptionIfOneOfTheUsersDoesNotExist() {
+    void testThatCreateNewChatThrowsExceptionIfOneOfTheUsersDoesNotExist() {
         // given
         UUID userId1 = UUID.randomUUID();
         UUID userId2 = UUID.randomUUID();
         // when
-        when(profileFeign.getProfileById(userId1)).thenReturn(ResponseEntity.notFound().build());
+        when(documentRepository.findById(userId1)).thenReturn(Optional.empty());
         // then
         assertThrows(NotFoundException.class, () -> chatService.createNewChat(userId1, userId2));
         verify(chatRepository, never()).save(any(ChatEntity.class));
     }
 
     @Test
-    public void testThatDeleteChatWorksWhenChatDoesNotExist() {
+    void testThatDeleteChatWorksWhenChatDoesNotExist() {
         // given
         String chatId = "1235";
         Query query = new Query();
@@ -133,7 +135,7 @@ public class ChatServiceUnitTest {
     }
 
     @Test
-    public void testThatDeleteChatWorksWhenChatExists() {
+    void testThatDeleteChatWorksWhenChatExists() {
         // given
         String chatId = "1235";
         Query query = new Query();
@@ -153,7 +155,7 @@ public class ChatServiceUnitTest {
     }
 
     @Test
-    public void testThatDeleteChatThrowsAuthException() {
+    void testThatDeleteChatThrowsAuthException() {
         String chatId = "1235";
         Query query = new Query();
         String jwt = "jwt";
@@ -173,7 +175,7 @@ public class ChatServiceUnitTest {
     }
 
     @Test
-    public void testThatGetChatByTwoUsersThrowsAuthException() {
+    void testThatGetChatByTwoUsersThrowsAuthException() {
         // given
         UUID u1 = UUID.randomUUID();
         UUID u2 = UUID.randomUUID();
@@ -185,7 +187,7 @@ public class ChatServiceUnitTest {
     }
 
     @Test
-    public void testThatGetChatByTwoUsersThrowsNotFoundException() {
+    void testThatGetChatByTwoUsersThrowsNotFoundException() {
         // given
         UUID u1 = UUID.randomUUID();
         UUID u2 = UUID.randomUUID();
@@ -198,7 +200,7 @@ public class ChatServiceUnitTest {
     }
 
     @Test
-    public void testThatGetChatByTwoUsersWorksAsExpected() {
+    void testThatGetChatByTwoUsersWorksAsExpected() {
         // given
         UUID u1 = UUID.randomUUID();
         UUID u2 = UUID.randomUUID();

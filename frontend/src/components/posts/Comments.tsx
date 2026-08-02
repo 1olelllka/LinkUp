@@ -25,7 +25,7 @@ export function Comments({
   const [showReplies, setShowReplies] = useState(false);
   const [replying, setReplying] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const currentUserId = useProfileStore.getState().profile?.userId;
+  const currentUserId = useProfileStore.getState().profile?.id;
 
   const canDelete = currentUserId && (currentUserId === comment.user_id);
 
@@ -43,15 +43,15 @@ export function Comments({
   };
 
   return (
-    <div className="border p-3 rounded-lg mb-3">
+    <div className="border border-[#C9A063] bg-[#F3EBD9] p-3 rounded-sm mb-3">
       {/* Main comment */}
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
           <CustomAvatar name={comment?.name} photo={comment?.photo} size={32} />
           <div>
-            <p className="font-medium text-sm">{comment?.name}</p>
+            <p className="font-medium text-sm text-[#241F1A]">{comment?.name}</p>
             <Link to={"/profile/" + comment.user_id}>
-              <p className="text-xs text-muted-foreground hover:underline">@{comment?.username}</p>
+              <p className="text-xs text-[#8A7F6C] hover:text-[#B23A2E] hover:underline">@{comment?.username}</p>
             </Link>
           </div>
         </div>
@@ -60,25 +60,25 @@ export function Comments({
           <div className="relative">
             <button
               onClick={() => setShowDeleteConfirm(!showDeleteConfirm)}
-              className="text-gray-400 hover:text-red-600 p-1 rounded"
+              className="text-[#8A7F6C] hover:text-[#B23A2E] p-1 rounded-sm"
               title="Delete comment"
             >
               <Trash size={16}/>
             </button>
             
             {showDeleteConfirm && (
-              <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-10 min-w-48">
-                <p className="text-sm text-gray-700 mb-3">Delete this comment?</p>
+              <div className="absolute right-0 top-8 bg-[#F3EBD9] border border-[#C9A063] rounded-sm shadow-lg p-3 z-10 min-w-48">
+                <p className="text-sm text-[#4A4136] mb-3">Delete this comment?</p>
                 <div className="flex gap-2">
                   <button
                     onClick={handleDelete}
-                    className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+                    className="px-3 py-1 bg-[#B23A2E] text-[#F3EBD9] text-sm rounded-sm hover:bg-[#9c3226]"
                   >
                     Delete
                   </button>
                   <button
                     onClick={() => setShowDeleteConfirm(false)}
-                    className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300"
+                    className="px-3 py-1 bg-[#DDD0B0] text-[#241F1A] text-sm rounded-sm hover:bg-[#C9A063]"
                   >
                     Cancel
                   </button>
@@ -89,21 +89,21 @@ export function Comments({
         )}
       </div>
       
-      <p className="text-sm text-gray-800">{comment.text}</p>
+      <p className="text-sm text-[#241F1A]">{comment.text}</p>
 
       {/* Reply button */}
       <div className="mt-2 space-x-4">
         {comment.replies && comment.replies?.length > 0 && (
           <button
             onClick={() => setShowReplies(!showReplies)}
-            className="text-sm text-blue-600"
+            className="text-sm text-[#B23A2E] hover:underline"
           >
             {showReplies ? "Hide replies" : `View replies (${comment.replies.length})`}
           </button>
         )}
         <button
           onClick={() => setReplying((prev) => !prev)}
-          className="text-sm text-gray-600"
+          className="text-sm text-[#4A4136] hover:text-[#241F1A]"
         >
           {replying ? "Cancel" : "Reply"}
         </button>
@@ -127,7 +127,7 @@ export function Comments({
 
       {/* Nested replies */}
       {showReplies && comment.replies && (
-        <div className="mt-3 pl-4 border-l space-y-3">
+        <div className="mt-3 pl-4 border-l border-[#C9A063] space-y-3">
           {comment.replies.map((reply) => (
             <Comments
               key={reply.id}

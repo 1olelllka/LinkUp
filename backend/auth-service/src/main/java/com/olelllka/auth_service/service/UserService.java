@@ -10,9 +10,7 @@ import jakarta.validation.constraints.NotEmpty;
 public interface UserService {
     UserEntity registerUser(RegisterUserDto userDto);
 
-    UserEntity patchUser(String jwt, PatchUserDto patchUserDto);
-
-    UserEntity getUserByJwt(String jwt);
-
     JWTTokenResponse generateJWTViaEmail(@Email(message = "Invalid Email.") @NotEmpty(message = "Email must not be empty.") String email);
+
+    UserEntity getUserByJwt(String substring);
 }

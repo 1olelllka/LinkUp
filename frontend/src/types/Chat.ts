@@ -8,7 +8,8 @@ export type ChatListResponse = {
 export type ChatUser = {
   id: string,
   name: string,
-  username: string
+  username: string,
+  photo: string
 };
 
 

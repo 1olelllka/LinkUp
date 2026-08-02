@@ -11,25 +11,24 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
-    public static final String update_elastic_queue = "update_profile_elastic_queue";
+    // CREATE USER AUTH QUEUE
     public static final String create_user_queue = "create_user_auth_queue";
-    public static final String update_user_queue = "update_user_auth_queue";
-    public static final String profile_exchange = "profile_exchange";
+//    public static final String profile_exchange = "profile_exchange";
+
+
+    // DELETE QUEUES
     public static final String profile_fanout_exchange = "profile_fanout_exchange";
-    public static final String delete_queue_elastic = "delete_profile_queue_elastic";
     public static final String delete_queue_post = "delete_profile_queue_post";
     public static final String delete_queue_story = "delete_profile_queue_story";
     public static final String delete_queue_feed = "delete_profile_queue_feed";
     public static final String delete_queue_notification = "delete_profile_queue_notification";
     public static final String delete_queue_chat = "delete_profile_queue_chat";
     public static final String delete_queue_auth = "delete_profile_queue_auth";
+
+    // NOTIFICATION QUEUE
     public static final String notification_queue = "notification_queue";
     public static final String notification_exchange = "notification_exchange";
 
-    @Bean
-    public Queue updateQueue() {
-        return new Queue(update_elastic_queue, true);
-    }
 
     @Bean
     public Queue deletePostQueue() {
@@ -52,11 +51,6 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Queue deleteQueueElastic() {
-        return new Queue(delete_queue_elastic, true);
-    }
-
-    @Bean
     public Queue deleteQueueAuth() {
         return new Queue(delete_queue_auth, true);
     }
@@ -71,10 +65,10 @@ public class RabbitMQConfig {
         return new Queue(notification_queue, true);
     }
 
-    @Bean
-    public TopicExchange exchange() {
-        return new TopicExchange(profile_exchange);
-    }
+//    @Bean
+//    public TopicExchange exchange() {
+//        return new TopicExchange(profile_exchange);
+//    }
 
     @Bean
     public FanoutExchange fanoutExchange() {
@@ -84,16 +78,6 @@ public class RabbitMQConfig {
     @Bean
     public TopicExchange notificationExchange() {
         return new TopicExchange(notification_exchange);
-    }
-
-    @Bean
-    public Binding createProfileElasicBinding(Queue updateQueue, TopicExchange exchange) {
-        return BindingBuilder.bind(updateQueue).to(exchange).with("update_profile");
-    }
-
-    @Bean
-    public Binding deleteProfileElasticBinding(Queue deleteQueueElastic, FanoutExchange fanoutExchange) {
-        return BindingBuilder.bind(deleteQueueElastic).to(fanoutExchange);
     }
 
     @Bean

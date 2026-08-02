@@ -1,13 +1,13 @@
 package com.olelllka.auth_service.service;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
-import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
@@ -51,7 +51,11 @@ public class JWTUtil {
     }
 
     public boolean isTokenValid(UUID userId, String jwt) {
-        return extractId(jwt).equals(userId.toString()) && getClaims(jwt).getExpiration().after(Date.from(Instant.now()));
+        try {
+            return getClaims(jwt).getSubject().equals(userId.toString());
+        } catch (JwtException | IllegalArgumentException ex) {
+            return false;
+        }
     }
 
     private SecretKey securityKey() {
