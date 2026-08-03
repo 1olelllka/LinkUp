@@ -1,7 +1,6 @@
 package com.olelllka.auth_service.service;
 
 import com.olelllka.auth_service.TestDataUtil;
-import com.olelllka.auth_service.domain.dto.PatchUserDto;
 import com.olelllka.auth_service.domain.dto.RegisterUserDto;
 import com.olelllka.auth_service.domain.dto.UserMessageDto;
 import com.olelllka.auth_service.domain.entity.UserEntity;
@@ -45,25 +44,6 @@ public class UserServiceUnitTest {
         verify(messagePublisher, never()).sendCreateUserMessage(any(UserMessageDto.class));
     }
 
-    @Test
-    public void testThatPatchUserWorksFine() {
-        // given
-        String jwt = "jwt";
-        PatchUserDto patchUserDto = PatchUserDto.builder()
-                .email("newemail@email.com")
-                .build();
-        UserEntity expected = TestDataUtil.createUserEntity();
-        expected.setEmail(patchUserDto.getEmail());
-        // when
-        when(jwtUtil.extractId(jwt)).thenReturn("email@email.com");
-        when(profileCacheHandlers.patchUserById("email@email.com", patchUserDto)).thenReturn(expected);
-        UserEntity result = userService.patchUser(jwt, patchUserDto);
-        // then
-        assertAll(
-                () -> assertNotNull(result),
-                () -> assertEquals(result.getEmail(), expected.getEmail())
-        );
-    }
 
     @Test
     public void testThatGetUserByJWTWorksFind() {

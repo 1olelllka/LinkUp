@@ -44,6 +44,13 @@ public class ProfileController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
+    @GetMapping("/username-availability")
+    public ResponseEntity<Void> checkUsernameAvailability(@RequestParam(name = "username") String username) {
+        boolean result = profileService.checkUsernameExistence(username);
+        if (result) return new ResponseEntity<>(HttpStatus.OK);
+        else return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
     @Tag(name="Profile management")
     @Operation(summary = "Get specific profile by ID")
     @ApiResponses(value = {

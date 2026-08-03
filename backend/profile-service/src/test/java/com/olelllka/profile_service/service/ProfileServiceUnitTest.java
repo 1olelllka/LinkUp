@@ -130,14 +130,6 @@ public class ProfileServiceUnitTest {
                 expected.getPhoto(),
                 expected.getAboutMe(),
                 expected.getDateOfBirth());
-        ProfileDocumentDto documentDto = ProfileDocumentDto.builder()
-                .id(result.getId())
-                .name(result.getName())
-                .photo(result.getPhoto())
-                .username(result.getUsername())
-                .email(result.getEmail())
-                .build();
-        verify(messagePublisher, times(1)).updateProfile(documentDto);
     }
 
     @Test

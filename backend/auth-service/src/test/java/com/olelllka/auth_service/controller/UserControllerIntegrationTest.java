@@ -7,7 +7,6 @@ import com.olelllka.auth_service.TestDataUtil;
 import com.olelllka.auth_service.config.RabbitMQConfig;
 import com.olelllka.auth_service.domain.dto.JWTTokenResponse;
 import com.olelllka.auth_service.domain.dto.LoginUser;
-import com.olelllka.auth_service.domain.dto.PatchUserDto;
 import com.olelllka.auth_service.domain.dto.RegisterUserDto;
 import com.olelllka.auth_service.domain.entity.UserEntity;
 import com.olelllka.auth_service.repository.UserRepository;
@@ -218,24 +217,6 @@ public class UserControllerIntegrationTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/auth/me")
                 .header("Authorization", "Bearer " + jwtTokenResponse.getAccessToken()))
                 .andExpect(MockMvcResultMatchers.status().isOk());
-        assertTrue(redisTemplate.hasKey("auth::" + SHA256.hash(user.getUserId().toString())));
-    }
-
-    @Test
-    public void testThatPatchUserReturnsHttp200Ok() throws Exception {
-        LoginUser loginUser = TestDataUtil.createLoginUser();
-        RegisterUserDto dto = TestDataUtil.createRegisterUserDto();
-        UserEntity user = userService.registerUser(dto);
-        JWTTokenResponse jwtTokenResponse = getJwtToken(loginUser);
-        PatchUserDto patchUserDto = PatchUserDto.builder().email("newemail@email.com").build();
-        String patchJson = objectMapper.writeValueAsString(patchUserDto);
-        mockMvc.perform(MockMvcRequestBuilders.patch("/auth/me")
-                .header("Authorization", "Bearer " + jwtTokenResponse.getAccessToken())
-                .contentType("application/json")
-                .content(patchJson))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.email").value("newemail@email.com"));
-        assertEquals(1, admin.getQueueInfo(RabbitMQConfig.update_user_queue).getMessageCount());
         assertTrue(redisTemplate.hasKey("auth::" + SHA256.hash(user.getUserId().toString())));
     }
 

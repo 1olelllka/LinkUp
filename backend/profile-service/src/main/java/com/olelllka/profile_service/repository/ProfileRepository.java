@@ -105,4 +105,6 @@ public interface ProfileRepository extends Neo4jRepository<ProfileEntity, UUID> 
             RETURN count(p)
             """)
     Page<ProfileEntity> findProfileByParam(String search, Pageable pageable);
+
+    boolean existsByUsernameIgnoreCase(String username);
 }

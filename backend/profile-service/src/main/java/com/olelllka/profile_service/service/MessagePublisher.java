@@ -18,10 +18,6 @@ public class MessagePublisher {
     private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper;
 
-    public void updateProfile(ProfileDocumentDto dto) {
-        rabbitTemplate.convertAndSend(RabbitMQConfig.profile_exchange, "update_profile", dto);
-    }
-
     public void deleteProfile(UUID id) {
         rabbitTemplate.convertAndSend(RabbitMQConfig.profile_fanout_exchange, "", id);
     }

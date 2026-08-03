@@ -28,7 +28,6 @@ public class MessageListener {
                 .id(messageDto.getProfileId())
                 .gender(messageDto.getGender())
                 .createdAt(LocalDate.now())
-                .email(messageDto.getEmail())
                 .name(messageDto.getName())
                 .username(messageDto.getUsername())
                 .dateOfBirth(messageDto.getDateOfBirth())

@@ -33,16 +33,12 @@ public class TestDataUtil {
     public static UserEntity createUserEntity() {
         return UserEntity.builder()
                 .email("email@email.com")
-                .alias("username")
-                .authProvider(AuthProvider.LOCAL)
-                .providerId("")
                 .role(Role.USER)
                 .build();
     }
 
     public static UserMessageDto createUserMessageDto() {
         return UserMessageDto.builder()
-                .email("email@email.com")
                 .name("name")
                 .username("username")
                 .gender(Gender.UNDEFINED)

@@ -14,7 +14,6 @@ import java.util.UUID;
 @Data
 public class UserMessageDto {
     private UUID profileId;
-    private String email;
     private String username;
     private String name;
     private Gender gender;

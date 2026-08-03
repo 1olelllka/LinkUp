@@ -11,7 +11,6 @@ public class TestDataUtil {
 
     public static ProfileEntity createNewProfileEntity() {
         return ProfileEntity.builder()
-                .email("email@email.com")
                 .name("Full Name")
                 .gender(Gender.MALE)
                 .dateOfBirth(LocalDate.of(2020, 1, 1))

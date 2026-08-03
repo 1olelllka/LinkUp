@@ -156,41 +156,37 @@ public class UserController {
         return new ResponseEntity<>(mapToDto(user), HttpStatus.OK);
     }
 
-    @Tag(name="User's auth information")
-    @Operation(summary = "Update user's auth information")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User updated successfully. The updated information will be sent to profile service via RabbitMQ"),
-            @ApiResponse(responseCode = "400", description = "Validation error", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))
-            }),
-            @ApiResponse(responseCode = "401", description = "Authorization error", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))
-            }),
-            @ApiResponse(responseCode = "404", description = "User not found", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))
-            })
-    })
-    @PatchMapping("/me")
-    public ResponseEntity<UserDto> patchUser(@RequestHeader(name = "Authorization") String header,
-                                            @Valid @RequestBody PatchUserDto patchUserDto,
-                                             BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            String msg = bindingResult.getAllErrors().stream().map(err -> err.getDefaultMessage()).collect(Collectors.joining(" "));
-            throw new ValidationException(msg);
-        }
-        UserEntity patched = userService.patchUser(header.substring(7), patchUserDto);
-        return new ResponseEntity<>(mapToDto(patched), HttpStatus.OK);
-    }
+//    @Tag(name="User's auth information")
+//    @Operation(summary = "Update user's auth information")
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "200", description = "User updated successfully. The updated information will be sent to profile service via RabbitMQ"),
+//            @ApiResponse(responseCode = "400", description = "Validation error", content = {
+//                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))
+//            }),
+//            @ApiResponse(responseCode = "401", description = "Authorization error", content = {
+//                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))
+//            }),
+//            @ApiResponse(responseCode = "404", description = "User not found", content = {
+//                    @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))
+//            })
+//    })
+//    @PatchMapping("/me")
+//    public ResponseEntity<UserDto> patchUser(@RequestHeader(name = "Authorization") String header,
+//                                            @Valid @RequestBody PatchUserDto patchUserDto,
+//                                             BindingResult bindingResult) {
+//        if (bindingResult.hasErrors()) {
+//            String msg = bindingResult.getAllErrors().stream().map(err -> err.getDefaultMessage()).collect(Collectors.joining(" "));
+//            throw new ValidationException(msg);
+//        }
+//        UserEntity patched = userService.patchUser(header.substring(7), patchUserDto);
+//        return new ResponseEntity<>(mapToDto(patched), HttpStatus.OK);
+//    }
 
     private UserDto mapToDto(UserEntity entity) {
         return UserDto.builder()
                 .userId(entity.getUserId())
                 .role(entity.getRole())
                 .email(entity.getEmail())
-                .alias(entity.getAlias())
-                .password(entity.getPassword())
-                .authProvider(entity.getAuthProvider())
-                .providerId(entity.getProviderId())
                 .build();
     }
 }

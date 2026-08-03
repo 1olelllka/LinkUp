@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Property;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.time.LocalDate;
@@ -29,7 +30,6 @@ public class ProfileEntity {
     private UUID id;
     private String username;
     private String name;
-    private String email;
     private String aboutMe;
     private String photo;
     private Gender gender;

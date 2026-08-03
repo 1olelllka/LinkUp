@@ -37,7 +37,6 @@ public class MessageListenerUnitTest {
         ProfileEntity expectedEntity = ProfileEntity.builder().build();
         expectedEntity.setId(userMessageDto.getProfileId());
         expectedEntity.setName(userMessageDto.getName());
-        expectedEntity.setEmail(userMessageDto.getEmail());
         expectedEntity.setUsername(userMessageDto.getUsername());
         expectedEntity.setGender(userMessageDto.getGender());
         expectedEntity.setCreatedAt(LocalDate.now());
@@ -57,9 +56,7 @@ public class MessageListenerUnitTest {
         messageDto.setProfileId(profileId);
         ProfileEntity expectedEntity = ProfileEntity.builder()
                 .id(messageDto.getProfileId())
-                .username(messageDto.getUsername())
-                .email(messageDto.getEmail()).build();
-        expectedEntity.setEmail(messageDto.getEmail());
+                .username(messageDto.getUsername()).build();
         // when
         when(redisTemplate.opsForValue()).thenReturn(mock(ValueOperations.class));
         when(profileRepository.updateProfile(profileId, messageDto.getUsername(), null,

@@ -62,14 +62,6 @@ public class ProfileServiceImpl implements ProfileService {
                 dto.getAboutMe(),
                 dto.getDateOfBirth()
         );
-        ProfileDocumentDto documentDto = ProfileDocumentDto.builder()
-                .id(updated.getId())
-                .username(updated.getUsername())
-                .name(updated.getName())
-                .photo(updated.getPhoto())
-                .email(updated.getEmail())
-                .build();
-        messagePublisher.updateProfile(documentDto);
         return updated;
     }
 
@@ -163,6 +155,11 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public boolean checkFollowStatus(UUID from, UUID to) {
         return repository.isFollowing(from, to);
+    }
+
+    @Override
+    public boolean checkUsernameExistence(String username) {
+        return repository.existsByUsernameIgnoreCase(username);
     }
 
 }
