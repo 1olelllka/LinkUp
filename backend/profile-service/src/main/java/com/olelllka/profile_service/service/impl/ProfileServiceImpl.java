@@ -3,10 +3,12 @@ package com.olelllka.profile_service.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.olelllka.profile_service.domain.dto.NotificationDto;
 import com.olelllka.profile_service.domain.dto.PatchProfileDto;
-import com.olelllka.profile_service.domain.dto.ProfileDocumentDto;
+import com.olelllka.profile_service.domain.entity.ProfileDocument;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
+import com.olelllka.profile_service.repository.ProfileDocumentRepository;
 import com.olelllka.profile_service.repository.ProfileRepository;
 import com.olelllka.profile_service.rest.exception.AuthException;
+import com.olelllka.profile_service.rest.exception.DuplicateException;
 import com.olelllka.profile_service.rest.exception.NotFoundException;
 import com.olelllka.profile_service.rest.exception.ValidationException;
 import com.olelllka.profile_service.service.JWTUtil;
@@ -30,6 +32,7 @@ import java.util.UUID;
 public class ProfileServiceImpl implements ProfileService {
 
     private final ProfileRepository repository;
+    private final ProfileDocumentRepository documentRepository;
     private final MessagePublisher messagePublisher;
     private final JWTUtil jwtUtil;
 
@@ -53,15 +56,24 @@ public class ProfileServiceImpl implements ProfileService {
         } catch (JwtException | IllegalArgumentException ex) {
             throw new AuthException(ex.getMessage());
         }
+        if (repository.existsByUsernameIgnoreCase(dto.getUsername())) {
+            throw new DuplicateException("User with such username already exists.");
+        }
         ProfileEntity updated = repository.updateProfile(profileId,
-                null,
+                dto.getUsername(),
                 dto.getName(),
-                null,
                 dto.getGender() != null ? dto.getGender().toString() : null,
                 dto.getPhoto(),
                 dto.getAboutMe(),
                 dto.getDateOfBirth()
         );
+        documentRepository.save(ProfileDocument
+                .builder()
+                        .id(profileId)
+                        .photo(updated.getPhoto())
+                        .username(updated.getUsername())
+                        .name(updated.getName())
+                .build());
         return updated;
     }
 
@@ -77,6 +89,7 @@ public class ProfileServiceImpl implements ProfileService {
             throw new AuthException(ex.getMessage());
         }
         repository.deleteById(profileId);
+        documentRepository.deleteById(profileId);
         messagePublisher.deleteProfile(profileId);
     }
 

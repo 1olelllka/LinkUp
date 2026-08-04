@@ -1,6 +1,6 @@
 package com.olelllka.notification_service.configuration;
 
-import com.olelllka.notification_service.feign.ProfileFeign;
+import com.olelllka.notification_service.repository.ProfileDocumentRepository;
 import com.olelllka.notification_service.service.JWTUtil;
 import com.olelllka.notification_service.service.WebSocketHandler;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 public class WebSocketConfig implements WebSocketConfigurer {
 
     @Autowired
-    public ProfileFeign profileService;
+    public ProfileDocumentRepository documentRepository;
     @Autowired
     public JWTUtil jwtUtil;
 
@@ -28,6 +28,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Bean
     public WebSocketHandler webSocketHandler() {
-        return new WebSocketHandler(jwtUtil, profileService);
+        return new WebSocketHandler(jwtUtil, documentRepository);
     }
 }

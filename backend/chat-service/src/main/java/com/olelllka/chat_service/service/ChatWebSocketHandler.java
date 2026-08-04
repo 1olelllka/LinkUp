@@ -5,11 +5,11 @@ import com.olelllka.chat_service.domain.dto.JWTMessage;
 import com.olelllka.chat_service.domain.dto.NotificationDto;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
+import com.olelllka.chat_service.domain.entity.ProfileDocument;
 import com.olelllka.chat_service.domain.entity.User;
-import com.olelllka.chat_service.feign.ProfileFeign;
 import com.olelllka.chat_service.repository.ChatRepository;
+import com.olelllka.chat_service.repository.ProfileDocumentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -27,42 +27,40 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private ChatRepository chatRepository;
     private MessagePublisher messagePublisher;
     private JWTUtil jwtUtil;
-    private ProfileFeign profileService;
+    private ProfileDocumentRepository documentRepository;
     private static final ConcurrentHashMap<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, UUID> authenticatedSessions = new ConcurrentHashMap<>();
-    private ResponseEntity<User> req1;
-    private ResponseEntity<User> req2;
+    private User user1;
+    private User user2;
     private AsyncMessageHandlingService messageHandlingService;
 
     @Autowired
     public ChatWebSocketHandler(ChatRepository chatRepository,
-                                ProfileFeign profileService,
                                 MessagePublisher messagePublisher,
                                 AsyncMessageHandlingService messageHandlingService,
+                                ProfileDocumentRepository documentRepository,
                                 JWTUtil jwtUtil) {
         this.chatRepository = chatRepository;
         this.messagePublisher = messagePublisher;
-        this.profileService = profileService;
         this.jwtUtil = jwtUtil;
         this.messageHandlingService = messageHandlingService;
+        this.documentRepository = documentRepository;
     }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         String sender = session.getUri().getQuery().split("=")[1].substring(0, 36);
         String receiver = session.getUri().getQuery().split("=")[2];
-        this.req1 = profileService.getProfileById(UUID.fromString(sender));
-        this.req2 = profileService.getProfileById(UUID.fromString(receiver));
-        if (this.req1.getStatusCode().is4xxClientError()) {
-            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A client error occurred on external service."));
-        } else if (this.req1.getStatusCode().is5xxServerError()) {
-            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A server error occurred on external service."));
+        Optional<ProfileDocument> doc1 = documentRepository.findById(UUID.fromString(sender));
+        Optional<ProfileDocument> doc2 = documentRepository.findById(UUID.fromString(receiver));
+        if (doc1.isEmpty()) {
+            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A sender was not found."));
         }
-        if (this.req2.getStatusCode().is4xxClientError()) {
-            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A client error occurred on external service."));
-        } else if (this.req2.getStatusCode().is5xxServerError()) {
-            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A server error occurred on external service."));
+        if (doc2.isEmpty()) {
+            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A receiver was not found."));
         }
+        this.user1 = User.builder().id(doc1.get().getId()).username(doc1.get().getUsername()).name(doc1.get().getName()).build();
+        this.user2 = User.builder().id(doc2.get().getId()).username(doc2.get().getUsername()).name(doc2.get().getName()).build();
         sessions.put(sender + ":" + receiver, session);
     }
 
@@ -92,7 +90,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         Optional<ChatEntity> chat = chatRepository.findChatByTwoMembers(senderId, targetUserId);
         String chatId;
         if (chat.isEmpty()) {
-            User users[] = {this.req1.getBody(), this.req2.getBody()};
+            User users[] = {this.user1, this.user2};
             ChatEntity newChat = chatRepository.save(ChatEntity.builder().participants(users).build());
             chatId = newChat.getId();
         } else {
@@ -109,7 +107,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                     .read(false)
                     .createdAt(new Date())
                     .userId(targetUserId.toString())
-                    .text("User @" + req2.getBody().getUsername() + " sent you a message: " + chatMessage)
+                    .text("User @" + user2.getUsername() + " sent you a message: " + chatMessage)
                     .build();
             messagePublisher.createChatNotification(notification);
         }

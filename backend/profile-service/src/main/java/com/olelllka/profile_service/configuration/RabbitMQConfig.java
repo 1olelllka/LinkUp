@@ -11,9 +11,12 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
+    // CREATE USER AUTH QUEUE
     public static final String create_user_queue = "create_user_auth_queue";
-    public static final String update_user_queue = "update_user_auth_queue";
-    public static final String profile_exchange = "profile_exchange";
+//    public static final String profile_exchange = "profile_exchange";
+
+
+    // DELETE QUEUES
     public static final String profile_fanout_exchange = "profile_fanout_exchange";
     public static final String delete_queue_post = "delete_profile_queue_post";
     public static final String delete_queue_story = "delete_profile_queue_story";
@@ -21,6 +24,8 @@ public class RabbitMQConfig {
     public static final String delete_queue_notification = "delete_profile_queue_notification";
     public static final String delete_queue_chat = "delete_profile_queue_chat";
     public static final String delete_queue_auth = "delete_profile_queue_auth";
+
+    // NOTIFICATION QUEUE
     public static final String notification_queue = "notification_queue";
     public static final String notification_exchange = "notification_exchange";
 
@@ -60,10 +65,10 @@ public class RabbitMQConfig {
         return new Queue(notification_queue, true);
     }
 
-    @Bean
-    public TopicExchange exchange() {
-        return new TopicExchange(profile_exchange);
-    }
+//    @Bean
+//    public TopicExchange exchange() {
+//        return new TopicExchange(profile_exchange);
+//    }
 
     @Bean
     public FanoutExchange fanoutExchange() {

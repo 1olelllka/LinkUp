@@ -2,9 +2,10 @@ package com.olelllka.chat_service.service.impl;
 
 import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
+import com.olelllka.chat_service.domain.entity.ProfileDocument;
 import com.olelllka.chat_service.domain.entity.User;
-import com.olelllka.chat_service.feign.ProfileFeign;
 import com.olelllka.chat_service.repository.ChatRepository;
+import com.olelllka.chat_service.repository.ProfileDocumentRepository;
 import com.olelllka.chat_service.rest.exception.AuthException;
 import com.olelllka.chat_service.rest.exception.NotFoundException;
 import com.olelllka.chat_service.service.ChatService;
@@ -17,7 +18,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,8 +29,8 @@ public class ChatServiceImpl implements ChatService {
 
     private final ChatRepository repository;
     private final MongoTemplate mongoTemplate;
-    private final ProfileFeign profileService;
     private final JWTUtil jwtUtil;
+    private final ProfileDocumentRepository documentRepository;
 
     @Override
     public Page<ChatEntity> getChatsForUser(UUID userId, Pageable pageable, String jwt) {
@@ -47,14 +47,12 @@ public class ChatServiceImpl implements ChatService {
     // This is being used only in tests
     @Override
     public ChatEntity createNewChat(@NotEmpty UUID userId1, @NotEmpty UUID userId2) {
-        ResponseEntity<User> req1 = profileService.getProfileById(userId1);
-        ResponseEntity<User> req2 = profileService.getProfileById(userId2);
-        if (!req1.getStatusCode().is2xxSuccessful() ||
-        !req2.getStatusCode().is2xxSuccessful()) {
-            throw new NotFoundException("One of the users with such id does not exist.");
-        }
+        ProfileDocument doc1 = documentRepository.findById(userId1).orElseThrow(() -> new NotFoundException("User with id %s was not found".formatted(userId1.toString())));
+        User user1 = User.builder().id(doc1.getId()).name(doc1.getName()).username(doc1.getUsername()).build();
+        ProfileDocument doc2 = documentRepository.findById(userId2).orElseThrow(() -> new NotFoundException("User with id %s was not found".formatted(userId2.toString())));
+        User user2 = User.builder().id(doc2.getId()).name(doc2.getName()).username(doc2.getUsername()).build();
         ChatEntity newChat = ChatEntity.builder()
-                .participants(new User[]{req1.getBody(), req2.getBody()})
+                .participants(new User[]{user1, user2})
                 .build();
         return repository.save(newChat);
     }

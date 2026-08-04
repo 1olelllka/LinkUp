@@ -48,22 +48,4 @@ public class MessageListenerUnitTest {
         // then
         verify(profileRepository, times(1)).save(expectedEntity);
     }
-
-    @Test
-    public void testThatUpdateProfileFromAuthServiceWorks() throws JsonProcessingException {
-        UUID profileId = UUID.randomUUID();
-        UserMessageDto messageDto = TestDataUtil.createUserMessageDto();
-        messageDto.setProfileId(profileId);
-        ProfileEntity expectedEntity = ProfileEntity.builder()
-                .id(messageDto.getProfileId())
-                .username(messageDto.getUsername()).build();
-        // when
-        when(redisTemplate.opsForValue()).thenReturn(mock(ValueOperations.class));
-        when(profileRepository.updateProfile(profileId, messageDto.getUsername(), null,
-                messageDto.getEmail(), null, null, null, null)).thenReturn(expectedEntity);
-        messageListener.updateProfileFromAuthService(messageDto);
-        verify(profileRepository, times(1)).updateProfile(profileId, messageDto.getUsername(), null, messageDto.getEmail(), null, null, null, null);
-        verify(redisTemplate.opsForValue(), times(1))
-                .set("profile::" + SHA256.hash(messageDto.getProfileId().toString()), expectedEntity, 60, TimeUnit.MINUTES);
-    }
 }

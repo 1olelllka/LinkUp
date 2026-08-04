@@ -4,7 +4,6 @@ import com.olelllka.chat_service.TestDataUtil;
 import com.olelllka.chat_service.domain.entity.ChatEntity;
 import com.olelllka.chat_service.domain.entity.MessageEntity;
 import com.olelllka.chat_service.domain.entity.User;
-import com.olelllka.chat_service.feign.ProfileFeign;
 import com.olelllka.chat_service.repository.ChatRepository;
 import com.olelllka.chat_service.rest.exception.AuthException;
 import com.olelllka.chat_service.rest.exception.NotFoundException;
@@ -37,8 +36,6 @@ public class ChatServiceUnitTest {
     private ChatRepository chatRepository;
     @Mock
     private MongoTemplate mongoTemplate;
-    @Mock
-    private ProfileFeign profileFeign;
     @Mock
     private JWTUtil jwtUtil;
     @InjectMocks
@@ -92,8 +89,6 @@ public class ChatServiceUnitTest {
         users[1] = user2;
         expected.setParticipants(users);
         // when
-        when(profileFeign.getProfileById(userId1)).thenReturn(ResponseEntity.ok().body(user1));
-        when(profileFeign.getProfileById(userId2)).thenReturn(ResponseEntity.ok().body(user2));
         when(chatRepository.save(expected)).thenReturn(expected);
         ChatEntity result = chatService.createNewChat(userId1, userId2);
         // then
@@ -110,7 +105,6 @@ public class ChatServiceUnitTest {
         UUID userId1 = UUID.randomUUID();
         UUID userId2 = UUID.randomUUID();
         // when
-        when(profileFeign.getProfileById(userId1)).thenReturn(ResponseEntity.notFound().build());
         // then
         assertThrows(NotFoundException.class, () -> chatService.createNewChat(userId1, userId2));
         verify(chatRepository, never()).save(any(ChatEntity.class));

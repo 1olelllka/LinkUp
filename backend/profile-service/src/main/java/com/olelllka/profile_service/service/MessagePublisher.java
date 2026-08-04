@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.olelllka.profile_service.configuration.RabbitMQConfig;
 import com.olelllka.profile_service.domain.dto.NotificationDto;
-import com.olelllka.profile_service.domain.dto.ProfileDocumentDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;

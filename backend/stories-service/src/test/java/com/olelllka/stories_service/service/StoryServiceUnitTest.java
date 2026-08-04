@@ -95,7 +95,7 @@ public class StoryServiceUnitTest {
         when(repository.save(expected)).thenReturn(story);
         when(jwtUtil.extractId(jwt)).thenReturn(userId.toString());
         when(mapper.toDto(story)).thenReturn(mappedDto);
-        when(profileFeign.getProfileById(userId)).thenReturn(ResponseEntity.ok().build());
+//        when(profileFeign.getProfileById(userId)).thenReturn(ResponseEntity.ok().build());
         StoryEntity result = service.createStory(userId, story, jwt);
         // then
         assertAll(
@@ -149,7 +149,7 @@ public class StoryServiceUnitTest {
         UUID userId = UUID.randomUUID();
         StoryEntity story = TestDataUtil.createStoryEntity();
         String jwt = "jwt";
-        when(profileFeign.getProfileById(userId)).thenReturn(ResponseEntity.notFound().build());
+//        when(profileFeign.getProfileById(userId)).thenReturn(ResponseEntity.notFound().build());
         when(jwtUtil.extractId(jwt)).thenReturn(userId.toString());
         assertThrows(NotFoundException.class, () -> service.createStory(userId, story, jwt));
         verify(repository, never()).save(any(StoryEntity.class));

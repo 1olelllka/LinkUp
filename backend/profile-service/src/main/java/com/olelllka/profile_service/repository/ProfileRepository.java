@@ -53,7 +53,6 @@ public interface ProfileRepository extends Neo4jRepository<ProfileEntity, UUID> 
     MATCH (p:Profile {id: $profileId})
     SET p.username = COALESCE($username, p.username),
         p.name = COALESCE($name, p.name),
-        p.email = COALESCE($email, p.email),
         p.gender = COALESCE($gender, p.gender),
         p.photo = COALESCE($photo, p.photo),
         p.aboutMe = COALESCE($aboutMe, p.aboutMe),
@@ -64,7 +63,6 @@ public interface ProfileRepository extends Neo4jRepository<ProfileEntity, UUID> 
             UUID profileId,
             String username,
             String name,
-            String email,
             String gender,
             String photo,
             String aboutMe,
