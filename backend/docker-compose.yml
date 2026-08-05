@@ -1,52 +1,581 @@
-# Global Docker Compose File
 name: LinkUp_Backend
+
 services:
-  profile_db:
-    container_name: profile_neo4j
-    image: neo4j:5.26.0
+
+  # ============================================================
+  # FRONTEND
+  # ============================================================
+
+  # frontend:
+  #   build: ./frontend
+  #   image: 1olelllka/linkup-frontend
+  #   container_name: linkup_frontend
+  #   ports:
+  #     - "3000:80"
+  #   networks:
+  #     - linkup-net
+  #   mem_limit: 64m
+  #   depends_on:
+  #     - gateway
+
+
+  # ============================================================
+  # SERVICE DISCOVERY
+  # ============================================================
+
+  eureka:
+    build: ./discovery-server
+    image: 1olelllka/linkup-discoveryserver
+    container_name: discovery_server
     ports:
-      - 7474:7474
-      - 7687:7687
-    environment:
-      - NEO4J_AUTH=${NEO4J_AUTH:-neo4j/neo4j-admin}
-      - NEO4J_server_memory_heap_max__size=2G
-    volumes:
-      - "neo4j_data:/data"
-  rabbitmq:
-    container_name: linkup_rabbimtq
-    image: rabbitmq:3.13-management
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-secret}
-      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-myuser}
+      - "8761:8761"
     networks:
       - linkup-net
-  global_cache:
-    container_name: redis_global_cache
-    image: redis:7.2.6
-    ports:
-      - 6379:6379
-    volumes:
-      - "redis_data:/data"
-  global_mongo:
-    container_name: mongo_global_db
-    image: mongo:8.0
-    ports:
-      - 27017:27017
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME:-admin}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-admin}
+      JAVA_TOOL_OPTIONS: "-Xms32m -Xmx128m"
+    mem_limit: 192m
+
+
+  # ============================================================
+  # API GATEWAY
+  # ============================================================
+
+  gateway:
+    build: ./gateway
+    image: 1olelllka/linkup-gateway
+    container_name: gateway_server
+    ports:
+      - "8080:8080"
+    networks:
+      - linkup-net
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xms32m -Xmx128m"
+      EUREKA_URI: "http://eureka:8761/eureka"
+      REDIS_HOST: "global_cache"
+      REDIS_PORT: "6379"
+      POSTS_SERVICE_HOST: host.docker.internal
+    depends_on:
+      eureka:
+        condition: service_started
+    mem_limit: 192m
+
+  # ============================================================
+  # AUTH SERVICE
+  # ============================================================
+
+  auth_service:
+    build: ./auth-service
+    image: 1olelllka/linkup-authservice
+    container_name: auth_server
+    ports:
+      - "8010:8010"
+    networks:
+      - linkup-net
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xms32m -Xmx128m"
+
+      EUREKA_URI: "http://eureka:8761/eureka"
+
+      REDIS_HOST: "global_cache"
+      REDIS_PORT: "6379"
+
+      MONGO_HOST: "global_mongo"
+      MONGO_PORT: "27017"
+      MONGO_USERNAME: "${MONGO_INITDB_ROOT_USERNAME:-admin}"
+      MONGO_PASSWORD: "${MONGO_INITDB_ROOT_PASSWORD:-admin}"
+
+      RABBIT_HOST: "rabbitmq"
+      RABBIT_PORT: "5672"
+      RABBIT_USERNAME: "${RABBITMQ_DEFAULT_USER:-myuser}"
+      RABBIT_PASSWORD: "${RABBITMQ_DEFAULT_PASS:-secret}"
+
+      JWT_SECRET: "${JWT_SECRET:-0d9aa86975f076cbb84ab112f361a4b254c6f553d41da0918b439300e592ed3f}"
+
+    depends_on:
+      eureka:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      global_cache:
+        condition: service_healthy
+      global_mongo:
+        condition: service_healthy
+      profile_service:
+        condition: service_started
+
+    mem_limit: 192m
+
+
+  # ============================================================
+  # PROFILE SERVICE
+  # ============================================================
+
+  profile_service:
+    build: ./profile-service
+    image: 1olelllka/linkup-profileservice
+    container_name: profile_server
+    ports:
+      - "8001:8001"
+    networks:
+      - linkup-net
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xms32m -Xmx160m"
+
+      EUREKA_URI: "http://eureka:8761/eureka"
+
+      NEO4J_URI: "bolt://host.docker.internal:7687"
+      NEO4J_USERNAME: "${NEO4J_USERNAME:-neo4j}"
+      NEO4J_PASSWORD: "${NEO4J_PASSWORD:-neo4j-admin}"
+
+      RABBIT_HOST: "rabbitmq"
+      RABBIT_PORT: "5672"
+      RABBIT_USERNAME: "${RABBITMQ_DEFAULT_USER:-myuser}"
+      RABBIT_PASSWORD: "${RABBITMQ_DEFAULT_PASS:-secret}"
+
+      REDIS_HOST: "global_cache"
+      REDIS_PORT: "6379"
+
+      MONGO_HOST: "global_mongo"
+      MONGO_PORT: "27017"
+      MONGO_USERNAME: "${MONGO_INITDB_ROOT_USERNAME:-admin}"
+      MONGO_PASSWORD: "${MONGO_INITDB_ROOT_PASSWORD:-admin}"
+
+      JWT_SECRET: "${JWT_SECRET:-0d9aa86975f076cbb84ab112f361a4b254c6f553d41da0918b439300e592ed3f}"
+
+    depends_on:
+      eureka:
+        condition: service_started
+      profile_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      global_cache:
+        condition: service_healthy
+      global_mongo:
+        condition: service_healthy
+
+    mem_limit: 256m
+
+
+  # ============================================================
+  # CHAT SERVICE
+  # ============================================================
+
+  chat_service:
+    build: ./chat-service
+    image: 1olelllka/linkup-chatservice
+    container_name: chat_server
+    ports:
+      - "8005:8005"
+    networks:
+      - linkup-net
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xms32m -Xmx128m"
+
+      MONGO_USERNAME: "${MONGO_INITDB_ROOT_USERNAME:-admin}"
+      MONGO_PASSWORD: "${MONGO_INITDB_ROOT_PASSWORD:-admin}"
+      MONGO_HOST: "global_mongo"
+      MONGO_PORT: "27017"
+
+      RABBIT_HOST: "rabbitmq"
+      RABBIT_PORT: "5672"
+      RABBIT_USERNAME: "${RABBITMQ_DEFAULT_USER:-myuser}"
+      RABBIT_PASSWORD: "${RABBITMQ_DEFAULT_PASS:-secret}"
+
+      EUREKA_URI: "http://eureka:8761/eureka"
+
+      JWT_SECRET: "${JWT_SECRET:-0d9aa86975f076cbb84ab112f361a4b254c6f553d41da0918b439300e592ed3f}"
+
+    depends_on:
+      eureka:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      global_cache:
+        condition: service_healthy
+      global_mongo:
+        condition: service_healthy
+      auth_service:
+        condition: service_started
+
+    mem_limit: 192m
+
+
+  # ============================================================
+  # STORIES SERVICE
+  # ============================================================
+
+  stories_service:
+    build: ./stories-service
+    image: 1olelllka/linkup-storiesservice
+    container_name: stories_server
+    ports:
+      - "8002:8002"
+    networks:
+      - linkup-net
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xms32m -Xmx128m"
+
+      EUREKA_URI: "http://eureka:8761/eureka"
+
+      REDIS_HOST: "global_cache"
+      REDIS_PORT: "6379"
+
+      RABBIT_HOST: "rabbitmq"
+      RABBIT_PORT: "5672"
+      RABBIT_USERNAME: "${RABBITMQ_DEFAULT_USER:-myuser}"
+      RABBIT_PASSWORD: "${RABBITMQ_DEFAULT_PASS:-secret}"
+
+      PROFILE_HOST: "profile_service"
+
+      MONGO_HOST: "global_mongo"
+      MONGO_PORT: "27017"
+      MONGO_USERNAME: "${MONGO_INITDB_ROOT_USERNAME:-admin}"
+      MONGO_PASSWORD: "${MONGO_INITDB_ROOT_PASSWORD:-admin}"
+
+      JWT_SECRET: "${JWT_SECRET:-0d9aa86975f076cbb84ab112f361a4b254c6f553d41da0918b439300e592ed3f}"
+
+    depends_on:
+      profile_service:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      global_cache:
+        condition: service_healthy
+      global_mongo:
+        condition: service_healthy
+
+    mem_limit: 192m
+
+
+  # ============================================================
+  # NOTIFICATION SERVICE
+  # ============================================================
+
+  notification_service:
+    build: ./notification-service
+    image: 1olelllka/linkup-notificationservice
+    container_name: notification_server
+    ports:
+      - "8003:8003"
+    networks:
+      - linkup-net
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xms32m -Xmx128m"
+
+      EUREKA_URI: "http://eureka:8761/eureka"
+
+      RABBIT_HOST: "rabbitmq"
+      RABBIT_PORT: "5672"
+      RABBIT_USERNAME: "${RABBITMQ_DEFAULT_USER:-myuser}"
+      RABBIT_PASSWORD: "${RABBITMQ_DEFAULT_PASS:-secret}"
+
+      MONGO_HOST: "global_mongo"
+      MONGO_PORT: "27017"
+      MONGO_USERNAME: "${MONGO_INITDB_ROOT_USERNAME:-admin}"
+      MONGO_PASSWORD: "${MONGO_INITDB_ROOT_PASSWORD:-admin}"
+
+      JWT_SECRET: "${JWT_SECRET:-0d9aa86975f076cbb84ab112f361a4b254c6f553d41da0918b439300e592ed3f}"
+
+    depends_on:
+      profile_service:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      global_mongo:
+        condition: service_healthy
+
+    mem_limit: 192m
+
+
+  # ============================================================
+  # POSTS SERVICE - DJANGO
+  # ============================================================
+
+  posts_service:
+    build: ./posts-service
+    image: 1olelllka/linkup-postsservice
+    container_name: posts_server
+    ports:
+      - "8000:8000"
+    networks:
+      - linkup-net
+    environment:
+      POSTGRES_HOST: "posts_db"
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: "${POSTGRES_USER:-postgres}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-postgres}"
+      POSTGRES_DB: "${POSTGRES_DB:-posts}"
+
+      EUREKA_URI: "http://eureka:8761/eureka"
+
+      RABBIT_HOST: "rabbitmq"
+      RABBIT_PORT: "5672"
+      RABBIT_USERNAME: "${RABBITMQ_DEFAULT_USER:-myuser}"
+      RABBIT_PASSWORD: "${RABBITMQ_DEFAULT_PASS:-secret}"
+
+      REDIS_URI: "redis://global_cache:6379/0"
+
+      JWT_SECRET: "${JWT_SECRET:-0d9aa86975f076cbb84ab112f361a4b254c6f553d41da0918b439300e592ed3f}"
+
+    depends_on:
+      posts_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      global_cache:
+        condition: service_healthy
+      profile_service:
+        condition: service_started
+
+    mem_limit: 256m
+
+
+  # ============================================================
+  # POSTS CONSUMER
+  # ============================================================
+
+  posts_service_consumer:
+    build: ./posts-service
+    image: 1olelllka/linkup-postsconsumer
+    container_name: posts_consumer
+    networks:
+      - linkup-net
+    environment:
+      POSTGRES_HOST: "posts_db"
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: "${POSTGRES_USER:-postgres}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-postgres}"
+      POSTGRES_DB: "${POSTGRES_DB:-posts}"
+
+      EUREKA_URI: "http://eureka:8761/eureka"
+
+      RABBIT_HOST: "rabbitmq"
+      RABBIT_PORT: "5672"
+      RABBIT_USERNAME: "${RABBITMQ_DEFAULT_USER:-myuser}"
+      RABBIT_PASSWORD: "${RABBITMQ_DEFAULT_PASS:-secret}"
+
+      JWT_SECRET: "${JWT_SECRET:-0d9aa86975f076cbb84ab112f361a4b254c6f553d41da0918b439300e592ed3f}"
+
+    command: ["python3", "manage.py", "start_consumer"]
+
+    depends_on:
+      posts_service:
+        condition: service_started
+      posts_db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+    mem_limit: 128m
+
+
+  # ============================================================
+  # POSTS DATABASE
+  # ============================================================
+
+  posts_db:
+    image: postgres:16.4
+    container_name: posts_postgres
+    networks:
+      - linkup-net
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER:-postgres}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-postgres}"
+      POSTGRES_DB: "${POSTGRES_DB:-posts}"
     volumes:
-      - "mongo_data:/data/db"
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    mem_limit: 160m
+
+
+  # ============================================================
+  # FEED SERVICE
+  # ============================================================
+
+  feed_service:
+    build: ./feed-service
+    image: 1olelllka/linkup-feedservice
+    container_name: feed_server
+    ports:
+      - "8004:8004"
+    networks:
+      - linkup-net
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xms32m -Xmx96m"
+
+      EUREKA_URI: "http://eureka:8761/eureka"
+
+      REDIS_HOST: "global_cache"
+      REDIS_PORT: "6379"
+
+      RABBIT_HOST: "rabbitmq"
+      RABBIT_PORT: "5672"
+      RABBIT_USERNAME: "${RABBITMQ_DEFAULT_USER:-myuser}"
+      RABBIT_PASSWORD: "${RABBITMQ_DEFAULT_PASS:-secret}"
+
+      POSTS_HOST: "posts_service"
+      PROFILE_HOST: "profile_service"
+
+      JWT_SECRET: "${JWT_SECRET:-0d9aa86975f076cbb84ab112f361a4b254c6f553d41da0918b439300e592ed3f}"
+
+    depends_on:
+      posts_service:
+        condition: service_started
+      profile_service:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+
+    mem_limit: 160m
+
+  # ============================================================
+  # IMAGE STORAGE
+  # ============================================================
+
+  image-storage:
+    build: ./image-storage
+    image: 1olelllka/linkup-imagestorage
+    container_name: imagestorage_server
+    ports:
+      - "8888:8888"
+    networks:
+      - linkup-net
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xms32m -Xmx96m"
+      EUREKA_URI: "http://eureka:8761/eureka"
+    volumes:
+      - image_storage:/uploads
+    depends_on:
+      profile_service:
+        condition: service_started
+    mem_limit: 160m
+
+
+  # ============================================================
+  # NEO4J
+  # ============================================================
+
+  profile_db:
+    image: neo4j:5.26.0
+    container_name: profile_neo4j
+    networks:
+      - linkup-net
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      NEO4J_AUTH: "${NEO4J_USERNAME:-neo4j}/${NEO4J_PASSWORD:-neo4j-admin}"
+
+      NEO4J_server_memory_heap_initial__size: "128m"
+      NEO4J_server_memory_heap_max__size: "256m"
+      NEO4J_server_memory_pagecache_size: "128m"
+
+    volumes:
+      - neo4j_data:/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+    mem_limit: 448m
+
+
+  # ============================================================
+  # RABBITMQ
+  # ============================================================
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: linkup_rabbitmq
+    networks:
+      - linkup-net
+    ports:
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_DEFAULT_USER:-myuser}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_DEFAULT_PASS:-secret}"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 128m
+
+
+  # ============================================================
+  # GLOBAL REDIS
+  # ============================================================
+
+  global_cache:
+    image: redis:7.2.6
+    container_name: redis_global_cache
+    networks:
+      - linkup-net
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    mem_limit: 64m
+
+
+  # ============================================================
+  # MONGODB
+  # ============================================================
+
+  global_mongo:
+    image: mongo:8.0
+    container_name: mongo_global_db
+    networks:
+      - linkup-net
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_INITDB_ROOT_USERNAME:-admin}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_INITDB_ROOT_PASSWORD:-admin}"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok'"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 256m
+
+
+# ==============================================================
+# VOLUMES
+# ==============================================================
 
 volumes:
-  elasticsearch_data:
   redis_data:
   mongo_data:
   neo4j_data:
+  gateway_redis_data:
+  image_storage:
+  postgres_data:
+  feed_redis_data:
+
+
+# ==============================================================
+# NETWORK
+# ==============================================================
 
 networks:
   linkup-net:
-     external: true
+    external: true
