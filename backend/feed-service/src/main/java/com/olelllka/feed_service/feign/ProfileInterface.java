@@ -15,7 +15,4 @@ public interface ProfileInterface {
 
     @GetMapping("/profiles/{profile_id}/followers")
     ResponseEntity<Page<ProfileDto>> getAllFollowersForProfile(@PathVariable UUID profile_id, Pageable pageable);
-
-    @GetMapping("/profiles/{profile_id}")
-    ResponseEntity<?> getProfileById(@PathVariable UUID profile_id);
 }
