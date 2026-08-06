@@ -25,6 +25,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
     private final UserRepository userRepository;
     private final JWTUtil jwtUtil;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -34,29 +35,37 @@ public class JWTFilter extends OncePerRequestFilter {
         }
         String jwt = request.getHeader("Authorization").substring(7);
         UUID userId;
-        ObjectMapper objectMapper = new ObjectMapper();
         try {
             userId = UUID.fromString(jwtUtil.extractId(jwt));
         } catch (Exception ex) {
-            ErrorMessage errorMessage = ErrorMessage.builder().message(ex.getMessage()).build();
-            response.setContentType("application/json");
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write(objectMapper.writeValueAsString(errorMessage));
-            filterChain.doFilter(request, response);
+            writeUnauthorized(response, ex.getMessage());
             return;
         }
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userRepository.findById(userId).orElseThrow(() -> new UnauthorizedException("Unauthorized."));
-            if (jwtUtil.isTokenValid(userId, jwt)) {
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
-                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            try {
+                UserDetails userDetails = userRepository.findById(userId)
+                        .orElseThrow(() -> new UnauthorizedException("Unauthorized."));
+                if (jwtUtil.isTokenValid(userId, jwt)) {
+                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+                    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                }
+            } catch (UnauthorizedException ex) {
+                writeUnauthorized(response, ex.getMessage());
+                return;
             }
         }
         filterChain.doFilter(request, response);
+    }
+
+    private void writeUnauthorized(HttpServletResponse response, String message) throws IOException {
+        ErrorMessage errorMessage = ErrorMessage.builder().message(message).build();
+        response.setContentType("application/json");
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.getWriter().write(objectMapper.writeValueAsString(errorMessage));
     }
 }

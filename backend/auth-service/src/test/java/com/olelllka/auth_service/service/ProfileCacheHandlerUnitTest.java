@@ -1,8 +1,6 @@
 package com.olelllka.auth_service.service;
 
 import com.olelllka.auth_service.TestDataUtil;
-import com.olelllka.auth_service.domain.dto.PatchUserDto;
-import com.olelllka.auth_service.domain.dto.UserMessageDto;
 import com.olelllka.auth_service.domain.entity.UserEntity;
 import com.olelllka.auth_service.repository.UserRepository;
 import com.olelllka.auth_service.rest.exception.NotFoundException;
@@ -17,20 +15,18 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class ProfileCacheHandlerUnitTest {
+class ProfileCacheHandlerUnitTest {
 
     @Mock
     private UserRepository userRepository;
-    @Mock
-    private MessagePublisher messagePublisher;
     @InjectMocks
     private ProfileCacheHandlers profileCacheHandlers;
 
     @Test
-    public void testThatGetUserByEmailThrowsException() {
+    void testThatGetUserByEmailThrowsException() {
         // given
         UUID id = UUID.randomUUID();
         // when
@@ -40,7 +36,7 @@ public class ProfileCacheHandlerUnitTest {
     }
 
     @Test
-    public void testThatGetUserByEmailReturnsUser() {
+    void testThatGetUserByEmailReturnsUser() {
         // given
         UserEntity user = TestDataUtil.createUserEntity();
         UUID id = UUID.randomUUID();

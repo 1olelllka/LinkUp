@@ -33,6 +33,7 @@ public class TestDataUtil {
     public static UserEntity createUserEntity() {
         return UserEntity.builder()
                 .email("email@email.com")
+                .password("password")
                 .role(Role.USER)
                 .build();
     }

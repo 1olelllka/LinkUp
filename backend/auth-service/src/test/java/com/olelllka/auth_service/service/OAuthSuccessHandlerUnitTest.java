@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class OAuthSuccessHandlerUnitTest {
+class OAuthSuccessHandlerUnitTest {
 
     @Mock
     private JWTUtil jwtUtil;
@@ -51,7 +51,7 @@ public class OAuthSuccessHandlerUnitTest {
     private OAuthSuccessHandler oAuthSuccessHandler;
 
     @Test
-    public void testThatItWorksIfUserAlreadyExists() throws ServletException, IOException {
+    void testThatItWorksIfUserAlreadyExists() throws ServletException, IOException {
         // given
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -78,7 +78,7 @@ public class OAuthSuccessHandlerUnitTest {
     }
 
     @Test
-    public void testThatItWorksIfUserIsNew() throws ServletException, IOException {
+    void testThatItWorksIfUserIsNew() throws ServletException, IOException {
         // given
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -90,7 +90,7 @@ public class OAuthSuccessHandlerUnitTest {
         when(oAuth2User.getAttribute("email")).thenReturn(email);
         when(oAuth2User.getAttribute("name")).thenReturn(name);
         when(oAuth2User.getAttribute("sub")).thenReturn(sub);
-        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+        when(oAuthIdentityRepository.findByAuthProviderAndProviderSubject(AuthProvider.GOOGLE, sub)).thenReturn(Optional.empty());
         when(userRepository.save(any(UserEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(jwtUtil.generateRefreshJWT(any(UUID.class))).thenReturn("REFRESH_TOKEN");
         when(redisTemplate.opsForValue()).thenReturn(mock(ValueOperations.class));

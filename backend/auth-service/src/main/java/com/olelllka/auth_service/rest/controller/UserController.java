@@ -187,6 +187,7 @@ public class UserController {
                 .userId(entity.getUserId())
                 .role(entity.getRole())
                 .email(entity.getEmail())
+                .password(entity.getPassword())
                 .build();
     }
 }
