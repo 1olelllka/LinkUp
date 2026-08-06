@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Import;
+import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.containers.Neo4jContainer;
 import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -23,10 +24,15 @@ class ProfileServiceApplicationTests {
 	@ServiceConnection
 	static RedisContainer redisContainer = new RedisContainer(DockerImageName.parse("redis:7.2.6"));
 
+	@ServiceConnection
+	static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:8.0"));
+
+
 	static {
 		neo4j.start();
 		rabbitContainer.start();
 		redisContainer.start();
+		mongoDBContainer.start();
 	}
 
 	@AfterAll
@@ -37,6 +43,8 @@ class ProfileServiceApplicationTests {
 		rabbitContainer.close();
 		redisContainer.stop();
 		redisContainer.close();
+		mongoDBContainer.stop();
+		mongoDBContainer.close();
 	}
 
 	@Test

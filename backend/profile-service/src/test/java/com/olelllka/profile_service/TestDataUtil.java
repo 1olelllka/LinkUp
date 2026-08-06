@@ -62,6 +62,7 @@ public class TestDataUtil {
     public static PatchProfileDto createPatchProfileDto() {
         return PatchProfileDto.builder()
                 .name("Full Name")
+                .username("username123")
                 .gender(Gender.MALE)
                 .dateOfBirth(LocalDate.of(2020, 1, 1))
                 .photo("Photo url")

@@ -9,12 +9,14 @@ import com.olelllka.profile_service.domain.dto.FollowDto;
 import com.olelllka.profile_service.domain.dto.PatchProfileDto;
 import com.olelllka.profile_service.domain.dto.UserMessageDto;
 import com.olelllka.profile_service.domain.entity.ProfileEntity;
+import com.olelllka.profile_service.repository.ProfileDocumentRepository;
 import com.olelllka.profile_service.repository.ProfileRepository;
 import com.olelllka.profile_service.service.ProfileService;
 import com.redis.testcontainers.RedisContainer;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
@@ -31,6 +33,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.containers.Neo4jContainer;
 import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
@@ -49,7 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @AutoConfigureMockMvc
 @Import(RabbitMQTestConfig.class)
 class ProfileControllerIntegrationTest {
@@ -62,6 +65,10 @@ class ProfileControllerIntegrationTest {
 
     @ServiceConnection
     static RedisContainer redisContainer = new RedisContainer(DockerImageName.parse("redis:7.2.6"));
+
+    @ServiceConnection
+    static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:8.0"));
+
     @Value("${JWT_SECRET:0d9aa86975f076cbb84ab112f361a4b254c6f553d41da0918b439300e592ed3f}")
     private String key;
 
@@ -69,6 +76,7 @@ class ProfileControllerIntegrationTest {
         neo4j.start();
         rabbitContainer.start();
         redisContainer.start();
+        mongoDBContainer.start();
     }
 
     @AfterAll
@@ -79,11 +87,14 @@ class ProfileControllerIntegrationTest {
         rabbitContainer.close();
         redisContainer.stop();
         redisContainer.close();
+        mongoDBContainer.stop();
+        mongoDBContainer.close();
     }
 
     private final MockMvc mockMvc;
     private final ProfileService profileService;
     private final ProfileRepository profileRepository;
+    private final ProfileDocumentRepository documentRepository;
     private final RabbitTemplate rabbitTemplate;
     private final RabbitAdmin rabbitAdmin;
     private final ObjectMapper objectMapper;
@@ -92,6 +103,7 @@ class ProfileControllerIntegrationTest {
     public ProfileControllerIntegrationTest(MockMvc mockMvc,
                                             ProfileRepository profileRepository,
                                             ProfileService profileService,
+                                            ProfileDocumentRepository documentRepository,
                                             RabbitTemplate rabbitTemplate,
                                             RabbitAdmin rabbitAdmin) {
         this.mockMvc = mockMvc;
@@ -99,18 +111,25 @@ class ProfileControllerIntegrationTest {
         this.profileRepository = profileRepository;
         this.rabbitTemplate = rabbitTemplate;
         this.objectMapper = new ObjectMapper();
+        this.documentRepository = documentRepository;
         this.rabbitAdmin = rabbitAdmin;
         objectMapper.registerModule(new JavaTimeModule());
     }
 
+    @AfterEach
+    void tearingDown() {
+        profileRepository.deleteAll();
+        documentRepository.deleteAll();
+    }
+
     @Test
-    public void testThatGetProfileByIdReturnsHttp404NotFoundIfProfileDoesNotExist() throws Exception {
+    void testThatGetProfileByIdReturnsHttp404NotFoundIfProfileDoesNotExist() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/profiles/" + UUID.randomUUID()))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test
-    public void testThatGetProfileReturnsHttp200OkIfProfileExists() throws Exception {
+    void testThatGetProfileReturnsHttp200OkIfProfileExists() throws Exception {
         ProfileEntity profile = TestDataUtil.createNewProfileEntity();
         profile.setId(UUID.randomUUID());
         profileRepository.save(profile);
@@ -119,7 +138,7 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatUpdateProfileByIdReturnsHttp400BadRequestIfInvalidData() throws Exception {
+    void testThatUpdateProfileByIdReturnsHttp400BadRequestIfInvalidData() throws Exception {
         PatchProfileDto patchProfileDto = TestDataUtil.createPatchProfileDto();
         patchProfileDto.setDateOfBirth(LocalDate.of(2026, 1, 1));
         String json = objectMapper.writeValueAsString(patchProfileDto);
@@ -130,7 +149,7 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatUpdateProfileByIdReturnsHttp404NotFoundIfProfileDoesNotExist() throws Exception {
+    void testThatUpdateProfileByIdReturnsHttp404NotFoundIfProfileDoesNotExist() throws Exception {
         PatchProfileDto patchProfileDto = TestDataUtil.createPatchProfileDto();
         UUID id = UUID.randomUUID();
         String json = objectMapper.writeValueAsString(patchProfileDto);
@@ -142,7 +161,7 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatUpdateProfileByIdReturnsHttp200OkAndUpdatedProfile() throws Exception {
+    void testThatUpdateProfileByIdReturnsHttp200OkAndUpdatedProfile() throws Exception {
         UserMessageDto messageDto = TestDataUtil.createUserMessageDto();
         messageDto.setProfileId(UUID.randomUUID());
         createNewUser(messageDto);
@@ -159,7 +178,7 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatDeleteProfileByIdReturnsHttp401UnauthorizedIfJWTInvalid() throws Exception {
+    void testThatDeleteProfileByIdReturnsHttp401UnauthorizedIfJWTInvalid() throws Exception {
         UUID profileId = UUID.randomUUID();
         mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/" + profileId)
                         .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
@@ -167,7 +186,7 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatDeleteProfileByIdReturnsHttp204NoContent() throws Exception {
+    void testThatDeleteProfileByIdReturnsHttp204NoContent() throws Exception {
         UUID profileId = UUID.randomUUID();
         UserMessageDto userMessageDto = TestDataUtil.createUserMessageDto();
         userMessageDto.setProfileId(profileId);
@@ -178,7 +197,7 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatFollowProfileReturnsHttp400BadRequestIfValidationFails() throws Exception {
+    void testThatFollowProfileReturnsHttp400BadRequestIfValidationFails() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post("/profiles/follow")
                         .contentType("application/json")
                         .content(""))
@@ -186,7 +205,7 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatFollowProfileReturnsHttp400BadRequestIfTheSameIds() throws Exception {
+    void testThatFollowProfileReturnsHttp400BadRequestIfTheSameIds() throws Exception {
         UUID id = UUID.randomUUID();
         FollowDto followDto = TestDataUtil.createFollowDto(id, id);
         String json = objectMapper.writeValueAsString(followDto);
@@ -197,7 +216,7 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatFollowProfileReturnsHttp401UnauthorizedIfJWTInvalid() throws Exception {
+    void testThatFollowProfileReturnsHttp401UnauthorizedIfJWTInvalid() throws Exception {
         rabbitAdmin.purgeQueue(RabbitMQConfig.notification_queue);
         UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
         messageDto1.setProfileId(UUID.randomUUID());
@@ -215,7 +234,7 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatFollowProfileReturnsHttp400BadRequestIfAlreadyFollowed() throws Exception {
+    void testThatFollowProfileReturnsHttp400BadRequestIfAlreadyFollowed() throws Exception {
         rabbitAdmin.purgeQueue(RabbitMQConfig.notification_queue);
         UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
         messageDto1.setProfileId(UUID.randomUUID());
@@ -234,7 +253,7 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatFollowProfileReturnsHttp200OkIfSuccessful() throws Exception {
+    void testThatFollowProfileReturnsHttp200OkIfSuccessful() throws Exception {
         rabbitAdmin.purgeQueue(RabbitMQConfig.notification_queue);
         UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
         messageDto1.setProfileId(UUID.randomUUID());
@@ -253,7 +272,7 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatUnfollowProfileReturnsHttp400BadRequestIfValidationFails() throws Exception {
+    void testThatUnfollowProfileReturnsHttp400BadRequestIfValidationFails() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/profiles/unfollow")
                         .contentType("application/json")
                         .content("{}"))
@@ -261,7 +280,7 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatUnfollowProfileReturnsHttp400BadRequestIfTheSameIds() throws Exception {
+    void testThatUnfollowProfileReturnsHttp400BadRequestIfTheSameIds() throws Exception {
         UUID id = UUID.randomUUID();
         FollowDto followDto = TestDataUtil.createFollowDto(id, id);
         String json = objectMapper.writeValueAsString(followDto);
@@ -272,7 +291,7 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatUnfollowProfileReturnsHttp401UnauthorizedIfJWTInvalid() throws Exception {
+    void testThatUnfollowProfileReturnsHttp401UnauthorizedIfJWTInvalid() throws Exception {
         UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
         messageDto1.setProfileId(UUID.randomUUID());
         createNewUser(messageDto1);
@@ -289,7 +308,7 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatUnfollowProfileReturnsHttp400BadRequestIfAlreadyUnfollowed() throws Exception {
+    void testThatUnfollowProfileReturnsHttp400BadRequestIfAlreadyUnfollowed() throws Exception {
         UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
         messageDto1.setProfileId(UUID.randomUUID());
         createNewUser(messageDto1);
@@ -306,7 +325,7 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatUnfollowProfileReturnsHttp200OkIfSuccessful() throws Exception {
+    void testThatUnfollowProfileReturnsHttp200OkIfSuccessful() throws Exception {
         UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
         messageDto1.setProfileId(UUID.randomUUID());
         createNewUser(messageDto1);
@@ -324,7 +343,7 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatGetFollowersByIdReturnsHttp200Ok() throws Exception {
+    void testThatGetFollowersByIdReturnsHttp200Ok() throws Exception {
         UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
         messageDto1.setProfileId(UUID.randomUUID());
         messageDto1.setUsername("TEST");
@@ -339,7 +358,7 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatGetFolloweesByIdReturnsHttp200Ok() throws Exception {
+    void testThatGetFolloweesByIdReturnsHttp200Ok() throws Exception {
         UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
         messageDto1.setProfileId(UUID.randomUUID());
         createNewUser(messageDto1);
@@ -354,7 +373,7 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatSearchProfilesByElasticSearchReturnsHttp200Ok() throws Exception {
+    void testThatSearchProfilesByElasticSearchReturnsHttp200Ok() throws Exception {
         UUID profileId = UUID.randomUUID();
         UserMessageDto messageDto = TestDataUtil.createUserMessageDto();
         messageDto.setProfileId(profileId);
@@ -365,7 +384,7 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatSearchProfilesByNeo4jReturnsHttp200OkIfElasticsearchIsDown() throws Exception {
+    void testThatSearchProfilesByNeo4jReturnsHttp200OkIfElasticsearchIsDown() throws Exception {
         UserMessageDto messageDto = TestDataUtil.createUserMessageDto();
         messageDto.setProfileId(UUID.randomUUID());
         createNewUser(messageDto);
@@ -375,7 +394,7 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatCheckFollowStatusReturnsHttp200OKIfSuccessful() throws Exception {
+    void testThatCheckFollowStatusReturnsHttp200OKIfSuccessful() throws Exception {
         rabbitAdmin.purgeQueue(RabbitMQConfig.notification_queue);
         UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
         messageDto1.setProfileId(UUID.randomUUID());
@@ -397,15 +416,31 @@ class ProfileControllerIntegrationTest {
     }
 
     @Test
-    public void testThatCheckFollowStatusReturnsHttp404NotFoundIfRelationshipDoesNotExist() throws Exception {
+    void testThatCheckFollowStatusReturnsHttp404NotFoundIfRelationshipDoesNotExist() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/profiles/follow-status?from=" + UUID.randomUUID() + "&to=" + UUID.randomUUID()))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
+    void testThatCheckUsernameAvailabilityReturnsHttp200Ok() throws Exception {
+        UserMessageDto messageDto1 = TestDataUtil.createUserMessageDto();
+        messageDto1.setProfileId(UUID.randomUUID());
+        messageDto1.setUsername("TEST");
+        createNewUser(messageDto1);
+        mockMvc.perform(MockMvcRequestBuilders.get("/profiles/username-availability?username="+messageDto1.getUsername()))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    void testThatCheckUsernameAvailabilityReturnsHttp404NotFound() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/profiles/username-availability?username=random"))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     private void createNewUser(UserMessageDto messageDto) throws InterruptedException {
         rabbitTemplate.convertAndSend(RabbitMQTestConfig.create_user_exchange, "create.user", messageDto);
         Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> rabbitAdmin.getQueueInfo(RabbitMQTestConfig.create_user_queue).getMessageCount() == 0);
-        Thread.sleep(Duration.of(  1, ChronoUnit.SECONDS));
+        Thread.sleep(Duration.of(1, ChronoUnit.SECONDS));
     }
 
     private String generateJwt(UUID id) {
