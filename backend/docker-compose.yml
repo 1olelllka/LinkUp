@@ -195,7 +195,7 @@ services:
         condition: service_healthy
       global_mongo:
         condition: service_healthy
-      auth_service:
+      profile_service:
         condition: service_started
 
     mem_limit: 192m
@@ -315,6 +315,11 @@ services:
       RABBIT_PASSWORD: "${RABBITMQ_DEFAULT_PASS:-secret}"
 
       REDIS_URI: "redis://global_cache:6379/0"
+
+      MONGO_HOST: "global_mongo"
+      MONGO_PORT: "27017"
+      MONGO_USERNAME: "${MONGO_INITDB_ROOT_USERNAME:-admin}"
+      MONGO_PASSWORD: "${MONGO_INITDB_ROOT_PASSWORD:-admin}"
 
       JWT_SECRET: "${JWT_SECRET:-0d9aa86975f076cbb84ab112f361a4b254c6f553d41da0918b439300e592ed3f}"
 

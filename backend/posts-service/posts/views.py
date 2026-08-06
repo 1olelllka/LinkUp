@@ -22,8 +22,8 @@ import os
 from pymongo import MongoClient
 from uuid import UUID
 
-client = MongoClient('mongodb://admin:admin@localhost:27017',
-                     uuidRepresentation='standard')
+client = MongoClient(f'mongodb://{os.environ.get("MONGO_USERNAME") or 'admin'}:{os.environ.get("MONGO_PASSWORD")}@{os.environ.get("MONGO_HOST") or 'localhost'}:{os.environ.get("MONGO_PORT") or '27017'}',
+                     uuidRepresentation='standart')
 linkup_collection = client['LinkUp']['Profile']
 
 @extend_schema(tags=['Posts management'])
