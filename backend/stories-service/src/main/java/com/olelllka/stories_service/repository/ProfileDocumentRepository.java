@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 import java.util.UUID;
 
 @Repository
-public interface ProductDocumentRepository extends MongoRepository<ProfileDocument, UUID> {
+public interface ProfileDocumentRepository extends MongoRepository<ProfileDocument, UUID> {
 }

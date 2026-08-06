@@ -4,7 +4,7 @@ import com.olelllka.stories_service.domain.dto.StoryDto;
 import com.olelllka.stories_service.domain.entity.StoryEntity;
 import com.olelllka.stories_service.feign.ProfileFeign;
 import com.olelllka.stories_service.mapper.StoryMapper;
-import com.olelllka.stories_service.repository.ProductDocumentRepository;
+import com.olelllka.stories_service.repository.ProfileDocumentRepository;
 import com.olelllka.stories_service.repository.StoryRepository;
 import com.olelllka.stories_service.rest.exception.AuthException;
 import com.olelllka.stories_service.rest.exception.NotFoundException;
@@ -39,7 +39,7 @@ public class StoryServiceImpl implements StoryService {
     private final JWTUtil jwtUtil;
     private final RedisTemplate<String, String> redisTemplate;
     private final StoryMapper<StoryEntity, StoryDto> mapper;
-    private final ProductDocumentRepository documentRepository;
+    private final ProfileDocumentRepository documentRepository;
 
     @Override
     public Page<StoryEntity> getArchiveForUser(UUID id, String jwt, Pageable pageable) {
