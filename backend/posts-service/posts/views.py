@@ -22,8 +22,15 @@ import os
 from pymongo import MongoClient
 from uuid import UUID
 
-client = MongoClient(f'mongodb://{os.environ.get("MONGO_USERNAME") or 'admin'}:{os.environ.get("MONGO_PASSWORD")}@{os.environ.get("MONGO_HOST") or 'localhost'}:{os.environ.get("MONGO_PORT") or '27017'}',
-                     uuidRepresentation='standart')
+mongo_user = os.environ.get("MONGO_USERNAME") or "admin"
+mongo_pass = os.environ.get("MONGO_PASSWORD")
+mongo_host = os.environ.get("MONGO_HOST") or "localhost"
+mongo_port = os.environ.get("MONGO_PORT") or "27017"
+
+client = MongoClient(
+    f'mongodb://{mongo_user}:{mongo_pass}@{mongo_host}:{mongo_port}',
+    uuidRepresentation='standard'
+)
 linkup_collection = client['LinkUp']['Profile']
 
 @extend_schema(tags=['Posts management'])
@@ -76,7 +83,6 @@ class UserPostViewSet(viewsets.ModelViewSet):
 
     def create(self, request, user_id):
         profile = linkup_collection.find_one({'_id':UUID(user_id)})
-        print(linkup_collection.find().to_list())
         if profile == None:
             return Response(data={"error": "User with such id does not exist"}, status=404)
         mutable_data = request.data.copy()
