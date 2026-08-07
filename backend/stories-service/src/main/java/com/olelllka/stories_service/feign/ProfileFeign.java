@@ -12,6 +12,6 @@ import java.util.UUID;
 
 @FeignClient(value = "PROFILE-SERVICE", url = "http://${PROFILE_HOST:localhost}:8001", dismiss404 = true)
 public interface ProfileFeign {
-    @GetMapping("/profiles/{profile_id}/followees")
-    ResponseEntity<Page<ProfileDto>> getAllFolloweesForProfile(@PathVariable UUID profile_id, Pageable pageable);
+    @GetMapping("/profiles/{profile_id}/followers")
+    ResponseEntity<Page<ProfileDto>> getAllFollowersForProfile(@PathVariable UUID profile_id, Pageable pageable);
 }

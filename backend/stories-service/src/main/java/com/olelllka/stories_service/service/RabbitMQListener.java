@@ -69,6 +69,6 @@ public class RabbitMQListener {
     }
 
     private Page<ProfileDto> getFollowers(UUID authorId, Pageable pageable) {
-        return profileInterface.getAllFolloweesForProfile(authorId, pageable).getBody();
+        return profileInterface.getAllFollowersForProfile(authorId, pageable).getBody();
     }
 }

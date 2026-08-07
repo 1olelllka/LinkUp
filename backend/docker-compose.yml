@@ -226,7 +226,7 @@ services:
       RABBIT_USERNAME: "${RABBITMQ_DEFAULT_USER:-myuser}"
       RABBIT_PASSWORD: "${RABBITMQ_DEFAULT_PASS:-secret}"
 
-      PROFILE_HOST: "profile_service"
+      PROFILE_HOST: "host.docker.internal"
 
       MONGO_HOST: "global_mongo"
       MONGO_PORT: "27017"

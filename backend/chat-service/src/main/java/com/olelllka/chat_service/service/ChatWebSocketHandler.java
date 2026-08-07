@@ -107,7 +107,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                     .read(false)
                     .createdAt(new Date())
                     .userId(targetUserId.toString())
-                    .text("User @" + user2.getUsername() + " sent you a message: " + chatMessage)
+                    .text("User @" + user1.getUsername() + " sent you a message: " + chatMessage)
                     .build();
             messagePublisher.createChatNotification(notification);
         }
