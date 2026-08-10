@@ -3,8 +3,8 @@ import { persist } from "zustand/middleware";
 
 
 export type ZustandProfile = {
-  userId: string;
-  alias: string;
+  id: string;
+  username: string;
   email: string;
 };
 

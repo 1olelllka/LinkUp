@@ -73,7 +73,7 @@ services:
       - linkup-net
     environment:
       JAVA_TOOL_OPTIONS: "-Xms32m -Xmx128m"
-
+      PROFILE_HOST: host.docker.internal
       EUREKA_URI: "http://eureka:8761/eureka"
 
       REDIS_HOST: "global_cache"

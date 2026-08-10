@@ -28,7 +28,7 @@ public class AdviceController {
     }
 
     @ExceptionHandler(DuplicateException.class)
-    public ResponseEntity<SuccessErrorMessage> duplicateException(AuthException ex) {
+    public ResponseEntity<SuccessErrorMessage> duplicateException(DuplicateException ex) {
         return new ResponseEntity<>(SuccessErrorMessage.builder().message(ex.getMessage()).build(), HttpStatus.CONFLICT);
     }
 }

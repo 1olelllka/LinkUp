@@ -14,6 +14,7 @@ import { NavLink, useNavigate } from "react-router";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
 import { SubmitLoader } from "../load/SubmitLoader";
+import { Pin } from "lucide-react";
 
 const formSchema = z.object({
   alias: z.string().min(8, "Alias must be at least 8 characters and contain only letters, digits, or underscores."),
@@ -76,8 +77,15 @@ export const SignUpForm = () => {
   };
 
   return (
-    <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-md border border-gray-200">
+    <div className="relative w-full max-w-md mx-auto bg-[#E8DFC8] p-8 pt-10 rounded-sm border border-[#C9A063] shadow-2xl">
       {loading && <SubmitLoader />}
+
+      <Pin
+        className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 z-10 drop-shadow rotate-[-8deg]"
+        style={{ color: "#D9A441" }}
+        fill="#D9A441"
+      />
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <FormField
@@ -85,9 +93,14 @@ export const SignUpForm = () => {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl><Input {...field} /></FormControl>
-                <FormMessage />
+                <FormLabel className="font-display text-xs uppercase tracking-wide text-[#4A4136]">Email</FormLabel>
+                <FormControl>
+                  <Input
+                    className="bg-[#F3EBD9] border-[#C9A063] text-[#241F1A] placeholder:text-[#8A7F6C] rounded-sm focus-visible:ring-[#D9A441] focus-visible:border-[#B23A2E]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage className="text-[#B23A2E]" />
               </FormItem>
             )}
           />
@@ -97,9 +110,14 @@ export const SignUpForm = () => {
             name="alias"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Alias</FormLabel>
-                <FormControl><Input {...field} /></FormControl>
-                <FormMessage />
+                <FormLabel className="font-display text-xs uppercase tracking-wide text-[#4A4136]">Alias</FormLabel>
+                <FormControl>
+                  <Input
+                    className="bg-[#F3EBD9] border-[#C9A063] text-[#241F1A] placeholder:text-[#8A7F6C] rounded-sm focus-visible:ring-[#D9A441] focus-visible:border-[#B23A2E]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage className="text-[#B23A2E]" />
               </FormItem>
             )}
           />
@@ -109,9 +127,14 @@ export const SignUpForm = () => {
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl><Input {...field} /></FormControl>
-                <FormMessage />
+                <FormLabel className="font-display text-xs uppercase tracking-wide text-[#4A4136]">Name</FormLabel>
+                <FormControl>
+                  <Input
+                    className="bg-[#F3EBD9] border-[#C9A063] text-[#241F1A] placeholder:text-[#8A7F6C] rounded-sm focus-visible:ring-[#D9A441] focus-visible:border-[#B23A2E]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage className="text-[#B23A2E]" />
               </FormItem>
             )}
           />
@@ -121,9 +144,15 @@ export const SignUpForm = () => {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl><Input type="password" {...field} /></FormControl>
-                <FormMessage />
+                <FormLabel className="font-display text-xs uppercase tracking-wide text-[#4A4136]">Password</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    className="bg-[#F3EBD9] border-[#C9A063] text-[#241F1A] placeholder:text-[#8A7F6C] rounded-sm focus-visible:ring-[#D9A441] focus-visible:border-[#B23A2E]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage className="text-[#B23A2E]" />
               </FormItem>
             )}
           />
@@ -133,11 +162,16 @@ export const SignUpForm = () => {
             name="dateOfBirth"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Date of Birth</FormLabel>
+                <FormLabel className="font-display text-xs uppercase tracking-wide text-[#4A4136]">Date of Birth</FormLabel>
                 <FormControl>
-                  <Input type="date" max={new Date().toISOString().split("T")[0]} {...field} />
+                  <Input
+                    type="date"
+                    max={new Date().toISOString().split("T")[0]}
+                    className="bg-[#F3EBD9] border-[#C9A063] text-[#241F1A] rounded-sm focus-visible:ring-[#D9A441] focus-visible:border-[#B23A2E]"
+                    {...field}
+                  />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-[#B23A2E]" />
               </FormItem>
             )}
           />
@@ -153,14 +187,16 @@ export const SignUpForm = () => {
             )}
           />
 
-          <Button type="submit" className="w-full">Submit</Button>
+          <Button type="submit" className="w-full bg-[#B23A2E] hover:bg-[#9c3226] text-[#F3EBD9] rounded-sm font-medium">
+            Submit
+          </Button>
         </form>
       </Form>
 
-      <div className="text-center mt-4 text-sm text-gray-600">
+      <div className="text-center mt-4 text-sm text-[#4A4136]">
         Already have an account?{" "}
         <NavLink to="/login">
-          <span className="text-blue-600 hover:underline cursor-pointer">
+          <span className="text-[#B23A2E] hover:underline cursor-pointer font-medium">
             Log in
           </span>
         </NavLink>

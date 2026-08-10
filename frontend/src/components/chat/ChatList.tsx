@@ -33,7 +33,7 @@ type selectedChat = {
 
 export const ChatList = () => {
   const [selectedChat, setSelectedChat] = useState<selectedChat | null>(null);
-  const currentUserId = useProfileStore.getState().profile?.userId;
+  const currentUserId = useProfileStore.getState().profile?.id;
   const { allChats, setAllChats, chatUsersPage, loadNextPage, loading, error, setRefresh } = useChatList(currentUserId, 0);
   const [deleteDialogChatId, setDeleteDialogChatId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");

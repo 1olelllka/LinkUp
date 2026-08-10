@@ -72,13 +72,13 @@ export const SearchNewChat = ({
       <div className="space-y-3">
         {loading && <PageLoader />}
         {searchResult.content.map((res) => {
-          if (res.id === useProfileStore.getState().profile?.userId) return null;
+          if (res.id === useProfileStore.getState().profile?.id) return null;
 
           return (
             <div
               key={res.id}
               onClick={() =>
-                getChatByTwoUsers(useProfileStore.getState().profile?.userId, res.id)
+                getChatByTwoUsers(useProfileStore.getState().profile?.id, res.id)
                 .then(response => {
                   setSelectedChat({
                     id: response.id,

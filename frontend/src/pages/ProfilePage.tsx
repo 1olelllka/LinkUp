@@ -7,7 +7,7 @@ export const ProfilePage = () => {
   return (
     <MainLayout>
       <UserProfile />
-      <UserPosts userId={useProfileStore.getState().profile?.userId || ""}/>
+      <UserPosts userId={useProfileStore.getState().profile?.id || ""}/>
     </MainLayout>
   );
 };
