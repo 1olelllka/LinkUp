@@ -142,19 +142,19 @@ export const FeedCommentSheet = ({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger>{children}</SheetTrigger>
-      <SheetContent className="overflow-y-auto">
-        <SheetHeader className="pb-0">
-          <SheetTitle className="text-3xl">Comments</SheetTitle>
+      <SheetContent className="overflow-y-auto bg-[#E8DFC8] border-[#C9A063] text-[#241F1A]">
+        <SheetHeader className="pb-4 border-b border-[#C9A063]">
+          <SheetTitle className="font-display text-3xl text-[#241F1A]">Comments</SheetTitle>
         </SheetHeader>
-        <div className="px-4">
+        <div className="px-4 pt-4">
           <CommentForm
             postId={postId || 0}
             onSubmit={handleAddTopLevelComment}
           />
         </div>
-        <div className="mt-4 flex-1 min-h-0 px-4 pb-2">
+        <div className="mt-4 flex-1 min-h-0 px-4 pb-4">
           {comments?.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No comments yet.</p>
+            <p className="font-hand text-lg text-[#8A7F6C]">💬 no comments yet</p>
           ) : (
             comments?.map((comment) => (
               <Comments
@@ -170,12 +170,12 @@ export const FeedCommentSheet = ({
           {commentPage && commentPage.next != null && (
             <div className="mt-2">
               {loading ? (
-                <p className="text-center font-semibold text-sm hover:underline cursor-pointer text-slate-400">
+                <p className="text-center font-semibold text-sm text-[#8A7F6C]">
                   🔄 Loading...
                 </p>
               ) : (
                 <p
-                  className="text-center font-semibold text-sm hover:underline cursor-pointer text-slate-400"
+                  className="text-center font-semibold text-sm hover:underline cursor-pointer text-[#B23A2E]"
                   onClick={loadMoreComments}
                 >
                   🚀 Load More
