@@ -4,6 +4,6 @@ import { useProfileStore } from "@/store/useProfileStore";
 
 export const FeedPage = () => (
   <FeedLayout>
-    <Feed userId={useProfileStore.getState().profile?.userId || ""}/>
+    <Feed userId={useProfileStore.getState().profile?.id || ""}/>
   </FeedLayout>
 );

@@ -32,7 +32,7 @@ public class TestDataUtil {
     }
 
     public static User createUser(UUID id) {
-        return User.builder().id(id).name("Random1").username("random1").build();
+        return User.builder().id(id).name("Random1").username("random1").photo("random-photo.url").build();
     }
 
     public static ProfileDocument createProfileDocument(UUID id) {

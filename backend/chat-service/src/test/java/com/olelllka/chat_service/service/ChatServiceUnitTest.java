@@ -82,10 +82,10 @@ class ChatServiceUnitTest {
         // given
         UUID userId1 = UUID.randomUUID();
         UUID userId2 = UUID.randomUUID();
-        ProfileDocument doc1 = ProfileDocument.builder().id(userId1).username("randommmm1").name("RandomUser1").build();
-        ProfileDocument doc2 = ProfileDocument.builder().id(userId2).username("randommmm2").name("RandomUser2").build();
-        User user1 = User.builder().id(userId1).name("RandomUser1").username("randommmm1").build();
-        User user2 = User.builder().id(userId2).name("RandomUser2").username("randommmm2").build();
+        ProfileDocument doc1 = ProfileDocument.builder().id(userId1).username("randommmm1").name("RandomUser1").photo("random-photo.url").build();
+        ProfileDocument doc2 = ProfileDocument.builder().id(userId2).username("randommmm2").name("RandomUser2").photo("random-photo.url").build();
+        User user1 = User.builder().id(userId1).name("RandomUser1").username("randommmm1").photo("random-photo.url").build();
+        User user2 = User.builder().id(userId2).name("RandomUser2").username("randommmm2").photo("random-photo.url").build();
         ChatEntity expected = TestDataUtil.createChatEntity();
         expected.setLastMessage(null);
         expected.setTime(null);

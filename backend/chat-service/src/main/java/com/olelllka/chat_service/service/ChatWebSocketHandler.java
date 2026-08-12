@@ -59,8 +59,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         if (doc2.isEmpty()) {
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("A receiver was not found."));
         }
-        this.user1 = User.builder().id(doc1.get().getId()).username(doc1.get().getUsername()).name(doc1.get().getName()).build();
-        this.user2 = User.builder().id(doc2.get().getId()).username(doc2.get().getUsername()).name(doc2.get().getName()).build();
+        this.user1 = User.builder().id(doc1.get().getId()).username(doc1.get().getUsername()).name(doc1.get().getName()).photo(doc1.get().getPhoto()).build();
+        this.user2 = User.builder().id(doc2.get().getId()).username(doc2.get().getUsername()).name(doc2.get().getName()).photo(doc2.get().getPhoto()).build();
         sessions.put(sender + ":" + receiver, session);
     }
 

@@ -8,8 +8,6 @@ import { ProfilePage } from "@/pages/ProfilePage";
 import { FollowersPage } from "@/pages/FollowersPage";
 import { ProfileDetailPage } from "@/pages/ProfileDetailPage";
 import { StoryArchivePage } from "@/pages/StoryArchivePage";
-import { CreatePostPage } from "@/pages/CreatePostPage";
-import { UpdatePostPage } from "@/pages/UpdatePostPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { LinkUpLanding } from "@/pages/LinkUpLanding";
@@ -61,14 +59,6 @@ export const router = createBrowserRouter([
   {
     path: "/archive",
     element: <ProtectedRoute children={<StoryArchivePage />} />
-  },
-  {
-    path: "/create-post",
-    element: <ProtectedRoute children={<CreatePostPage />} />
-  },
-  {
-    path: "/update-post/:postId",
-    element: <ProtectedRoute children={<UpdatePostPage />} />
   },
   {
     path: "*",

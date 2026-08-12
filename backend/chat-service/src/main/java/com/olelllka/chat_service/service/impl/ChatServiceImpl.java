@@ -48,9 +48,9 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public ChatEntity createNewChat(@NotEmpty UUID userId1, @NotEmpty UUID userId2) {
         ProfileDocument doc1 = documentRepository.findById(userId1).orElseThrow(() -> new NotFoundException("User with id %s was not found".formatted(userId1.toString())));
-        User user1 = User.builder().id(doc1.getId()).name(doc1.getName()).username(doc1.getUsername()).build();
+        User user1 = User.builder().id(doc1.getId()).name(doc1.getName()).username(doc1.getUsername()).photo(doc1.getPhoto()).build();
         ProfileDocument doc2 = documentRepository.findById(userId2).orElseThrow(() -> new NotFoundException("User with id %s was not found".formatted(userId2.toString())));
-        User user2 = User.builder().id(doc2.getId()).name(doc2.getName()).username(doc2.getUsername()).build();
+        User user2 = User.builder().id(doc2.getId()).name(doc2.getName()).username(doc2.getUsername()).photo(doc2.getPhoto()).build();
         ChatEntity newChat = ChatEntity.builder()
                 .participants(new User[]{user1, user2})
                 .build();

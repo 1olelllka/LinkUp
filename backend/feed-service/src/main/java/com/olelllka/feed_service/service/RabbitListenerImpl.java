@@ -64,7 +64,6 @@ public class RabbitListenerImpl {
         return CompletableFuture.completedFuture(null);
     }
 
-    // TODO (in future): Implement fallback strategy, so that followers don't lose new posts
     @CircuitBreaker(name = "feed-service", fallbackMethod = "rabbitFallbackMethod")
     private Page<ProfileDto> getFollowers(UUID authorId, Pageable pageable) {
         return profileInterface.getAllFollowersForProfile(authorId, pageable).getBody();
