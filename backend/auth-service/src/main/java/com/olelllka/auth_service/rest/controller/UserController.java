@@ -24,6 +24,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -59,6 +60,9 @@ public class UserController {
         if (bindingResult.hasErrors()) {
             String msg = bindingResult.getAllErrors().stream().map(err -> err.getDefaultMessage()).collect(Collectors.joining(" "));
             throw new ValidationException(msg);
+        }
+        if (userDto.getDateOfBirth().isBefore(LocalDate.of(1910, 1, 1))) {
+            throw new ValidationException("Please enter valid date of birth.");
         }
         UserEntity registeredUser = userService.registerUser(userDto);
         return new ResponseEntity<>(mapToDto(registeredUser), HttpStatus.CREATED);
