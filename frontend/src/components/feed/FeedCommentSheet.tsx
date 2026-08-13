@@ -184,6 +184,11 @@ export const FeedCommentSheet = ({
             </div>
           )}
         </div>
+        <div className="shrink-0 px-4 py-3 text-center">
+          <span className="font-hand text-sm text-[#8A7F6C]">
+            click anywhere outside to close
+          </span>
+        </div>
       </SheetContent>
     </Sheet>
   );

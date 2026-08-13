@@ -1,4 +1,4 @@
-export const API_BASE = "http://localhost:8080/api";
+export const API_BASE = `http://${import.meta.env.VITE_HOST || 'localhost'}:8080/api`;
 
 export const API_ROUTES = {
     auth: {

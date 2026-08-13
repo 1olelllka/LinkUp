@@ -1,4 +1,4 @@
-name: LinkUp_Backend
+name: LinkUp
 
 services:
 
@@ -6,17 +6,19 @@ services:
   # FRONTEND
   # ============================================================
 
-  # frontend:
-  #   build: ./frontend
-  #   image: 1olelllka/linkup-frontend
-  #   container_name: linkup_frontend
-  #   ports:
-  #     - "3000:80"
-  #   networks:
-  #     - linkup-net
-  #   mem_limit: 64m
-  #   depends_on:
-  #     - gateway
+  frontend:
+    build: ./frontend
+    image: 1olelllka/linkup-frontend
+    container_name: linkup_frontend
+    environment:
+      - VITE_HOST=host.docker.internal
+    ports:
+      - "5173:5173"
+    networks:
+      - linkup-net
+    mem_limit: 64m
+    depends_on:
+      - gateway
 
 
   # ============================================================
@@ -24,7 +26,7 @@ services:
   # ============================================================
 
   eureka:
-    build: ./discovery-server
+    build: ./backend/discovery-server
     image: 1olelllka/linkup-discoveryserver
     container_name: discovery_server
     ports:
@@ -41,7 +43,7 @@ services:
   # ============================================================
 
   gateway:
-    build: ./gateway
+    build: ./backend/gateway
     image: 1olelllka/linkup-gateway
     container_name: gateway_server
     ports:
@@ -64,7 +66,7 @@ services:
   # ============================================================
 
   auth_service:
-    build: ./auth-service
+    build: ./backend/auth-service
     image: 1olelllka/linkup-authservice
     container_name: auth_server
     ports:
@@ -90,7 +92,8 @@ services:
       RABBIT_PASSWORD: "${RABBITMQ_DEFAULT_PASS:-secret}"
 
       JWT_SECRET: "${JWT_SECRET:-0d9aa86975f076cbb84ab112f361a4b254c6f553d41da0918b439300e592ed3f}"
-
+    env_file:
+      - ./backend/auth-service/.env
     depends_on:
       eureka:
         condition: service_started
@@ -111,7 +114,7 @@ services:
   # ============================================================
 
   profile_service:
-    build: ./profile-service
+    build: ./backend/profile-service
     image: 1olelllka/linkup-profileservice
     container_name: profile_server
     ports:
@@ -162,7 +165,7 @@ services:
   # ============================================================
 
   chat_service:
-    build: ./chat-service
+    build: ./backend/chat-service
     image: 1olelllka/linkup-chatservice
     container_name: chat_server
     ports:
@@ -206,7 +209,7 @@ services:
   # ============================================================
 
   stories_service:
-    build: ./stories-service
+    build: ./backend/stories-service
     image: 1olelllka/linkup-storiesservice
     container_name: stories_server
     ports:
@@ -253,7 +256,7 @@ services:
   # ============================================================
 
   notification_service:
-    build: ./notification-service
+    build: ./backend/notification-service
     image: 1olelllka/linkup-notificationservice
     container_name: notification_server
     ports:
@@ -293,7 +296,7 @@ services:
   # ============================================================
 
   posts_service:
-    build: ./posts-service
+    build: ./backend/posts-service
     image: 1olelllka/linkup-postsservice
     container_name: posts_server
     ports:
@@ -341,7 +344,7 @@ services:
   # ============================================================
 
   posts_service_consumer:
-    build: ./posts-service
+    build: ./backend/posts-service
     image: 1olelllka/linkup-postsconsumer
     container_name: posts_consumer
     networks:
@@ -403,7 +406,7 @@ services:
   # ============================================================
 
   feed_service:
-    build: ./feed-service
+    build: ./backend/feed-service
     image: 1olelllka/linkup-feedservice
     container_name: feed_server
     ports:
@@ -443,7 +446,7 @@ services:
   # ============================================================
 
   image-storage:
-    build: ./image-storage
+    build: ./backend/image-storage
     image: 1olelllka/linkup-imagestorage
     container_name: imagestorage_server
     ports:
