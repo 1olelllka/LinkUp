@@ -7,6 +7,16 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Pin } from "lucide-react";
 import { useProfileStore } from "@/store/useProfileStore";
 import { deletePostById } from "@/services/postServices";
@@ -33,10 +43,27 @@ export const UserPosts = ({ userId }: { userId: string | undefined }) => {
   const currentUser = useProfileStore((state) => state.profile?.id);
   const [updatePostId, setUpdatePostId] = useState<number | null>(null);
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  const [deletePostId, setDeletePostId] = useState<number | null>(null);
 
   const handleLoadPosts = useCallback(async () => {
     await loadMorePosts();
   }, [loadMorePosts]);
+
+  const handleConfirmDelete = () => {
+    if (deletePostId == null) return;
+
+    deletePostById(deletePostId)
+      .then((response) => {
+        if (response.status === 204) {
+          setPosts((prev) => prev?.filter((p) => p.id !== deletePostId));
+          toast.success("Successfully deleted post!");
+        } else {
+          toast.warning("Unexpected server response. Please try again");
+        }
+      })
+      .catch((err) => toast.error((err as AxiosError).message))
+      .finally(() => setDeletePostId(null));
+  };
 
   return (
     <div className="mt-5 bg-[#E8DFC8] border border-[#C9A063] p-6 rounded-sm shadow-lg transition-all w-[99%] flex-1 min-h-0 flex flex-col">
@@ -185,30 +212,7 @@ export const UserPosts = ({ userId }: { userId: string | undefined }) => {
                                     onSelect={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
-
-                                      deletePostById(post.id)
-                                        .then((response) => {
-                                          if (response.status === 204) {
-                                            setPosts((prev) =>
-                                              prev?.filter(
-                                                (p) => p.id !== post.id
-                                              )
-                                            );
-
-                                            toast.success(
-                                              "Successfully deleted post!"
-                                            );
-                                          } else {
-                                            toast.warning(
-                                              "Unexpected server response. Please try again"
-                                            );
-                                          }
-                                        })
-                                        .catch((err) =>
-                                          toast.error(
-                                            (err as AxiosError).message
-                                          )
-                                        );
+                                      setDeletePostId(post.id);
                                     }}
                                     className="
                                     text-[#B23A2E]
@@ -254,6 +258,42 @@ export const UserPosts = ({ userId }: { userId: string | undefined }) => {
               }
             }}
           />
+
+          <Dialog
+            open={deletePostId !== null}
+            onOpenChange={(open) => {
+              if (!open) setDeletePostId(null);
+            }}
+          >
+            <DialogContent className="sm:max-w-[425px] bg-[#E8DFC8] text-[#241F1A] border-[#C9A063] rounded-sm shadow-2xl">
+              <DialogHeader>
+                <span className="font-hand text-xl text-[#D9A441]">unpin this post</span>
+                <DialogTitle className="font-display text-2xl font-bold text-[#241F1A]">
+                  Are you sure?
+                </DialogTitle>
+                <DialogDescription className="text-[#4A4136]">
+                  This post will be deleted permanently and can't be restored.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="gap-2 sm:gap-2">
+                <DialogClose asChild>
+                  <Button
+                    variant="outline"
+                    className="rounded-sm border-[#6B4A32] bg-transparent text-[#241F1A] hover:bg-[#DDD0B0]"
+                  >
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button
+                  className="rounded-sm bg-[#B23A2E] text-[#F3EBD9] hover:bg-[#9c3226]"
+                  onClick={handleConfirmDelete}
+                >
+                  Delete
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
           {postPage && postPage.next != null && (
             <div className="mt-4">
               {loading ? (

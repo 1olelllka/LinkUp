@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -65,6 +65,8 @@ export const PersonalDataForm = ({
   profile,
   setProfile,
 }: PersonalDataFormProps) => {
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -547,24 +549,22 @@ export const PersonalDataForm = ({
                   gap-3
                 "
               >
-                <DialogClose asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleDelete}
-                    className="
-                      rounded-sm
-                      border-[#B23A2E]
-                      bg-transparent
-                      text-[#B23A2E]
-                      font-display
-                      hover:bg-[#B23A2E]
-                      hover:text-[#F3EBD9]
-                    "
-                  >
-                    Delete
-                  </Button>
-                </DialogClose>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setDeleteConfirmOpen(true)}
+                  className="
+                    rounded-sm
+                    border-[#B23A2E]
+                    bg-transparent
+                    text-[#B23A2E]
+                    font-display
+                    hover:bg-[#B23A2E]
+                    hover:text-[#F3EBD9]
+                  "
+                >
+                  Delete
+                </Button>
 
                 <div className="flex gap-2">
                   <DialogClose asChild>
@@ -602,6 +602,41 @@ export const PersonalDataForm = ({
               </DialogFooter>
             </form>
           </Form>
+
+          {/* Delete-account confirmation — separate nested dialog, only
+              handleDelete actually deletes anything */}
+          <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+            <DialogContent className="sm:max-w-[425px] bg-[#E8DFC8] text-[#241F1A] border-[#C9A063] rounded-sm shadow-2xl">
+              <DialogHeader>
+                <span className="font-hand text-xl text-[#D9A441]">
+                  take this card down
+                </span>
+                <DialogTitle className="font-display text-2xl font-bold text-[#241F1A]">
+                  Delete your account?
+                </DialogTitle>
+                <DialogDescription className="text-[#4A4136]">
+                  This permanently deletes your profile, posts, and everything
+                  else — it can't be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="gap-2 sm:gap-2">
+                <DialogClose asChild>
+                  <Button
+                    variant="outline"
+                    className="rounded-sm border-[#8A7F6C] bg-transparent text-[#4A4136] hover:bg-[#DDD0B0]"
+                  >
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button
+                  className="rounded-sm bg-[#B23A2E] text-[#F3EBD9] hover:bg-[#9c3226]"
+                  onClick={handleDelete}
+                >
+                  Delete my account
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </DialogContent>
     </Dialog>

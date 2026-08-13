@@ -19,13 +19,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { NavLink, useNavigate } from "react-router";
 import {
-  Archive,
+  BookMarked,
   ChevronUp,
-  Link,
-  MessageCircle,
+  ContactRound,
+  LogOut,
+  Mail,
+  Newspaper,
+  Paperclip,
   Search,
-  Signpost,
-  UserRoundPen,
 } from "lucide-react";
 import { useProfileStore } from "@/store/useProfileStore";
 import { logout } from "@/services/authServices";
@@ -39,12 +40,12 @@ const items = [
   {
     title: "Feed",
     url: "/feeds",
-    icon: Signpost,
+    icon: Newspaper,
   },
   {
     title: "Messages",
     url: "/chats",
-    icon: MessageCircle,
+    icon: Mail,
   },
   {
     title: "Search",
@@ -54,15 +55,14 @@ const items = [
   {
     title: "Archive",
     url: "/archive",
-    icon: Archive,
+    icon: BookMarked,
   },
   {
     title: "My Profile",
     url: "/profile",
-    icon: UserRoundPen,
+    icon: ContactRound,
   },
 ];
-
 export function AppSidebar() {
   const { profile, clearProfile } = useProfileStore();
   const navigate = useNavigate();
@@ -74,12 +74,30 @@ export function AppSidebar() {
         <SidebarMenu className="ml-1">
           {open ? (
             <SidebarMenuItem className="flex flex-row items-center gap-2">
-              <Link className="border border-[#6B4A32] bg-[#C9A063] rounded-sm p-1 text-[#241F1A]" />
+              <Paperclip
+                className="
+                  border
+                  border-[#6B4A32]
+                  bg-[#C9A063]
+                  rounded-sm
+                  p-1
+                  text-[#241F1A]
+                "
+              />
               <Label className="font-display font-bold text-[#241F1A]">LinkUP!</Label>
             </SidebarMenuItem>
           ) : (
             <SidebarMenuItem>
-              <Link className="border border-[#6B4A32] bg-[#C9A063] rounded-sm p-1 text-[#241F1A]" />
+            <Paperclip
+              className="
+                border
+                border-[#6B4A32]
+                bg-[#C9A063]
+                rounded-sm
+                p-1
+                text-[#241F1A]
+              "
+            />
             </SidebarMenuItem>
           )}
         </SidebarMenu>
@@ -145,8 +163,16 @@ export function AppSidebar() {
                         toast.error(`Unexpected error occured. ${error.message}`)
                       });
                   }}
-                  className="rounded-sm text-[#B23A2E] focus:bg-[#B23A2E] focus:text-[#F3EBD9]"
+                    className="rounded-sm
+                    text-[#B23A2E]
+                    focus:bg-[#B23A2E]
+                    focus:text-[#F3EBD9]
+                    [&>svg]:text-[#B23A2E]
+                    focus:[&>svg]:text-[#F3EBD9]
+                    transition-colors
+                  "
                   >
+                    <LogOut/>
                     <span>Sign out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>

@@ -423,12 +423,19 @@ export const NotificationSheet = ({
                 )
               )}
 
-              {/* Loading */}
-              {loading && (
-                <div className="shrink-0 border-t border-[#C9A063] py-3">
-                  <PageLoader />
-                </div>
-              )}
+            {/* Loading */}
+            {loading && (
+              <div className="shrink-0 border-t border-[#C9A063] py-3">
+                <PageLoader />
+              </div>
+            )}
+
+            {/* Close hint */}
+            <div className="shrink-0 px-4 py-3 text-center">
+              <span className="font-hand text-sm text-[#8A7F6C]">
+                click anywhere outside to close
+              </span>
+            </div>
             </>
           )}
         </div>
