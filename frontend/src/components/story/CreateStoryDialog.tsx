@@ -6,6 +6,8 @@ import {
   DialogTrigger,
   DialogHeader,
   DialogDescription,
+  DialogClose,
+  DialogFooter,
 } from "../ui/dialog";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
@@ -236,38 +238,69 @@ export const CreateStoryDialog = ({
               )}
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <DialogFooter
+              className="
+                pt-5
+                border-t
+                border-[#C9A063]
+                sm:justify-between
+                gap-3
+              "
+            >
               <Button
                 type="reset"
                 variant="outline"
+                disabled={loading}
+                onClick={() => setImage(null)}
                 className="
-                  cursor-pointer
-                  border-[#6B4A32]
-                  text-[#241F1A]
+                  rounded-sm
+                  border-[#8A7F6C]
                   bg-transparent
+                  text-[#4A4136]
+                  font-display
                   hover:bg-[#DDD0B0]
                   hover:text-[#241F1A]
-                  rounded-sm
                 "
-                onClick={() => setImage(null)}
               >
                 Reset
               </Button>
 
-              <Button
-                type="submit"
-                className="
-                  cursor-pointer
-                  bg-[#B23A2E]
-                  text-[#F3EBD9]
-                  hover:bg-[#8F2E25]
-                  rounded-sm
-                  shadow-sm
-                "
-              >
-                Publish Story
-              </Button>
-            </div>
+              <div className="flex gap-2">
+                <DialogClose asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={loading}
+                    className="
+                      rounded-sm
+                      border-[#8A7F6C]
+                      bg-transparent
+                      text-[#4A4136]
+                      font-display
+                      hover:bg-[#DDD0B0]
+                      hover:text-[#241F1A]
+                    "
+                  >
+                    Cancel
+                  </Button>
+                </DialogClose>
+
+                <Button
+                  type="submit"
+                  disabled={loading || !image}
+                  className="
+                    rounded-sm
+                    bg-[#B23A2E]
+                    text-[#F3EBD9]
+                    font-display
+                    hover:bg-[#9C3226]
+                    disabled:opacity-50
+                  "
+                >
+                  {loading ? <SubmitLoader /> : "Pin it!"}
+                </Button>
+              </div>
+            </DialogFooter>
           </form>
         </div>
       </DialogContent>
