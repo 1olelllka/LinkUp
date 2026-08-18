@@ -286,7 +286,7 @@ export function LinkUpLanding() {
                   fill="#D9A441"
                 />
                 <MessageCircle className="w-3.5 h-3.5 text-[#B23A2E]" />
-                <span className="font-hand text-base text-[#241F1A]">the group chat</span>
+                <span className="font-hand text-base text-[#241F1A]">new dm 💬</span>
               </div>
             </div>
           </div>
