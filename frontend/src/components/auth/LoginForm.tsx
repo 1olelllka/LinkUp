@@ -48,10 +48,9 @@ export const LoginForm = () => {
             const res = await login(values);
             useAuthStore.getState().setToken(res.accessToken);
             const authData = await getMe();
-            console.log(authData)
             const profileData = await getSpecificProfileInfo(authData.userId);
             useProfileStore.getState().setProfile(profileData);
-            toast.success(`Welcome back ${authData.alias}!`);
+            toast.success(`Welcome back ${profileData.username}!`);
             navigate("/profile")
         } catch (err) {
             const error = err as AxiosError<{ message?: string }>;

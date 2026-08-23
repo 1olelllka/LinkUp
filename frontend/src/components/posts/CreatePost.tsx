@@ -131,6 +131,8 @@ export const CreatePost = ({ onPostCreated }: CreatePostProps) => {
       <DialogContent
         className="
           sm:max-w-[550px]
+          max-h-[90vh]
+          overflow-y-auto
           bg-[#E8DFC8]
           text-[#241F1A]
           border-[#C9A063]

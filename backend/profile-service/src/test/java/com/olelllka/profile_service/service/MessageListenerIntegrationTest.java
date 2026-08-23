@@ -92,7 +92,7 @@ class MessageListenerIntegrationTest {
         Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> admin.getQueueInfo(RabbitMQTestConfig.create_user_queue).getMessageCount() == 0);
         Thread.sleep(Duration.of(2, ChronoUnit.SECONDS));
         // then
-        assertTrue(profileRepository.existsById(profileId));
-        assertTrue(documentRepository.existsById(profileId));
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> profileRepository.existsById(profileId));
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> documentRepository.existsById(profileId));
     }
 }

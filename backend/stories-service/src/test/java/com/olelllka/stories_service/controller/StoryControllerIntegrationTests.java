@@ -284,14 +284,14 @@ class StoryControllerIntegrationTests {
         mockMvc.perform(MockMvcRequestBuilders.delete("/stories/" + entity.getId())
                 .header("Authorization", "Bearer " + generateJwt(UUID.randomUUID())))
                 .andExpect(MockMvcResultMatchers.status().isUnauthorized());
-        assertTrue(redisTemplate.hasKey("story-feed:" + SHA256.generate(dto.getId().toString())));
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(() -> redisTemplate.hasKey("story-feed:" + SHA256.generate(dto.getId().toString())));
     }
 
     private @NotNull ProfileDto getProfileDto(UUID profileId) throws JsonProcessingException {
         Pageable pageable = PageRequest.of(0, 1);
         ProfileDto dto = TestDataUtil.createProfileDto();
         Page<ProfileDto> stubBody = new PageImpl<>(List.of(dto), pageable, 1);
-        PROFILE_SERVICE.stubFor(WireMock.get(WireMock.urlMatching("/profiles/" + profileId + "/followees.*"))
+        PROFILE_SERVICE.stubFor(WireMock.get(WireMock.urlMatching("/profiles/" + profileId + "/followers.*"))
                 .willReturn(WireMock.ok(objectMapper.writeValueAsString(stubBody))
                         .withHeader("Content-Type", "application/json")));
         return dto;
